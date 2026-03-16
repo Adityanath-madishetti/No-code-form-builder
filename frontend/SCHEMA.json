@@ -1,0 +1,23 @@
+{
+    "name": "",
+    "themeID": "",
+
+    "body": [
+        {
+            "id": "page1",
+            "type": "page",
+            "children": [
+                {
+                    "id": "text1",
+                    "type": "text",
+                    "content": "blah blah blah"
+                },
+                {
+                    "id": "input1",
+                    "type": "input",
+                    "inputType": ""
+                }
+            ]
+        }
+    ]
+}
