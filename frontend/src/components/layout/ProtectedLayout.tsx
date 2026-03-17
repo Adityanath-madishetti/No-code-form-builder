@@ -3,8 +3,7 @@ import { Navigate, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 
-// import { logout } from "@/lib/firebase";
-
+import { Loader2 } from "lucide-react";
 
 
 
@@ -13,10 +12,11 @@ export default function ProtectedLayout() {
   const navigate = useNavigate();
 
   if (loading) {
-    // return <div className="flex h-screen items-center justify-center">Loading...</div>;
-    <div className="flex h-screen items-center justify-center text-muted-foreground">
-      Checking authentication...
-    </div>
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
   }
 
   if (!user) {
@@ -32,7 +32,7 @@ export default function ProtectedLayout() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Minimal Header */}
-      <header className="flex items-center justify-between px-6 py-4 border-b">
+      {/* <header className="flex items-center justify-between px-6 py-4 border-b">
         <h1 className="text-lg font-semibold tracking-tight">App Name</h1>
 
         <div className="flex items-center gap-4">
@@ -43,7 +43,7 @@ export default function ProtectedLayout() {
             Logout
           </Button>
         </div>
-      </header>
+      </header> */}
 
       {/* Main Content Area */}
       {/* <main className="flex-1 p-4 md:p-6"> */}
