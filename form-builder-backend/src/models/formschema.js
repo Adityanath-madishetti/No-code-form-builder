@@ -4,46 +4,7 @@ const { Schema } = mongoose;
 
 /* ---------------- COMPONENT ---------------- */
 
-// const ComponentSchema = new Schema(
-//     {
-//         // basically it decides what it is i.e is it checkbox or input box and all
-        // id: {
-        //     type: String,
-        //     required: true
-        // },
 
-//         type: {
-//             type: String,
-//             required: true
-//         },
-
-//         label: String,
-
-//         placeholder: String,
-
-//         defaultValue: Schema.Types.Mixed,
-
-//         options: [
-//             {
-//                 label: String,
-//                 value: Schema.Types.Mixed
-//             }
-//         ],
-
-//         validation: {
-//             required: Boolean,
-//             min: Number,
-//             max: Number,
-//             minLength: Number,
-//             maxLength: Number,
-//             regex: String,
-//             customMessage: String
-//         },
-
-//         settings: Schema.Types.Mixed
-//     },
-//     { _id: false }
-// );
 
 
 // [|]
@@ -72,7 +33,11 @@ const ComponentSchema = new Schema(
             type:Boolean,
             default:false
         },
-
+        // this mat have score in it if its a quiz
+        // thats i soptions or min max raneg for slider
+        // drowp down options 
+        // it i scomp specific
+        // may have is_autograderd
         props: {
             type: Schema.Types.Mixed,
             default:{}
@@ -222,7 +187,8 @@ const ThemeSchema = new Schema(
                 type: String,
                 required : true,
             }
-    }
+    },
+    {_id:false}
 );
 
 
@@ -259,13 +225,12 @@ const MetaSchema = new Schema(
 
         isMultiPage: Boolean, // idk whats the use of it 
 
-        is_it_quiz: {
+        is_quiz: {
             type: Boolean,
             default: false,
         }
     },
-    { timestamps: true, _id: false }
-
+    {_id:false}
 );
 
 /* ---------------- MAIN FORM ---------------- */
