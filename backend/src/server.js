@@ -1,11 +1,13 @@
-import app from "./app.js";
+// Load .env FIRST, before any other module that reads env vars.
+// We must use dynamic imports because ESM hoists all static imports
+// above any code — meaning dotenv.config() would run AFTER firebase.js.
 import dotenv from "dotenv";
-import { connectDB } from "./db/db.js";
+dotenv.config();
 
+const { default: app } = await import("./app.js");
+const { connectDB } = await import("./db/db.js");
 
 const PORT = process.env.PORT || 5000;
-//loadenv
-dotenv.config({ debug: true });
 
 const startServer = async () => {
     try {
@@ -14,7 +16,7 @@ const startServer = async () => {
             console.log(`Server is running on port ${PORT}`);
         });
     } catch (error) {
-        console.log(error);
+        console.error("Failed to start server:", error);
         process.exit(1);
     }
 };

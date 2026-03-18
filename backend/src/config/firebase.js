@@ -1,5 +1,5 @@
 import admin from "firebase-admin";
-import { readFileSync } from "fs";
+import { readFileSync, existsSync } from "fs";
 
 /**
  * Initialize Firebase Admin SDK.
@@ -20,22 +20,41 @@ function initFirebaseAdmin() {
     const filePath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
     const jsonString = process.env.FIREBASE_SERVICE_ACCOUNT;
 
-    if (filePath) {
-        const serviceAccount = JSON.parse(readFileSync(filePath, "utf8"));
-        admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount),
-        });
-    } else if (jsonString) {
-        const serviceAccount = JSON.parse(jsonString);
-        admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount),
-        });
-    } else {
-        // Application Default Credentials
-        admin.initializeApp();
+    try {
+        if (filePath && existsSync(filePath)) {
+            const serviceAccount = JSON.parse(readFileSync(filePath, "utf8"));
+            admin.initializeApp({
+                credential: admin.credential.cert(serviceAccount),
+            });
+            console.log("Firebase Admin initialized with service account file");
+        } else if (jsonString) {
+            const serviceAccount = JSON.parse(jsonString);
+            admin.initializeApp({
+                credential: admin.credential.cert(serviceAccount),
+            });
+            console.log("Firebase Admin initialized with inline credentials");
+        } else {
+            console.warn(
+                "⚠️  No Firebase credentials configured. Auth routes will not work.\n" +
+                "   Set FIREBASE_SERVICE_ACCOUNT_PATH in .env to your service account JSON file."
+            );
+            // Initialize without credentials — verifyIdToken will fail
+            // but the server can still start for non-auth endpoints
+            admin.initializeApp();
+        }
+    } catch (err) {
+        console.warn(
+            "⚠️  Firebase Admin initialization failed:", err.message, "\n" +
+        "   Auth routes will not work until this is fixed."
+        );
+        // Still try a bare init so `admin.auth()` exists (will fail on use)
+        if (!admin.apps.length) {
+            try { admin.initializeApp(); } catch { /* ignore */ }
+        }
     }
 
     return admin;
 }
 
 export default initFirebaseAdmin();
+

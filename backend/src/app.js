@@ -1,5 +1,4 @@
 import express from "express";
-import dotenv from "dotenv";
 import cors from "cors";
 import helmet from "helmet";
 
@@ -7,7 +6,7 @@ import userRoutes from "./routes/userRoutes.js";
 import formRoutes from "./routes/formRoutes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
-dotenv.config({ debug: true });
+
 
 const app = express();
 
