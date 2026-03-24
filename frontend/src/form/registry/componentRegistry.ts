@@ -45,6 +45,7 @@ import type {
 
 // ------------------------------------------------------------------------------------------------
 import { createDummyComponent } from '../components/dummy';
+import type { DummyProps } from '../components/dummy';
 import {
   DummyComponentPropsRenderer,
   DummyComponentRenderer,
@@ -86,12 +87,21 @@ import {
 } from '../components/DropdownRenderer';
 // ------------------------------------------------------------------------------------------------
 
-export interface SerializedComponent<TProps = unknown> {
-  id: ComponentID;
+export type ComponentPropsMap = {
+  [ComponentIDs.Dummy]: DummyProps;
+  [ComponentIDs.TextBox]: TextBoxProps;
+  [ComponentIDs.Input]: InputProps;
+  [ComponentIDs.Radio]: RadioProps;
+  [ComponentIDs.Checkbox]: CheckboxProps;
+  [ComponentIDs.Dropdown]: DropdownProps;
+};
+
+export interface SerializedComponent<T extends ComponentID = ComponentID> {
+  id: T;
   instanceId: string;
   name: string;
   metadata: ComponentMetadata;
-  props: TProps;
+  props: ComponentPropsMap[T];
 }
 
 /**
@@ -112,7 +122,7 @@ export type ComponentRenderer<TProps = unknown> = ComponentType<
  * - Define how it is deserialized from JSON
  * - Provide catalog metadata for UI
  */
-export interface ComponentRegistryEntry<TProps = unknown> {
+export interface ComponentRegistryEntry<T extends ComponentID> {
   id: ComponentID;
 
   /**
@@ -129,19 +139,21 @@ export interface ComponentRegistryEntry<TProps = unknown> {
    * - `settings`: renders inside the editor panel
    */
   renderers: {
-    main: ComponentRenderer<TProps> | null;
-    settings: ComponentRenderer<TProps> | null;
+    main: ComponentRenderer<ComponentPropsMap[T]> | null;
+    settings: ComponentRenderer<ComponentPropsMap[T]> | null;
   };
 
   /**
    * Factory for creating a fresh component instance.
    */
-  create: (instanceId: string) => BaseFormComponent<TProps>;
+  create: (instanceId: string) => BaseFormComponent<ComponentPropsMap[T]>;
 
   /**
    * Reconstructs a component from serialized JSON.
    */
-  deserialize: (json: SerializedComponent<TProps>) => BaseFormComponent<TProps>;
+  deserialize: (
+    json: SerializedComponent<T>
+  ) => BaseFormComponent<ComponentPropsMap[T]>;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -150,12 +162,16 @@ export interface ComponentRegistryEntry<TProps = unknown> {
 //
 // ------------------------------------------------------------------------------------------------
 
+type Registry = {
+  [K in ComponentID]: ComponentRegistryEntry<K>;
+};
+
 /**
  * Internal registry mapping ComponentID -> ComponentRegistryEntry.
  *
  * This is the core lookup table used throughout the system.
  */
-const registry: Record<ComponentID, ComponentRegistryEntry> = {
+const registry: Registry = {
   [ComponentIDs.Dummy]: {
     id: ComponentIDs.Dummy,
     catalog: {
@@ -169,11 +185,7 @@ const registry: Record<ComponentID, ComponentRegistryEntry> = {
     create: (instanceId) =>
       createDummyComponent(instanceId, { label: 'Dummy Field' }, { text: '' }),
     deserialize: (json) =>
-      createDummyComponent(
-        json.instanceId,
-        json.metadata,
-        json.props as { text: string }
-      ),
+      createDummyComponent(json.instanceId, json.metadata, json.props),
   },
 
   [ComponentIDs.TextBox]: {
@@ -189,11 +201,7 @@ const registry: Record<ComponentID, ComponentRegistryEntry> = {
     create: (instanceId) =>
       createTextBoxComponent(instanceId, { label: 'Text Box' }, { text: '' }),
     deserialize: (json) =>
-      createTextBoxComponent(
-        json.instanceId,
-        json.metadata,
-        json.props as TextBoxProps
-      ),
+      createTextBoxComponent(json.instanceId, json.metadata, json.props),
   },
 
   [ComponentIDs.Input]: {
@@ -213,11 +221,7 @@ const registry: Record<ComponentID, ComponentRegistryEntry> = {
         { placeholder: '', defaultValue: '' }
       ),
     deserialize: (json) =>
-      createInputComponent(
-        json.instanceId,
-        json.metadata,
-        json.props as InputProps
-      ),
+      createInputComponent(json.instanceId, json.metadata, json.props),
   },
 
   [ComponentIDs.Radio]: {
@@ -243,11 +247,7 @@ const registry: Record<ComponentID, ComponentRegistryEntry> = {
         }
       ),
     deserialize: (json) =>
-      createRadioComponent(
-        json.instanceId,
-        json.metadata,
-        json.props as RadioProps
-      ),
+      createRadioComponent(json.instanceId, json.metadata, json.props),
   },
 
   [ComponentIDs.Checkbox]: {
@@ -275,11 +275,7 @@ const registry: Record<ComponentID, ComponentRegistryEntry> = {
         }
       ),
     deserialize: (json) =>
-      createCheckboxComponent(
-        json.instanceId,
-        json.metadata,
-        json.props as CheckboxProps
-      ),
+      createCheckboxComponent(json.instanceId, json.metadata, json.props),
   },
 
   [ComponentIDs.Dropdown]: {
@@ -306,13 +302,9 @@ const registry: Record<ComponentID, ComponentRegistryEntry> = {
         }
       ),
     deserialize: (json) =>
-      createDropdownComponent(
-        json.instanceId,
-        json.metadata,
-        json.props as DropdownProps
-      ),
+      createDropdownComponent(json.instanceId, json.metadata, json.props),
   },
-} as Record<ComponentID, ComponentRegistryEntry>;
+};
 
 // ------------------------------------------------------------------------------------------------
 //
@@ -320,27 +312,24 @@ const registry: Record<ComponentID, ComponentRegistryEntry> = {
 //
 // ------------------------------------------------------------------------------------------------
 
-export const getComponentRenderer = (
-  id: ComponentID
-): ComponentRenderer | null => {
+export function getComponentRenderer<T extends ComponentID>(
+  id: T
+): ComponentRenderer<ComponentPropsMap[T]> | null {
   return registry[id]?.renderers.main || null;
-};
+}
 
-export const getComponentPropsRenderer = (
-  id: ComponentID
-): ComponentRenderer | null => {
+export function getComponentPropsRenderer<T extends ComponentID>(
+  id: T
+): ComponentRenderer<ComponentPropsMap[T]> | null {
   return registry[id]?.renderers.settings || null;
-};
+}
 
-export const deserializeComponent = (
-  json: SerializedComponent
-): BaseFormComponent<unknown> => {
+export function deserializeComponent<T extends ComponentID>(
+  json: SerializedComponent<T>
+): BaseFormComponent<ComponentPropsMap[T]> {
   const def = registry[json.id];
-  if (!def || !def.deserialize) {
-    throw new Error(`No factory registered for component: ${json.id}`);
-  }
   return def.deserialize(json);
-};
+}
 
 /**
  * Flat map of componentID -> main renderer.

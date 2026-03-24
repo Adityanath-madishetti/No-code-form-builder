@@ -100,6 +100,25 @@ export const YourComponentPropsRenderer = ({
 Open:  
 `src/form/registry/componentRegistry.ts`
 
+Add your component props to the `ComponentPropsMap`:
+
+```ts
+export type ComponentPropsMap = {
+  ...
+  [ComponentIDs.YourComponent]: YourComponentProps;
+};
+```
+
+Add to `componentRenderers` (Optional Helper Map)
+
+```ts
+export const componentRenderers = {
+  ...
+  [ComponentIDs.YourComponent]:
+    registry[ComponentIDs.YourComponent].renderers.main,
+};
+```
+
 Add a new entry inside `registry`:
 
 ```ts
@@ -125,7 +144,7 @@ Add a new entry inside `registry`:
     createYourComponent(
       json.instanceId,
       json.metadata,
-      json.props as YourComponentProps
+      json.props
     ),
 },
 ```
