@@ -36,7 +36,7 @@ export function SidePanel() {
         </TabsTrigger>
       </TabsList>
 
-      <div className="flex-1 overflow-y-auto rounded-xl bg-muted">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-muted">
         <TabsContent value="overview" className="mt-0 p-4">
           {/* Overview content */}
         </TabsContent>
@@ -45,7 +45,7 @@ export function SidePanel() {
           <ComponentPropertiesPanel />
         </TabsContent>
 
-        <TabsContent value="components" className="mt-0">
+        <TabsContent value="components" className="mt-0 p-4">
           <ComponentCatalogPanel />
         </TabsContent>
       </div>

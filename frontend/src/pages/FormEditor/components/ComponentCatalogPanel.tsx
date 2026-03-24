@@ -87,7 +87,7 @@ export function ComponentCatalogPanel() {
   }, [searchQuery]);
 
   return (
-    <div key={catalogRefreshKey} className="flex flex-col gap-6 p-4">
+    <div key={catalogRefreshKey} className="flex flex-col gap-6">
       
       {/* Search bar */}
       <div className="relative">

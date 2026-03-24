@@ -35,9 +35,9 @@ export default function ProtectedLayout() {
         </div>
       </header> */}
 
-      <main className="flex w-full flex-1 flex-col">
-        <Outlet />
-      </main>
+      {/* <main className="flex w-full h-screen flex-1 flex-col"> */}
+      <Outlet />
+      {/* </main> */}
     </div>
   );
 }

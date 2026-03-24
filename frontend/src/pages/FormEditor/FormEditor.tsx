@@ -5,7 +5,7 @@ loadFromJSON({
     id: 'form-1',
     name: 'My Form',
     themeID: null,
-    pages: ['page-1', 'page-2', 'page-3'],
+    pages: ['page-1', 'page-2', 'page-3', 'page-4', 'page-5', 'page-6', 'page-7', 'page-8', 'page-9', 'page-10'],
     metadata: {
       description: 'A sample form loaded from JSON.',
       createdAt: '2024-01-01T00:00:00.000Z',
@@ -17,14 +17,20 @@ loadFromJSON({
     {
       id: 'page-1',
       children: [
-        // "instance-1",
         'text-box-instance-1',
         'input-instance-1',
       ],
       isTerminal: false,
     },
     { id: 'page-2', children: ['instance-1'], isTerminal: false },
-    { id: 'page-3', children: [], isTerminal: true },
+    { id: 'page-3', children: [], isTerminal: false },
+    { id: 'page-4', children: [], isTerminal: false },
+    { id: 'page-5', children: [], isTerminal: false },
+    { id: 'page-6', children: [], isTerminal: false },
+    { id: 'page-7', children: [], isTerminal: false },
+    { id: 'page-8', children: [], isTerminal: false },
+    { id: 'page-9', children: [], isTerminal: false },
+    { id: 'page-10', children: [], isTerminal: true },
   ],
   components: [
     {
@@ -33,7 +39,7 @@ loadFromJSON({
       name: 'DummyComponent',
       metadata: { label: 'Hello World', description: 'A dummy field.' },
       props: { text: 'This is a dummy component.' },
-      children: [],
+      // children: [],
     },
     {
       id: 'TextBox',
@@ -43,7 +49,7 @@ loadFromJSON({
       props: {
         text: 'Mirror, mirror on the wall, who’s the fairest of them all?',
       },
-      children: [],
+      // children: [],
     },
     {
       id: 'Input',
@@ -57,14 +63,14 @@ loadFromJSON({
         placeholder: 'Thou, O Queen, art the fairest in the land.',
         defaultValue: '',
       },
-      children: [],
+      // children: [],
     },
   ],
 });
 
-// import { printFormJSON } from '@/form/store/formStore';
+import { printFormJSON } from '@/form/store/formStore';
 
-// printFormJSON();
+printFormJSON();
 
 // src/FormEditor.tsx
 import { useFormStore, type FormDragData } from '@/form/store/formStore';
@@ -337,7 +343,7 @@ export default function FormEditor() {
         <ResizablePanel
           defaultSize="75%"
           minSize="40%"
-          className="flex flex-col"
+          className="flex min-h-0 flex-col"
         >
           <div
             className="relative w-full flex-1 overflow-y-auto pt-10 pb-20"
@@ -356,9 +362,9 @@ export default function FormEditor() {
           defaultSize="25%"
           minSize="20%"
           maxSize="50%"
-          className="flex flex-col"
+          className="flex min-h-0 flex-col"
         >
-          <div className="z-10 flex w-full flex-1 flex-col p-6">
+          <div className="z-10 flex w-full flex-1 flex-col overflow-y-auto p-6">
             <SidePanel />
           </div>
         </ResizablePanel>
@@ -381,7 +387,7 @@ export default function FormEditor() {
                 {Renderer && (
                   <Renderer
                     metadata={previewData.metadata}
-                    props={previewData.props as unknown}
+                    props={previewData.props}
                     instanceId={previewData.instanceId}
                   />
                 )}
@@ -410,7 +416,7 @@ export default function FormEditor() {
                 {Renderer && (
                   <Renderer
                     metadata={existingComponent.metadata}
-                    props={existingComponent.props as unknown}
+                    props={existingComponent.props}
                     instanceId={existingComponent.instanceId}
                   />
                 )}
