@@ -1,0 +1,1 @@
+Handle 'catalog-page' and 'catalog-component'
