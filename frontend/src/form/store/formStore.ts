@@ -388,7 +388,6 @@ export const useFormStore = create<FormStore>()(
   }))
 );
 
-
 // ------------------------------------------------------------------------------------------------
 //
 // Serialization Layer
@@ -416,9 +415,23 @@ import { deserializeComponent } from '../registry/componentRegistry';
 export function loadFromJSON(json: SerializedForm) {
   const components = json.components.map(deserializeComponent);
 
-  useFormStore.getState().loadForm(
-    json.form,
-    json.pages,
-    components
-  );
+  useFormStore.getState().loadForm(json.form, json.pages, components);
+}
+
+export function serializeForm(): SerializedForm {
+  const state = useFormStore.getState();
+  if (!state.form) throw new Error('No form loaded');
+
+  return {
+    form: state.form,
+    pages: state.form.pages.map((id) => state.pages[id]),
+    components: state.form.pages.flatMap((pageId) =>
+      state.pages[pageId].children.map((id) => state.components[id])
+    ),
+  };
+}
+
+export function printFormJSON() {
+  const serialized = serializeForm();
+  console.log(JSON.stringify(serialized, null, 2));
 }

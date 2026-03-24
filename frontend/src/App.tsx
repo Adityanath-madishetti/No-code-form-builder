@@ -3,7 +3,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedLayout from "./components/layout/ProtectedLayout";
 import Login from "./pages/Login/page";
 import Home from "./pages/Home";
-import FormEditor from "./pages/FormEditor/page";
+import FormEditor from "./pages/FormEditor/FormEditor";
 import FormTest from "./pages/FormTest";
 
 const router = createBrowserRouter([

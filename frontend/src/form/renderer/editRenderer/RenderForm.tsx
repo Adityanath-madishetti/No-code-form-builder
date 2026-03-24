@@ -16,7 +16,7 @@ import {
   CardContent,
 } from '@/components/ui/card';
 import { useDroppable } from '@dnd-kit/react';
-import { PAGE_PLACEHOLDER_ID } from '@/pages/FormEditor/page';
+import { PAGE_PLACEHOLDER_ID } from '@/pages/FormEditor/FormEditor';
 
 export const RenderComponent = ({
   component,

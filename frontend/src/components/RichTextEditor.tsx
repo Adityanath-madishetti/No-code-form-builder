@@ -185,7 +185,7 @@ const ToolbarButton = ({
           {children}
         </Button>
       </TooltipTrigger>
-      <TooltipContent side="top" sideOffset={8} className="px-2 py-1 text-xs">
+      <TooltipContent side="top" sideOffset={8} className="px-2 py-1 text-xs [&_svg]:invisible">
         {tooltip}
       </TooltipContent>
     </Tooltip>
@@ -246,7 +246,7 @@ const LinkToolbarButton = ({
             </PopoverTrigger>
           </span>
         </TooltipTrigger>
-        <TooltipContent side="top" sideOffset={8} className="px-2 py-1 text-xs">
+        <TooltipContent side="top" sideOffset={8} className="px-2 py-1 text-xs [&_svg]:invisible">
           Link
         </TooltipContent>
       </Tooltip>
@@ -295,6 +295,7 @@ const EditorBubbleMenu = ({ editor }: { editor: Editor }) => {
       editor={editor}
       shouldShow={({ editor }) => editor.isFocused || isLinkMenuOpen}
       options={{
+        strategy: 'fixed',
         placement: 'bottom',
         offset: 12,
       }}

@@ -2,7 +2,7 @@
 import { useFormStore } from '@/form/store/formStore';
 import { Card } from '@/components/ui/card';
 import type { BaseFormComponent, PageID } from '@/form/components/base';
-import { PAGE_PLACEHOLDER_ID } from '@/pages/FormEditor/page';
+import { PAGE_PLACEHOLDER_ID } from '@/pages/FormEditor/FormEditor';
 
 import { GripHorizontal, Trash2 } from 'lucide-react';
 import { useSortable } from '@dnd-kit/react/sortable';

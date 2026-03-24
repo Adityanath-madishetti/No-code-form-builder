@@ -110,12 +110,9 @@ export const CheckboxComponentPropsRenderer = ({
       </div>
 
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
+        {/* <div className="flex items-center justify-between"> */}
           <ComponentPropTitle title="Checkboxes" />
-          <Button type="button" variant="outline" size="sm" onClick={handleAddOption}>
-            <Plus className="mr-1 h-4 w-4" /> Add Option
-          </Button>
-        </div>
+        {/* </div> */}
 
         <div className="space-y-2">
           {(props.options || []).map((option) => (
@@ -153,6 +150,9 @@ export const CheckboxComponentPropsRenderer = ({
             </div>
           )}
         </div>
+        <Button type="button" variant="outline" size="sm" onClick={handleAddOption}>
+            <Plus className="mr-1 h-4 w-4" /> Add Option
+          </Button>
       </div>
 
       <div className="space-y-2">

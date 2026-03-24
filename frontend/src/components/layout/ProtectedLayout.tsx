@@ -19,9 +19,9 @@ export default function ProtectedLayout() {
     return <Navigate to="/login" replace />;
   }
 
-  
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    // IMP: h-screen is needed
+    <div className="flex h-screen min-h-screen flex-col">
       {/* <header className="flex items-center justify-between px-6 py-4 border-b">
         <h1 className="text-lg font-semibold tracking-tight">App Name</h1>
 
@@ -35,9 +35,9 @@ export default function ProtectedLayout() {
         </div>
       </header> */}
 
-      {/* <main className="flex-1 p-4 md:p-6"> */}
-      <Outlet />
-      {/* </main> */}
+      <main className="flex w-full flex-1 flex-col">
+        <Outlet />
+      </main>
     </div>
   );
 }

@@ -62,8 +62,11 @@ loadFromJSON({
   ],
 });
 
+// import { printFormJSON } from '@/form/store/formStore';
+
+// printFormJSON();
+
 // src/FormEditor.tsx
-import { useState } from 'react';
 import { useFormStore, type FormDragData } from '@/form/store/formStore';
 import { FormCanvas } from './components/FormCanvas';
 import { SidePanel } from './components/SidePanel';
@@ -71,7 +74,11 @@ import { DragDropProvider, DragOverlay } from '@dnd-kit/react';
 
 import { componentRenderers } from '@/form/registry/componentRegistry';
 import type { ComponentID, ComponentMetadata } from '@/form/components/base';
-// import { Card, CardContent } from "@/components/ui/card";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from '@/components/ui/resizable';
 
 export const COMPONENT_PLACEHOLDER_ID = 'temp-placeholder-component';
 export const PAGE_PLACEHOLDER_ID = 'temp-placeholder-page';
@@ -89,7 +96,6 @@ export default function FormEditor() {
         store.setActiveDragData(
           (event.operation.source?.data as FormDragData) || null
         );
-        
       }}
       onDragOver={(event) => {
         const { source, target } = event.operation;
@@ -324,21 +330,39 @@ export default function FormEditor() {
         }
       }}
     >
-      <div className="flex h-screen overflow-hidden">
-        <div
-          className="relative flex-1 overflow-y-auto bg-muted/20 pt-10 pb-20"
-          onClick={() => {
-            selectComponent(null);
-            selectPage(null);
-          }}
+      <ResizablePanelGroup
+        orientation="horizontal"
+        className="h-screen w-full overflow-hidden bg-muted/20"
+      >
+        <ResizablePanel
+          defaultSize="75%"
+          minSize="40%"
+          className="flex flex-col"
         >
-          <FormCanvas />
-        </div>
+          <div
+            className="relative w-full flex-1 overflow-y-auto pt-10 pb-20"
+            onClick={() => {
+              selectComponent(null);
+              selectPage(null);
+            }}
+          >
+            <FormCanvas />
+          </div>
+        </ResizablePanel>
 
-        <div className="z-10 w-130 overflow-y-auto border-l bg-background p-3">
-          <SidePanel />
-        </div>
-      </div>
+        <ResizableHandle withHandle />
+
+        <ResizablePanel
+          defaultSize="25%"
+          minSize="20%"
+          maxSize="50%"
+          className="flex flex-col"
+        >
+          <div className="z-10 flex w-full flex-1 flex-col p-6">
+            <SidePanel />
+          </div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
 
       <DragOverlay dropAnimation={null}>
         {/* ==========================================
