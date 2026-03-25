@@ -9,7 +9,7 @@ export interface DummyProps {
   text: string;
 }
 
-import { createBaseFormComponent } from './base.factories';
+import type { FormComponent } from '../registry/componentRegistry';
 import type { ComponentMetadata } from './base';
 import { ComponentIDs } from './base';
 
@@ -17,14 +17,13 @@ export const createDummyComponent = (
   instanceId: string,
   metadata: ComponentMetadata,
   props: DummyProps
-) => {
-  return createBaseFormComponent(
-    ComponentIDs.Dummy,
-    instanceId,
-    'DummyComponent',
-    metadata,
-    props
-  );
-};
+): FormComponent => ({
+  id: ComponentIDs.Dummy,
+  instanceId,
+  name: 'DummyComponent',
+  metadata,
+  children: [],
+  props,
+});
 
 export type DummyComponent = ReturnType<typeof createDummyComponent>;

@@ -1,18 +1,17 @@
 // src/form/components/ComponentCatalogPanel.tsx
 import { useState, useMemo } from 'react';
 import { useDraggable } from '@dnd-kit/react';
-import { Search } from 'lucide-react'; // Assuming you use lucide-react for icons
-import { Input } from '@/components/ui/input'; // Adjust path to your shadcn Input component
+import { Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { catalogRegistry } from '@/form/registry/componentRegistry';
 import { useFormStore } from '@/form/store/formStore';
 
-export const CATALOG_COMPONENT_ID = 'catalog-component';
-export const CATALOG_PAGE_ID = 'catalog-page';
+import { DRAG_CATALOG_PAGE_ID, DRAG_CATALOG_COMPONENT_ID } from '@/form/utils/DndUtils';
 
 const STRUCTURE_ITEMS = [
   {
-    id: CATALOG_PAGE_ID,
-    type: CATALOG_PAGE_ID,
+    id: DRAG_CATALOG_PAGE_ID,
+    type: DRAG_CATALOG_PAGE_ID,
     label: 'New Page',
     description: 'Add a new blank page to your form.',
   },
@@ -63,7 +62,7 @@ function DraggableCatalogItem({
 
 export function ComponentCatalogPanel() {
   const catalogRefreshKey = useFormStore((s) => s.catalogRefreshKey);
-  
+
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredStructure = useMemo(() => {
@@ -88,10 +87,9 @@ export function ComponentCatalogPanel() {
 
   return (
     <div key={catalogRefreshKey} className="flex flex-col gap-6">
-      
       {/* Search bar */}
       <div className="relative">
-        <Search className="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground" />
+        <Search className="absolute top-2 left-2.5 h-4 w-4 text-muted-foreground" />
         <Input
           type="search"
           placeholder="Search components..."
@@ -103,7 +101,7 @@ export function ComponentCatalogPanel() {
 
       {/* Handle case where nothing matches */}
       {filteredStructure.length === 0 && filteredComponents.length === 0 && (
-        <div className="text-center text-sm text-muted-foreground py-8">
+        <div className="py-8 text-center text-sm text-muted-foreground">
           No components found for "{searchQuery}"
         </div>
       )}
@@ -111,7 +109,7 @@ export function ComponentCatalogPanel() {
       {/* Structure section */}
       {filteredStructure.length > 0 && (
         <div>
-          <h3 className="mb-3 text-xs font-semibold uppercase text-muted-foreground tracking-wider">
+          <h3 className="mb-3 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
             Structure
           </h3>
           <div className="grid grid-cols-1 gap-3">
@@ -131,7 +129,7 @@ export function ComponentCatalogPanel() {
       {/* components section */}
       {filteredComponents.length > 0 && (
         <div>
-          <h3 className="mb-3 text-xs font-semibold uppercase text-muted-foreground tracking-wider">
+          <h3 className="mb-3 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
             Form Fields
           </h3>
           <div className="grid grid-cols-1 gap-3">
@@ -140,7 +138,7 @@ export function ComponentCatalogPanel() {
                 key={entry.id}
                 id={`catalog-${entry.id}`}
                 data={{
-                  type: CATALOG_COMPONENT_ID,
+                  type: DRAG_CATALOG_COMPONENT_ID,
                   entry: entry,
                 }}
                 label={entry.label}

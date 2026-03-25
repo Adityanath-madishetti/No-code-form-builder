@@ -20,9 +20,9 @@
  * ------------------------------------------------------------------------------------------------
  */
 
-import { createBaseFormComponent } from './base.factories';
 import type { ComponentMetadata } from './base';
 import { ComponentIDs } from './base';
+import type { FormComponent } from '../registry/componentRegistry';
 
 export interface DropdownOption {
   id: string;
@@ -41,14 +41,13 @@ export const createDropdownComponent = (
   instanceId: string,
   metadata: ComponentMetadata,
   props: DropdownProps
-) => {
-  return createBaseFormComponent(
-    ComponentIDs.Dropdown,
-    instanceId,
-    'DropdownComponent',
-    metadata,
-    props
-  );
-};
+): FormComponent => ({
+  id: ComponentIDs.Dropdown,
+  instanceId,
+  name: 'DropdownComponent',
+  metadata,
+  children: [],
+  props,
+});
 
 export type DropdownComponent = ReturnType<typeof createDropdownComponent>;

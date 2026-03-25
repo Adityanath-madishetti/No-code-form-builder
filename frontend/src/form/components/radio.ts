@@ -21,7 +21,7 @@
  * ------------------------------------------------------------------------------------------------
  */
 
-import { createBaseFormComponent } from './base.factories';
+import type { FormComponent } from '../registry/componentRegistry';
 import type { ComponentMetadata } from './base';
 import { ComponentIDs } from './base';
 
@@ -42,14 +42,13 @@ export const createRadioComponent = (
   instanceId: string,
   metadata: ComponentMetadata,
   props: RadioProps
-) => {
-  return createBaseFormComponent(
-    ComponentIDs.Radio,
+): FormComponent => ({
+    id: ComponentIDs.Radio,
     instanceId,
-    'RadioComponent',
+    name:'RadioComponent',
     metadata,
+    children: [],
     props
-  );
-};
+});
 
 export type RadioComponent = ReturnType<typeof createRadioComponent>;

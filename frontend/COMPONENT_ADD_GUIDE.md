@@ -1,3 +1,5 @@
+# [Deprecated]
+
 # How to Add a New Component
 
 This guide outlines the steps required to add a new component to the form system.  

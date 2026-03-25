@@ -19,9 +19,9 @@
  * ------------------------------------------------------------------------------------------------
  */
 
-import { createBaseFormComponent } from './base.factories';
 import type { ComponentMetadata } from './base';
 import { ComponentIDs } from './base';
+import type { FormComponent } from '../registry/componentRegistry';
 
 export interface TextBoxProps {
   text: string;
@@ -31,14 +31,12 @@ export const createTextBoxComponent = (
   instanceId: string,
   metadata: ComponentMetadata,
   props: TextBoxProps
-) => {
-  return createBaseFormComponent(
-    ComponentIDs.TextBox,
-    instanceId,
-    'TextBoxComponent',
-    metadata,
-    props
-  );
-};
-
+): FormComponent => ({
+  id: ComponentIDs.TextBox,
+  instanceId,
+  name: 'TextBoxComponent',
+  metadata,
+  children: [],
+  props,
+});
 export type TextBoxComponent = ReturnType<typeof createTextBoxComponent>;

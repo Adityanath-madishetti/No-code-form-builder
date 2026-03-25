@@ -16,20 +16,11 @@
  *
  * ------------------------------------------------------------------------------------------------
  * When to use:
- * - Creating new components in the form builder
  * - Initializing new pages/forms
  * - Hydrating default state for stores (e.g., Zustand)
  *
  * ------------------------------------------------------------------------------------------------
  * Example Usage:
- *
- * const input = createBaseFormComponent(
- *   ComponentIDs.Input,
- *   'inst_1',
- *   'Email Input',
- *   { label: 'Email' },
- *   { placeholder: 'Enter your email' }
- * );
  *
  * const page = createFormPage('page_1');
  * page.children.push(input.instanceId);
@@ -46,25 +37,11 @@
  */
 
 import type {
-  BaseFormComponent,
-  ComponentID,
-  ComponentMetadata,
   FormID,
   FormMetadata,
   FormPage,
   PageID,
-  InstanceID,
 } from './base';
-
-export function createBaseFormComponent<P>(
-  id: ComponentID,
-  instanceId: InstanceID,
-  name: string,
-  metadata: ComponentMetadata,
-  props: P
-): BaseFormComponent<P> {
-  return { id, instanceId, name, metadata, props, children: [] };
-}
 
 export function createFormPage(id: PageID): FormPage {
   return { id, children: [], isTerminal: true };

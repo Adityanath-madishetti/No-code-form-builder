@@ -20,7 +20,7 @@
  * ------------------------------------------------------------------------------------------------
  */
 
-import { createBaseFormComponent } from './base.factories';
+import type { FormComponent } from '../registry/componentRegistry';
 import type { ComponentMetadata } from './base';
 import { ComponentIDs } from './base';
 
@@ -41,14 +41,13 @@ export const createCheckboxComponent = (
   instanceId: string,
   metadata: ComponentMetadata,
   props: CheckboxProps
-) => {
-  return createBaseFormComponent(
-    ComponentIDs.Checkbox,
-    instanceId,
-    'CheckboxComponent',
-    metadata,
-    props
-  );
-};
+): FormComponent => ({
+  id: ComponentIDs.Checkbox,
+  instanceId,
+  name: 'CheckboxComponent',
+  metadata,
+  children: [],
+  props,
+});
 
 export type CheckboxComponent = ReturnType<typeof createCheckboxComponent>;

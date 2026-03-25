@@ -19,9 +19,9 @@
  * ------------------------------------------------------------------------------------------------
  */
 
-import { createBaseFormComponent } from './base.factories';
 import type { ComponentMetadata } from './base';
 import { ComponentIDs } from './base';
+import type { FormComponent } from '../registry/componentRegistry';
 
 export interface InputProps {
   placeholder?: string;
@@ -33,14 +33,13 @@ export const createInputComponent = (
   instanceId: string,
   metadata: ComponentMetadata,
   props: InputProps
-) => {
-  return createBaseFormComponent(
-    ComponentIDs.Input,
-    instanceId,
-    'InputComponent',
-    metadata,
-    props
-  );
-};
+): FormComponent => ({
+  id: ComponentIDs.Input,
+  instanceId,
+  name: 'InputComponent',
+  metadata,
+  children: [],
+  props,
+});
 
 export type InputComponent = ReturnType<typeof createInputComponent>;

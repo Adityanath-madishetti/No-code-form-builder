@@ -1,14 +1,23 @@
 // src/form/renderer/SelectableWrapper.tsx
 import { useFormStore } from '@/form/store/formStore';
 import { Card } from '@/components/ui/card';
-import type { BaseFormComponent, PageID } from '@/form/components/base';
-import { PAGE_PLACEHOLDER_ID } from '@/pages/FormEditor/FormEditor';
+import type { PageID } from '@/form/components/base';
+import { TEMP_PAGE_PLACEHOLDER_ID } from '@/form/utils/DndUtils';
 
 import { GripHorizontal, Trash2 } from 'lucide-react';
 import { useSortable } from '@dnd-kit/react/sortable';
+import type { AnyFormComponent } from '../registry/componentRegistry';
+
+import {
+  DRAG_CATALOG_COMPONENT_ID,
+  DRAG_CATALOG_PAGE_ID,
+  DRAG_COMPONENT_ID,
+  DRAG_PAGE_ID,
+  DRAG_PAGE_GROUP_ID
+} from '@/form/utils/DndUtils';
 
 interface Props {
-  component: BaseFormComponent;
+  component: AnyFormComponent;
   pageId: PageID;
   index: number;
   children: React.ReactNode;
@@ -30,10 +39,10 @@ export const SelectableComponent = ({
     id: component.instanceId,
     index: index,
     group: pageId,
-    type: 'component',
-    accept: ['component', 'catalog-component'],
+    type: DRAG_COMPONENT_ID,
+    accept: [DRAG_COMPONENT_ID, DRAG_CATALOG_COMPONENT_ID],
     data: {
-      type: 'component',
+      type: DRAG_COMPONENT_ID,
       pageId: pageId,
       instanceId: component.instanceId,
     },
@@ -55,7 +64,6 @@ export const SelectableComponent = ({
         {children}
       </div>
 
-      {/* {isSelected && ( */}
       <div className="absolute top-[1px] -right-[6px] bottom-[1px] z-10 flex w-12 flex-col items-center justify-start rounded-r-[calc(var(--radius)-1px)]">
         <button
           onClick={(e) => {
@@ -68,7 +76,6 @@ export const SelectableComponent = ({
           <Trash2 className="h-4 w-4" />
         </button>
       </div>
-      {/* )} */}
     </div>
   );
 };
@@ -95,11 +102,11 @@ export const SelectablePage = ({
   const { ref, isDragging } = useSortable({
     id: pageId,
     index: index,
-    group: 'pages',
-    type: 'page',
-    accept: ['page', 'catalog-page'],
+    group: DRAG_PAGE_GROUP_ID,
+    type: DRAG_PAGE_ID,
+    accept: [DRAG_PAGE_ID, DRAG_CATALOG_PAGE_ID],
     data: {
-      type: 'page',
+      type: DRAG_PAGE_ID,
       pageId: pageId,
     },
   });
@@ -125,7 +132,7 @@ export const SelectablePage = ({
         <GripHorizontal className="h-4 w-4 text-gray-400" />
       </div>
 
-      {pageId !== PAGE_PLACEHOLDER_ID && (
+      {pageId !== TEMP_PAGE_PLACEHOLDER_ID && (
         <div className="pointer-events-none absolute top-4 left-6 z-20">
           <span className="text-sm text-muted-foreground/60">
             Page {index + 1}
@@ -133,7 +140,7 @@ export const SelectablePage = ({
         </div>
       )}
 
-      {pageId !== PAGE_PLACEHOLDER_ID && (
+      {pageId !== TEMP_PAGE_PLACEHOLDER_ID && (
         <div className="absolute top-3.5 right-5 z-20">
           <button
             onClick={(e) => {

@@ -295,9 +295,9 @@ const EditorBubbleMenu = ({ editor }: { editor: Editor }) => {
       editor={editor}
       shouldShow={({ editor }) => editor.isFocused || isLinkMenuOpen}
       options={{
-        strategy: 'fixed',
+        strategy: 'absolute',
         placement: 'bottom',
-        offset: 12,
+        offset: 0,
       }}
       className="flex w-max max-w-[90vw] flex-wrap items-center justify-center gap-0.5 rounded-lg border border-border bg-background/95 p-1 shadow-md backdrop-blur-md"
     >
@@ -484,7 +484,7 @@ export const RichTextEditor = ({
     editorProps: {
       attributes: {
         class: `
-        w-full rounded-md border border-input bg-background 
+        w-full rounded-md border border-input bg-card 
         px-4 py-3 text-sm placeholder:text-muted-foreground 
         focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 
         min-h-[100px] cursor-text

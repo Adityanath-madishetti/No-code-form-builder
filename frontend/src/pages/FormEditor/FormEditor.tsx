@@ -5,7 +5,18 @@ loadFromJSON({
     id: 'form-1',
     name: 'My Form',
     themeID: null,
-    pages: ['page-1', 'page-2', 'page-3', 'page-4', 'page-5', 'page-6', 'page-7', 'page-8', 'page-9', 'page-10'],
+    pages: [
+      'page-1',
+      'page-2',
+      'page-3',
+      'page-4',
+      'page-5',
+      'page-6',
+      'page-7',
+      'page-8',
+      'page-9',
+      'page-10',
+    ],
     metadata: {
       description: 'A sample form loaded from JSON.',
       createdAt: '2024-01-01T00:00:00.000Z',
@@ -16,10 +27,7 @@ loadFromJSON({
   pages: [
     {
       id: 'page-1',
-      children: [
-        'text-box-instance-1',
-        'input-instance-1',
-      ],
+      children: ['text-box-instance-1', 'input-instance-1'],
       isTerminal: false,
     },
     { id: 'page-2', children: ['instance-1'], isTerminal: false },
@@ -78,7 +86,10 @@ import { FormCanvas } from './components/FormCanvas';
 import { SidePanel } from './components/SidePanel';
 import { DragDropProvider, DragOverlay } from '@dnd-kit/react';
 
-import { componentRenderers } from '@/form/registry/componentRegistry';
+import {
+  componentRenderers,
+  type AnyFormComponent,
+} from '@/form/registry/componentRegistry';
 import type { ComponentID, ComponentMetadata } from '@/form/components/base';
 import {
   ResizableHandle,
@@ -86,8 +97,16 @@ import {
   ResizablePanelGroup,
 } from '@/components/ui/resizable';
 
-export const COMPONENT_PLACEHOLDER_ID = 'temp-placeholder-component';
-export const PAGE_PLACEHOLDER_ID = 'temp-placeholder-page';
+import {
+  TEMP_COMPONENT_PLACEHOLDER_ID,
+  TEMP_PAGE_PLACEHOLDER_ID,
+} from '@/form/utils/DndUtils';
+import {
+  DRAG_CATALOG_COMPONENT_ID,
+  DRAG_CATALOG_PAGE_ID,
+  DRAG_COMPONENT_ID,
+  DRAG_PAGE_ID,
+} from '@/form/utils/DndUtils';
 
 export default function FormEditor() {
   const store = useFormStore();
@@ -113,33 +132,33 @@ export default function FormEditor() {
         // ==========================================
         // CREATE COMPONENT GAPS
         // ==========================================
-        if (sourceData?.type === 'catalog-component') {
+        if (sourceData?.type === DRAG_CATALOG_COMPONENT_ID) {
           let targetPageId = null;
           let targetIndex = -1;
 
-          if (targetData?.type === 'component') {
+          if (targetData?.type === DRAG_COMPONENT_ID) {
             targetPageId = targetData.pageId;
             targetIndex = store.pages[targetPageId].children.indexOf(
               targetData.instanceId
             );
-          } else if (targetData?.type === 'page') {
+          } else if (targetData?.type === DRAG_PAGE_ID) {
             targetPageId = targetData.pageId;
             targetIndex = store.pages[targetPageId].children.length;
           }
 
           if (targetPageId) {
-            if (!store.components[COMPONENT_PLACEHOLDER_ID]) {
+            if (!store.components[TEMP_COMPONENT_PLACEHOLDER_ID]) {
               // Inject the Gap
               store.addComponent(
                 targetPageId,
                 {
                   id: 'Placeholder' as ComponentID,
-                  instanceId: COMPONENT_PLACEHOLDER_ID,
+                  instanceId: TEMP_COMPONENT_PLACEHOLDER_ID,
                   name: 'Gap',
                   metadata: {} as ComponentMetadata,
                   props: {},
                   children: [],
-                },
+                } as AnyFormComponent,
                 targetIndex !== -1
                   ? targetIndex
                   : store.pages[targetPageId].children.length
@@ -147,11 +166,11 @@ export default function FormEditor() {
             } else {
               // Move the Gap smoothly
               const currentPage = Object.values(store.pages).find((p) =>
-                p.children.includes(COMPONENT_PLACEHOLDER_ID)
+                p.children.includes(TEMP_COMPONENT_PLACEHOLDER_ID)
               );
               if (currentPage) {
                 const currentIndex = currentPage.children.indexOf(
-                  COMPONENT_PLACEHOLDER_ID
+                  TEMP_COMPONENT_PLACEHOLDER_ID
                 );
                 const finalIndex =
                   targetIndex !== -1
@@ -176,18 +195,22 @@ export default function FormEditor() {
         // ==========================================
         // CREATE PAGE GAPS
         // ==========================================
-        if (sourceData?.type === 'catalog-page') {
+        if (sourceData?.type === DRAG_CATALOG_PAGE_ID) {
           let targetIndex = -1;
-          if (targetData?.type === 'page' || targetData?.type === 'component') {
+          if (
+            targetData?.type === DRAG_PAGE_ID ||
+            targetData?.type === DRAG_COMPONENT_ID
+          ) {
             targetIndex = store.form!.pages.indexOf(targetData.pageId);
           }
 
           if (targetIndex !== -1) {
-            if (!store.pages[PAGE_PLACEHOLDER_ID]) {
-              store.addPage(targetIndex, PAGE_PLACEHOLDER_ID);
+            if (!store.pages[TEMP_PAGE_PLACEHOLDER_ID]) {
+              store.addPage(targetIndex, TEMP_PAGE_PLACEHOLDER_ID);
             } else {
-              const currentIndex =
-                store.form!.pages.indexOf(PAGE_PLACEHOLDER_ID);
+              const currentIndex = store.form!.pages.indexOf(
+                TEMP_PAGE_PLACEHOLDER_ID
+              );
               if (currentIndex !== -1 && currentIndex !== targetIndex) {
                 store.reorderPages(currentIndex, targetIndex);
               }
@@ -198,7 +221,7 @@ export default function FormEditor() {
         // ==========================================
         // MOVE EXISTING COMPONENTS NATIVELY
         // ==========================================
-        if (sourceData?.type === 'component') {
+        if (sourceData?.type === DRAG_COMPONENT_ID) {
           const instanceId = sourceData.instanceId;
           const currentPage = Object.values(store.pages).find((p) =>
             p.children.includes(instanceId)
@@ -210,12 +233,12 @@ export default function FormEditor() {
           let targetPageId = null;
           let targetIndex = -1;
 
-          if (targetData?.type === 'component') {
+          if (targetData?.type === DRAG_COMPONENT_ID) {
             targetPageId = targetData.pageId;
             targetIndex = store.pages[targetPageId].children.indexOf(
               targetData.instanceId
             );
-          } else if (targetData?.type === 'page') {
+          } else if (targetData?.type === DRAG_PAGE_ID) {
             targetPageId = targetData.pageId;
             targetIndex = store.pages[targetPageId].children.length;
           }
@@ -240,10 +263,10 @@ export default function FormEditor() {
 
         // CLEANUP: If cancelled or dropped outside, delete the gaps!
         if (canceled || !target) {
-          if (store.components[COMPONENT_PLACEHOLDER_ID])
-            store.removeComponent(COMPONENT_PLACEHOLDER_ID);
-          if (store.pages[PAGE_PLACEHOLDER_ID])
-            store.removePage(PAGE_PLACEHOLDER_ID);
+          if (store.components[TEMP_COMPONENT_PLACEHOLDER_ID])
+            store.removeComponent(TEMP_COMPONENT_PLACEHOLDER_ID);
+          if (store.pages[TEMP_PAGE_PLACEHOLDER_ID])
+            store.removePage(TEMP_PAGE_PLACEHOLDER_ID);
           return;
         }
 
@@ -252,16 +275,16 @@ export default function FormEditor() {
         if (!sourceData || !targetData) return;
 
         // DROP COMPONENT: Swap the Gap for the Real Component
-        if (sourceData.type === 'catalog-component') {
-          if (store.components[COMPONENT_PLACEHOLDER_ID]) {
+        if (sourceData.type === DRAG_CATALOG_COMPONENT_ID) {
+          if (store.components[TEMP_COMPONENT_PLACEHOLDER_ID]) {
             const currentPage = Object.values(store.pages).find((p) =>
-              p.children.includes(COMPONENT_PLACEHOLDER_ID)
+              p.children.includes(TEMP_COMPONENT_PLACEHOLDER_ID)
             );
             if (currentPage) {
               const finalIndex = currentPage.children.indexOf(
-                COMPONENT_PLACEHOLDER_ID
+                TEMP_COMPONENT_PLACEHOLDER_ID
               );
-              store.removeComponent(COMPONENT_PLACEHOLDER_ID);
+              store.removeComponent(TEMP_COMPONENT_PLACEHOLDER_ID);
 
               const realId = `instance-${crypto.randomUUID()}`;
               const realComponent = sourceData.entry.create(realId);
@@ -275,10 +298,12 @@ export default function FormEditor() {
         }
 
         // DROP PAGE: Swap the Gap for the Real Page
-        if (sourceData.type === 'catalog-page') {
-          if (store.pages[PAGE_PLACEHOLDER_ID]) {
-            const finalIndex = store.form!.pages.indexOf(PAGE_PLACEHOLDER_ID);
-            store.removePage(PAGE_PLACEHOLDER_ID);
+        if (sourceData.type === DRAG_CATALOG_PAGE_ID) {
+          if (store.pages[TEMP_PAGE_PLACEHOLDER_ID]) {
+            const finalIndex = store.form!.pages.indexOf(
+              TEMP_PAGE_PLACEHOLDER_ID
+            );
+            store.removePage(TEMP_PAGE_PLACEHOLDER_ID);
             const realId = store.addPage(finalIndex);
             console.log(realId);
 
@@ -288,7 +313,10 @@ export default function FormEditor() {
         }
 
         // FINALIZE EXISTING PAGES/COMPONENTS
-        if (sourceData.type === 'page' && targetData.type === 'page') {
+        if (
+          sourceData.type === DRAG_PAGE_ID &&
+          targetData.type === DRAG_PAGE_ID
+        ) {
           const form = store.form;
           if (!form) return;
           const fromIndex = form.pages.indexOf(sourceData.pageId);
@@ -299,7 +327,7 @@ export default function FormEditor() {
           return;
         }
 
-        if (sourceData.type === 'component') {
+        if (sourceData.type === DRAG_COMPONENT_ID) {
           const instanceId = sourceData.instanceId;
           const currentPage = Object.values(store.pages).find((p) =>
             p.children.includes(instanceId)
@@ -311,12 +339,12 @@ export default function FormEditor() {
           let targetPageId = null;
           let targetIndex = -1;
 
-          if (targetData.type === 'component') {
+          if (targetData.type === DRAG_COMPONENT_ID) {
             targetPageId = targetData.pageId;
             targetIndex = store.pages[targetPageId].children.indexOf(
               targetData.instanceId
             );
-          } else if (targetData.type === 'page') {
+          } else if (targetData.type === DRAG_PAGE_ID) {
             targetPageId = targetData.pageId;
             targetIndex = store.pages[targetPageId].children.length;
           }
@@ -375,7 +403,7 @@ export default function FormEditor() {
             SCENARIO 1: DRAGGING FROM THE SIDEBAR CATALOG
             (Generates fresh default data via entry.create)
             ========================================== */}
-        {activeDragData?.type === 'catalog-component' &&
+        {activeDragData?.type === DRAG_CATALOG_COMPONENT_ID &&
           (() => {
             const entry = activeDragData.entry;
             const Renderer =
@@ -399,7 +427,7 @@ export default function FormEditor() {
             SCENARIO 2: DRAGGING AN EXISTING FORM COMPONENT
             (Pulls the exact saved data from Zustand)
             ========================================== */}
-        {activeDragData?.type === 'component' &&
+        {activeDragData?.type === DRAG_COMPONENT_ID &&
           (() => {
             // Grab the ACTUAL component data from your store!
             const existingComponent =
@@ -427,7 +455,7 @@ export default function FormEditor() {
         {/* ==========================================
             SCENARIO 3: DRAGGING A NEW PAGE
             ========================================== */}
-        {activeDragData?.type === 'catalog-page' && (
+        {activeDragData?.type === DRAG_CATALOG_PAGE_ID && (
           <div className="pointer-events-none w-[500px] opacity-90">
             <div className="flex h-32 items-center justify-center rounded-xl border-2 bg-card">
               Drop to create New Page

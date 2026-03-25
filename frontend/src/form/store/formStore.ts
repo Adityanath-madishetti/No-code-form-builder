@@ -35,7 +35,6 @@ import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { createForm, createFormPage } from '../components/base.factories';
 import type {
-  BaseFormComponent,
   ComponentMetadata,
   Form,
   FormID,
@@ -44,15 +43,34 @@ import type {
   InstanceID,
   PageID,
 } from '../components/base';
+import type {
+  AnyFormComponent,
+  AnySerializedComponent,
+} from '../registry/componentRegistry';
+import {
+  deserializeComponent,
+  serializeComponent,
+} from '../registry/componentRegistry';
+
+import type {
+  DRAG_CATALOG_COMPONENT_TYPE,
+  DRAG_CATALOG_PAGE_TYPE,
+  DRAG_COMPONENT_TYPE,
+  DRAG_PAGE_TYPE,
+} from '../utils/DndUtils';
+import {
+  TEMP_COMPONENT_PLACEHOLDER_ID,
+  TEMP_PAGE_PLACEHOLDER_ID,
+} from '@/form/utils/DndUtils';
 
 /**
  * Represents drag data when dragging a component from the catalog.
  */
 export interface CatalogComponentDragData {
-  type: 'catalog-component';
+  type: DRAG_CATALOG_COMPONENT_TYPE;
   entry: {
     id: string;
-    create: (id: string) => BaseFormComponent;
+    create: (id: string) => AnyFormComponent;
   };
 }
 
@@ -60,14 +78,14 @@ export interface CatalogComponentDragData {
  * Represents drag data when dragging a new page from catalog.
  */
 export interface CatalogPageDragData {
-  type: 'catalog-page';
+  type: DRAG_CATALOG_PAGE_TYPE;
 }
 
 /**
  * Represents drag data when moving an existing component.
  */
 export interface FormComponentDragData {
-  type: 'component';
+  type: DRAG_COMPONENT_TYPE;
   instanceId: InstanceID;
   pageId?: PageID;
 }
@@ -76,7 +94,7 @@ export interface FormComponentDragData {
  * Represents drag data when reordering pages.
  */
 export interface FormPageDragData {
-  type: 'page';
+  type: DRAG_PAGE_TYPE;
   pageId: PageID;
 }
 
@@ -100,7 +118,7 @@ export type FormDragData =
 interface FormSchemaState {
   form: Form | null;
   pages: Record<PageID, FormPage>;
-  components: Record<InstanceID, BaseFormComponent>;
+  components: Record<InstanceID, AnyFormComponent>;
 }
 
 /**
@@ -131,7 +149,7 @@ interface FormSchemaActions {
   loadForm: (
     form: Form,
     pages: FormPage[],
-    components: BaseFormComponent[]
+    components: AnyFormComponent[]
   ) => void;
   updateFormName: (name: string) => void;
 
@@ -141,7 +159,7 @@ interface FormSchemaActions {
 
   addComponent: (
     pageId: PageID,
-    component: BaseFormComponent,
+    component: AnyFormComponent,
     index?: number
   ) => void;
   removeComponent: (instanceId: InstanceID) => void;
@@ -156,6 +174,11 @@ interface FormSchemaActions {
     instanceId: InstanceID,
     metadata: Partial<ComponentMetadata>
   ) => void;
+
+  insertComponentGap: (pageId: PageID, index?: number) => void;
+  removeComponentGap: () => void;
+  insertPageGap: (index: number) => void;
+  removePageGap: () => void;
 }
 
 interface FormUIActions {
@@ -322,6 +345,7 @@ export const useFormStore = create<FormStore>()(
         } else {
           children.splice(index, 0, component.instanceId);
         }
+        printFormJSON();
       }),
 
     removeComponent: (instanceId) =>
@@ -368,6 +392,62 @@ export const useFormStore = create<FormStore>()(
         Object.assign(state.components[instanceId].metadata, metadata);
       }),
 
+    insertComponentGap: (pageId, index) =>
+      set((state) => {
+        // 1. Remove gap from wherever it currently is
+        for (const page of Object.values(state.pages)) {
+          page.children = page.children.filter(
+            (id) => id !== TEMP_COMPONENT_PLACEHOLDER_ID
+          );
+        }
+        // 2. Insert it at the new location
+        const children = state.pages[pageId]?.children;
+        if (!children) return;
+
+        if (index === undefined || index === -1)
+          children.push(TEMP_COMPONENT_PLACEHOLDER_ID);
+        else children.splice(index, 0, TEMP_COMPONENT_PLACEHOLDER_ID);
+      }),
+
+    removeComponentGap: () =>
+      set((state) => {
+        for (const page of Object.values(state.pages)) {
+          page.children = page.children.filter(
+            (id) => id !== TEMP_COMPONENT_PLACEHOLDER_ID
+          );
+        }
+        // Also clean up from components dict just in case the old code left it there
+        delete state.components[TEMP_COMPONENT_PLACEHOLDER_ID];
+      }),
+
+    insertPageGap: (index) =>
+      set((state) => {
+        if (!state.form) return;
+        state.form.pages = state.form.pages.filter(
+          (id) => id !== TEMP_PAGE_PLACEHOLDER_ID
+        );
+
+        // Ensure the dummy page object exists so the renderer doesn't crash
+        if (!state.pages[TEMP_PAGE_PLACEHOLDER_ID]) {
+          state.pages[TEMP_PAGE_PLACEHOLDER_ID] = createFormPage(
+            TEMP_PAGE_PLACEHOLDER_ID
+          );
+        }
+
+        if (index === -1) state.form.pages.push(TEMP_PAGE_PLACEHOLDER_ID);
+        else state.form.pages.splice(index, 0, TEMP_PAGE_PLACEHOLDER_ID);
+      }),
+
+    removePageGap: () =>
+      set((state) => {
+        if (!state.form) return;
+        state.form.pages = state.form.pages.filter(
+          (id) => id !== TEMP_PAGE_PLACEHOLDER_ID
+        );
+        delete state.pages[TEMP_PAGE_PLACEHOLDER_ID];
+      }),
+
+    //==================
     selectComponent: (instanceId) =>
       set((state) => {
         state.selectedInstanceId = instanceId;
@@ -401,7 +481,7 @@ export const useFormStore = create<FormStore>()(
 export interface SerializedForm {
   form: Form;
   pages: FormPage[];
-  components: BaseFormComponent[];
+  components: AnySerializedComponent[];
 }
 
 /**
@@ -410,11 +490,12 @@ export interface SerializedForm {
  * - Deserializes components using registry
  * - Hydrates Zustand store
  */
-import { deserializeComponent } from '../registry/componentRegistry';
 
 export function loadFromJSON(json: SerializedForm) {
-  const components = json.components.map(deserializeComponent);
-
+  // Force TS to retain the strict union type during the map iteration
+  const components = json.components.map(
+    (c) => deserializeComponent(c) as AnyFormComponent
+  );
   useFormStore.getState().loadForm(json.form, json.pages, components);
 }
 
@@ -426,7 +507,11 @@ export function serializeForm(): SerializedForm {
     form: state.form,
     pages: state.form.pages.map((id) => state.pages[id]),
     components: state.form.pages.flatMap((pageId) =>
-      state.pages[pageId].children.map((id) => state.components[id])
+      state.pages[pageId].children.map(
+        // Force TS to retain the strict serialized union type
+        (id) =>
+          serializeComponent(state.components[id]) as AnySerializedComponent
+      )
     ),
   };
 }

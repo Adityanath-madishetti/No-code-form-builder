@@ -63,6 +63,9 @@ export const ComponentIDs = {
 
 export type ComponentID = (typeof ComponentIDs)[keyof typeof ComponentIDs];
 export type InstanceID = string;
+export type PageID = string;
+export type FormID = string;
+export type ThemeID = string;
 
 export interface ComponentMetadata {
   label: string;
@@ -82,30 +85,40 @@ export interface RendererProps<P> {
   instanceId: InstanceID;
 }
 
-export interface BaseFormComponent<P = unknown> {
-  readonly id: ComponentID;
-  readonly instanceId: InstanceID;
-  readonly name: string;
+/**
+ * Represents a component instance within the form tree.
+ * Uses generics so the base layer doesn't need to know about specific component props.
+ */
+export interface FormComponent<
+  T extends ComponentID = ComponentID,
+  P = unknown,
+> {
+  id: T;
+  instanceId: InstanceID;
+  name: string;
   metadata: ComponentMetadata;
+  props: P;
   children: InstanceID[];
-  props: P; // Component-specific props (e.g., placeholder, min/max)
 }
 
-// ------------------------------------------------------------------------------------------------
-//
-// Page Model
-//
-// ------------------------------------------------------------------------------------------------
-
-export type PageID = string;
-
 /**
- * Represents a single page in a multi-step form.
+ * The serializable version of a component (strips out runtime/tree data if needed).
  */
+export interface SerializedComponent<
+  T extends ComponentID = ComponentID,
+  P = unknown,
+> {
+  id: T;
+  instanceId: InstanceID;
+  name: string;
+  metadata: ComponentMetadata;
+  props: P;
+}
+
 export interface FormPage {
   readonly id: PageID;
   children: InstanceID[];
-  isTerminal: boolean; // True if this is the last page (default)
+  isTerminal: boolean;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -113,9 +126,6 @@ export interface FormPage {
 // Form Model
 //
 // ------------------------------------------------------------------------------------------------
-
-export type FormID = string;
-export type ThemeID = string;
 
 export interface FormMetadata {
   description?: string;

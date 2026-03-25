@@ -37,11 +37,10 @@
 import type { ComponentType } from 'react';
 import { ComponentIDs } from '../components/base';
 import type {
-  ComponentMetadata,
   ComponentID,
-  BaseFormComponent,
   RendererProps,
 } from '../components/base';
+import type { FormComponent, SerializedComponent } from '../components/base';
 
 // ------------------------------------------------------------------------------------------------
 import { createDummyComponent } from '../components/dummy';
@@ -96,13 +95,13 @@ export type ComponentPropsMap = {
   [ComponentIDs.Dropdown]: DropdownProps;
 };
 
-export interface SerializedComponent<T extends ComponentID = ComponentID> {
-  id: T;
-  instanceId: string;
-  name: string;
-  metadata: ComponentMetadata;
-  props: ComponentPropsMap[T];
-}
+export type AnyFormComponent = {
+  [K in ComponentID]: FormComponent<K, ComponentPropsMap[K]>;
+}[ComponentID];
+
+export type AnySerializedComponent = {
+  [K in ComponentID]: SerializedComponent<K, ComponentPropsMap[K]>;
+}[ComponentID];
 
 /**
  * Generic React renderer for a component.
@@ -123,7 +122,7 @@ export type ComponentRenderer<TProps = unknown> = ComponentType<
  * - Provide catalog metadata for UI
  */
 export interface ComponentRegistryEntry<T extends ComponentID> {
-  id: ComponentID;
+  id: T;
 
   /**
    * Metadata used in the component catalog (drag/drop panel).
@@ -146,14 +145,12 @@ export interface ComponentRegistryEntry<T extends ComponentID> {
   /**
    * Factory for creating a fresh component instance.
    */
-  create: (instanceId: string) => BaseFormComponent<ComponentPropsMap[T]>;
+  create: (instanceId: string) => FormComponent<T, ComponentPropsMap[T]>;
 
   /**
    * Reconstructs a component from serialized JSON.
    */
-  deserialize: (
-    json: SerializedComponent<T>
-  ) => BaseFormComponent<ComponentPropsMap[T]>;
+  deserialize: (json: SerializedComponent<T, ComponentPropsMap[T]>) => FormComponent<T, ComponentPropsMap[T]>;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -324,11 +321,24 @@ export function getComponentPropsRenderer<T extends ComponentID>(
   return registry[id]?.renderers.settings || null;
 }
 
+export function serializeComponent<T extends ComponentID>(
+  component: FormComponent
+): SerializedComponent<T> {
+  return {
+    id: component.id as T,
+    instanceId: component.instanceId,
+    name: component.name,
+    metadata: component.metadata,
+    props: component.props as ComponentPropsMap[T],
+  };
+}
+
 export function deserializeComponent<T extends ComponentID>(
   json: SerializedComponent<T>
-): BaseFormComponent<ComponentPropsMap[T]> {
-  const def = registry[json.id];
-  return def.deserialize(json);
+): FormComponent {
+  // NOTE
+  // @ts-expect-error - TypeScript struggles to infer the mapped exact union here, but it is safe at runtime
+  return registry[json.id].deserialize(json);
 }
 
 /**
@@ -354,7 +364,7 @@ export interface CatalogEntry {
   /**
    * Factory used when a component is added (e.g., drag-and-drop).
    */
-  create: (instanceId: string) => BaseFormComponent<unknown>;
+  create: (instanceId: string) => FormComponent;
 }
 
 export const catalogRegistry: CatalogEntry[] = Object.values(registry).map(
