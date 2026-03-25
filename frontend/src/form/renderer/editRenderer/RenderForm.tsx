@@ -19,7 +19,10 @@ import {
   CardContent,
 } from '@/components/ui/card';
 import { useDroppable } from '@dnd-kit/react';
-import { TEMP_PAGE_PLACEHOLDER_ID } from '@/form/utils/DndUtils';
+import {
+  DRAG_CATALOG_PAGE_ID,
+  TEMP_PAGE_PLACEHOLDER_ID,
+} from '@/form/utils/DndUtils';
 
 import {
   DRAG_CATALOG_COMPONENT_ID,
@@ -105,13 +108,22 @@ export const RenderPage = ({
     data: { type: DRAG_PAGE_ID, pageId: pageId },
   });
 
+  const { ref: pagePlaceholderRef } = useDroppable({
+    id: `page-placeholder-drop`,
+    accept: [DRAG_CATALOG_PAGE_ID],
+    data: { type: DRAG_PAGE_ID, pageId: TEMP_PAGE_PLACEHOLDER_ID },
+  });
+
   // ==========================================
   // CATCH THE PAGE PLACEHOLDER GAP
   // ==========================================
   if (pageId === TEMP_PAGE_PLACEHOLDER_ID) {
     return (
-      <CardContent className="m-6 flex h-6 items-center justify-center rounded-lg">
-        <span className="text-primary">Drop New Page?</span>
+      <CardContent
+        ref={mode === 'edit' ? pagePlaceholderRef : undefined}
+        className="m-6 flex h-6 items-center justify-center rounded-lg"
+      >
+        <span className="text-primary">Drop New Page Here</span>
       </CardContent>
     );
   }
