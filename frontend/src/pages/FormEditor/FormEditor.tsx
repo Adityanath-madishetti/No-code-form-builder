@@ -5,11 +5,7 @@ loadFromJSON({
     id: 'form-1',
     name: 'My Form',
     themeID: null,
-    pages: [
-      'page-1',
-      'page-2',
-      'page-3',
-    ],
+    pages: ['page-1', 'page-2', 'page-3'],
     metadata: {
       description: 'A sample form loaded from JSON.',
       createdAt: '2024-01-01T00:00:00.000Z',
@@ -20,6 +16,7 @@ loadFromJSON({
   pages: [
     {
       id: 'page-1',
+      title: 'some shit?',
       children: ['text-box-instance-1', 'input-instance-1'],
       isTerminal: false,
     },
@@ -32,7 +29,7 @@ loadFromJSON({
       instanceId: 'text-box-instance-1',
       metadata: { label: 'Static Text', description: 'A static text box.' },
       props: {
-        text: 'Mirror, mirror on the wall, who’s the fairest of them all?',
+        text: '<h1>Lorem Ipsum</h1><p></p><p><strong><em>Lorem ipsum</em></strong> dolor sit amet, consectetur adipiscing elit, <em>sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam</em>, quis nostrud <u>exercitation ullamco laboris</u> nisi ut aliquip ex ea commodo consequat. </p><p>Duis <mark>aute irure dolor</mark> in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint <s>occaecat cupidatat non proident</s>, sunt in culpa qui officia deserunt mollit anim id est laborum.</p><p></p><p>And as always, x<sup>2</sup> is not the answer lol.</p><blockquote><p>Those who die, die.</p><p>~ Kǒng Fūzǐ, probably</p></blockquote><p></p>',
       },
       // children: [],
     },

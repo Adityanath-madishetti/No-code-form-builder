@@ -94,7 +94,6 @@ export interface FormComponent<
 > {
   id: T;
   instanceId: InstanceID;
-  // name: string;
   metadata: ComponentMetadata;
   props: P;
   children: InstanceID[];
@@ -109,13 +108,14 @@ export interface SerializedComponent<
 > {
   id: T;
   instanceId: InstanceID;
-  // name: string;
   metadata: ComponentMetadata;
   props: P;
 }
 
 export interface FormPage {
   readonly id: PageID;
+  title?: string;
+  description?: string;
   children: InstanceID[];
   isTerminal: boolean;
 }

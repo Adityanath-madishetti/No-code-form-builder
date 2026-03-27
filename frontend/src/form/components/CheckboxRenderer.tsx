@@ -3,7 +3,7 @@ import { useFormStore } from '../store/formStore';
 import type { RendererProps } from './base';
 import type { CheckboxProps, CheckboxOption } from './checkbox';
 import { ComponentPropTitle } from './ComponentRender.Helper';
-import { RichTextEditor } from '@/components/RichTextEditor';
+import { RichTextEditor, sharedProseClasses } from '@/components/RichTextEditor';
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -31,7 +31,7 @@ export const CheckboxComponentRenderer = ({
       <CardContent className="space-y-6">
         {props.questionText && (
           <div
-            className="prose prose-sm dark:prose-invert max-w-none break-words"
+            className={sharedProseClasses}
             dangerouslySetInnerHTML={{ __html: props.questionText }}
           />
         )}

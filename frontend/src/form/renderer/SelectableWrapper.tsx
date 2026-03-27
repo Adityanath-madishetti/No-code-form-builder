@@ -15,6 +15,7 @@ import {
   DRAG_PAGE_ID,
   DRAG_PAGE_GROUP_ID,
 } from '@/form/utils/DndUtils';
+import { useShallow } from 'zustand/react/shallow';
 
 interface Props {
   component: AnyFormComponent;
@@ -91,13 +92,13 @@ export const SelectablePage = ({
   index,
   children,
 }: SelectablePageProps) => {
-  const activePageId = useFormStore((s) => s.activePageId);
-  const selectedInstanceId = useFormStore((s) => s.selectedInstanceId);
+  // const activePageId = useFormStore((s) => s.activePageId);
+  // const selectedInstanceId = useFormStore((s) => s.selectedInstanceId);
   const setActivePage = useFormStore((s) => s.setActivePage);
   const selectComponent = useFormStore((s) => s.selectComponent);
   const removePage = useFormStore((s) => s.removePage);
 
-  const isSelected = activePageId === pageId && !selectedInstanceId;
+  // const isSelected = activePageId === pageId && !selectedInstanceId;
 
   const { ref, isDragging } = useSortable({
     id: pageId,
@@ -111,6 +112,10 @@ export const SelectablePage = ({
     },
   });
 
+  const pageTitle = useFormStore(
+    useShallow((s) => s.pages[pageId]?.title ?? '')
+  );
+
   return (
     <Card
       ref={ref}
@@ -119,11 +124,7 @@ export const SelectablePage = ({
         setActivePage(pageId);
         selectComponent(null);
       }}
-      className={`group relative cursor-pointer !overflow-visible transition-all duration-200 ease-in-out ${isDragging ? 'opacity-50' : 'opacity-100'} ${
-        isSelected
-          ? 'border-primary'
-          : 'border-transparent hover:border-border [&:has(.form-component:hover)]:border-transparent'
-      } `}
+      className={`group relative cursor-pointer !overflow-visible transition-all duration-200 ease-in-out ${isDragging ? 'opacity-50' : 'opacity-100'} `}
     >
       <div
         className="absolute -top-3 left-1/2 z-20 -translate-x-1/2 cursor-grab rounded-full border bg-background p-1 opacity-0 transition-opacity group-hover:opacity-100 hover:opacity-100 [&:has(.form-component:group-hover)]:opacity-0 [&:has(.form-component:hover)]:opacity-0"
@@ -134,9 +135,7 @@ export const SelectablePage = ({
 
       {pageId !== TEMP_PAGE_PLACEHOLDER_ID && (
         <div className="pointer-events-none absolute top-4 left-6 z-20">
-          <span className="text-sm text-muted-foreground/60">
-            Page {index + 1}
-          </span>
+          <span className="text-sm text-muted-foreground/60">{pageTitle}</span>
         </div>
       )}
 

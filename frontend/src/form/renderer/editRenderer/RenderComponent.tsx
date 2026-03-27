@@ -1,41 +1,64 @@
-// src/form/renderer/editRenderer/RenderForm.tsx
-import { useFormStore, formSelectors } from '@/form/store/formStore';
+// src/form/renderer/editRenderer/RenderComponent.tsx
 import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from '@/components/ui/card';
+  componentRenderers,
+  type AnyFormComponent,
+} from '@/form/registry/componentRegistry';
+import { useFormMode } from '@/form/context/FormModeContext';
+import { SelectableComponent } from '@/form/renderer/SelectableWrapper';
+import type { PageID } from '@/form/components/base';
 
-import { RenderPage } from './RenderPage';
+type RenderableComponent =
+  | AnyFormComponent
+  | { id: 'Placeholder'; [key: string]: unknown };
 
-export const RenderForm = () => {
-  const form = useFormStore(formSelectors.form);
-  if (!form) {
+export const RenderComponent = ({
+  component,
+  pageId,
+  index,
+}: {
+  component: RenderableComponent;
+  pageId: PageID;
+  index: number;
+}) => {
+  const mode = useFormMode();
+
+  // ------------------------------------------
+  // CATCH THE PLACEHOLDER GAP
+  // ------------------------------------------
+  if ((component.id as string) === 'Placeholder') {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>No form loaded.</CardTitle>
-        </CardHeader>
-      </Card>
+      <div className="flex h-20 w-full items-center justify-center rounded-lg transition-all duration-200">
+        <span className="text-primary">Drop Component?</span>
+      </div>
     );
   }
 
-  return (
-    <Card className="mx-auto w-full max-w-xl">
-      <CardHeader>
-        <CardTitle className="text-2xl font-bold">{form.name}</CardTitle>
-        {form.metadata.description && (
-          <CardDescription>{form.metadata.description}</CardDescription>
-        )}
-      </CardHeader>
-      <CardContent className="flex flex-col gap-6">
-        {form.pages.map((page, index) => (
-          <RenderPage key={page} pageId={page} index={index} />
-        ))}
-      </CardContent>
-    </Card>
+  const validComponent = component as AnyFormComponent;
+
+  const Renderer = componentRenderers[validComponent.id];
+  if (!Renderer)
+    return <div className="text-sm text-muted-foreground">No renderer</div>;
+
+  const rendered = (
+    <Renderer
+      metadata={validComponent.metadata}
+      // Note - some type safety issue
+      // @ts-expect-error - forget for now
+      props={validComponent.props}
+      instanceId={validComponent.instanceId}
+    />
+  );
+
+  return mode === 'edit' ? (
+    <SelectableComponent
+      component={validComponent}
+      pageId={pageId}
+      index={index}
+    >
+      {rendered}
+    </SelectableComponent>
+  ) : (
+    rendered
   );
 };
 
