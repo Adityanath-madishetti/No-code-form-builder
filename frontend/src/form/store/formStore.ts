@@ -125,7 +125,7 @@ interface FormSchemaState {
  * UI-specific state (NOT persisted).
  */
 interface FormUIState {
-  selectedInstanceId: InstanceID | null;
+  activeComponentId: InstanceID | null;
   activePageId: PageID | null;
   activeDragData: FormDragData | null;
 
@@ -157,6 +157,8 @@ interface FormSchemaActions {
   addPage: (insertIndex?: number, customId?: PageID) => PageID;
   removePage: (pageId: PageID) => void;
   reorderPages: (fromIndex: number, toIndex: number) => void;
+  updatePageTitle: (pageId: PageID, name: string) => void;
+  updatePageDesc: (pageId: PageID, desc: string) => void;
 
   addComponent: (
     pageId: PageID,
@@ -175,10 +177,15 @@ interface FormSchemaActions {
     instanceId: InstanceID,
     metadata: Partial<ComponentMetadata>
   ) => void;
+
+  updateComponentValidation: (
+    instanceId: InstanceID,
+    validation: unknown
+  ) => void;
 }
 
 interface FormUIActions {
-  selectComponent: (instanceId: InstanceID | null) => void;
+  setActiveComponent: (instanceId: InstanceID | null) => void;
   setActivePage: (pageId: PageID | null) => void;
   setActiveDragData: (data: FormDragData | null) => void;
 
@@ -231,8 +238,8 @@ export const formSelectors = {
   components: (s: FormStore) => s.components,
   activePage: (s: FormStore) =>
     s.activePageId ? (s.pages[s.activePageId] ?? null) : null,
-  selectedComponent: (s: FormStore) =>
-    s.selectedInstanceId ? (s.components[s.selectedInstanceId] ?? null) : null,
+  activeComponent: (s: FormStore) =>
+    s.activeComponentId ? (s.components[s.activeComponentId] ?? null) : null,
   componentById: (instanceId: InstanceID) => (s: FormStore) =>
     s.components[instanceId] ?? null,
   pageById: (pageId: PageID) => (s: FormStore) => s.pages[pageId] ?? null,
@@ -250,7 +257,7 @@ export const useFormStore = create<FormStore>()(
     pages: {},
     components: {},
 
-    selectedInstanceId: null,
+    activeComponentId: null,
     activePageId: null,
     activeDragData: null,
 
@@ -267,7 +274,7 @@ export const useFormStore = create<FormStore>()(
         state.components = {};
         // state.activePageId = firstPage.id;
         state.activePageId = null;
-        state.selectedInstanceId = null;
+        state.activeComponentId = null;
       }),
 
     loadForm: (form, pages, components) =>
@@ -279,7 +286,7 @@ export const useFormStore = create<FormStore>()(
         );
         // state.activePageId = pages[0]?.id ?? null;
         state.activePageId = null;
-        state.selectedInstanceId = null;
+        state.activeComponentId = null;
       }),
 
     updateFormName: (name) =>
@@ -319,8 +326,8 @@ export const useFormStore = create<FormStore>()(
         if (!state.form || state.form.pages.length <= 1) return;
         for (const instanceId of state.pages[pageId].children) {
           delete state.components[instanceId];
-          if (state.selectedInstanceId === instanceId)
-            state.selectedInstanceId = null;
+          if (state.activeComponentId === instanceId)
+            state.activeComponentId = null;
         }
         delete state.pages[pageId];
         state.form.pages = state.form.pages.filter((id) => id !== pageId);
@@ -337,6 +344,18 @@ export const useFormStore = create<FormStore>()(
         const [moved] = state.form.pages.splice(fromIndex, 1);
         state.form.pages.splice(toIndex, 0, moved);
         syncTerminalFlags(state);
+      }),
+
+    updatePageTitle: (pageId: PageID, name: string) =>
+      set((state) => {
+        if (!state.form || state.form.pages.length === 1) return;
+        state.pages[pageId].title = name;
+      }),
+
+    updatePageDesc: (pageId: PageID, desc: string) =>
+      set((state) => {
+        if (!state.form || state.form.pages.length === 1) return;
+        state.pages[pageId].description = desc;
       }),
 
     addComponent: (pageId, component, index) =>
@@ -357,8 +376,8 @@ export const useFormStore = create<FormStore>()(
           page.children = page.children.filter((id) => id !== instanceId);
         }
         delete state.components[instanceId];
-        if (state.selectedInstanceId === instanceId)
-          state.selectedInstanceId = null;
+        if (state.activeComponentId === instanceId)
+          state.activeComponentId = null;
       }),
 
     moveComponent: (fromPageId, fromIndex, toPageId, toIndex) =>
@@ -395,15 +414,25 @@ export const useFormStore = create<FormStore>()(
         Object.assign(state.components[instanceId].metadata, metadata);
       }),
 
-    //==================
-    selectComponent: (instanceId) =>
+    updateComponentValidation: (instanceId: InstanceID, validation: unknown) =>
       set((state) => {
-        state.selectedInstanceId = instanceId;
+        if (!state.components[instanceId]) return;
+        Object.assign(
+          state.components[instanceId].validation as Record<string, unknown>,
+          validation as Record<string, unknown>
+        );
+      }),
+
+    //==================
+    setActiveComponent: (instanceId) =>
+      set((state) => {
+        state.activeComponentId = instanceId;
       }),
 
     setActivePage: (pageId) =>
       set((state) => {
         state.activePageId = pageId;
+        state.activeComponentId = null;
       }),
 
     setActiveDragData: (data) => set({ activeDragData: data }),

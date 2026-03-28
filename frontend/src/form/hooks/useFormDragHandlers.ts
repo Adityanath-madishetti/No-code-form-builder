@@ -86,8 +86,9 @@ export function useFormDragHandlers() {
               name: 'Gap',
               metadata: {} as ComponentMetadata,
               props: {},
+              validation: {},
               children: [],
-            } as AnyFormComponent,
+            } as unknown as AnyFormComponent,
             injectIndex
           );
         } else {
@@ -305,7 +306,7 @@ export function useFormDragHandlers() {
 
           console.log(`[DND-End] Generated new component ID: ${realId}`);
           store.addComponent(currentPage.id, realComponent, finalIndex);
-          store.selectComponent(realId);
+          store.setActiveComponent(realId);
           store.refreshCatalog();
         } else {
           console.warn(

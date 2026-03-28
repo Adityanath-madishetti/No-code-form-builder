@@ -25,20 +25,19 @@ export const RenderForm = () => {
     <div className="mx-auto flex h-auto w-full max-w-3xl flex-col gap-6">
       {/* 1. The Isolated White Header Region */}
       <HeroCard className="bg-content1 mx-auto w-full max-w-3xl border-none shadow-sm">
-        <HeroCard.Header className="flex flex-col items-start gap-3 pb-4">
+        <HeroCard.Header className="flex flex-col items-start gap-3">
           <h2 className="text-6xl tracking-tight text-foreground">
             {form.name}
           </h2>
+        </HeroCard.Header>
+        <HeroCard.Content>
           {form.metadata.description && (
-            // <p className="text-default-500 text-lg">
-            //   {form.metadata.description}
-            // </p>
             <div
               className={sharedProseClasses}
               dangerouslySetInnerHTML={{ __html: form.metadata.description }}
             />
           )}
-        </HeroCard.Header>
+        </HeroCard.Content>
       </HeroCard>
 
       {/* 2. The Rendered Pages */}

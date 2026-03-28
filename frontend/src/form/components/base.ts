@@ -79,10 +79,10 @@ export interface ComponentMetadata {
  * Separates rendering concerns from the underlying data model.
  */
 export interface RendererProps<P, V> {
+  instanceId: InstanceID;
   metadata: ComponentMetadata;
   props: P;
   validation: V;
-  instanceId: InstanceID;
 }
 
 /**

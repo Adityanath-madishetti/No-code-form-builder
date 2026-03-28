@@ -1,30 +1,41 @@
 // src/form/components/DropdownRenderer.tsx
 import { useFormStore } from '../store/formStore';
 import type { RendererProps } from './base';
-import type { DropdownProps, DropdownOption } from './dropdown';
+import type {
+  DropdownProps,
+  DropdownOption,
+  DropdownValidation,
+} from './dropdown';
 import { ComponentPropTitle } from './ComponentRender.Helper';
 import { RichTextEditor } from '@/components/RichTextEditor';
 
-import { Card, CardContent } from '@/components/ui/card';
+import { Card as HeroCard } from '@heroui/react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select as ShadSelect,
+  SelectContent as ShadSelectContent,
+  SelectItem as ShadSelectItem,
+  SelectTrigger as ShadSelectTrigger,
+  SelectValue as ShadSelectValue,
+} from '@/components/ui/select';
+import { Select as HeroSelect, ListBox as HeroListBox } from '@heroui/react';
 import { Plus, Trash2 } from 'lucide-react';
 
 export const DropdownComponentRenderer = ({
   // metadata,
   props,
-}: RendererProps<DropdownProps>) => {
+}: RendererProps<DropdownProps, DropdownValidation>) => {
   return (
-    <Card className="w-full">
-      {/* <CardHeader>
-        <CardTitle>{metadata.label}</CardTitle>
+    <HeroCard className="w-full">
+      {/* <HeroCard.Header>
+        <HeroCard.Title>{metadata.label}</HeroCard.Title>
         {metadata.description && (
-          <CardDescription>{metadata.description}</CardDescription>
+          <HeroCard.Description>{metadata.description}</HeroCard.Description>
         )}
-      </CardHeader> */}
+      </HeroCard.Header> */}
 
-      <CardContent className="space-y-6">
+      <HeroCard.Content>
         {props.questionText && (
           <div
             className="prose prose-sm dark:prose-invert max-w-none break-words"
@@ -32,27 +43,34 @@ export const DropdownComponentRenderer = ({
           />
         )}
 
-        <Select defaultValue={props.defaultValue}>
-          <SelectTrigger className="w-full sm:w-[300px]">
-            <SelectValue placeholder={props.placeholder || "Select an option..."} />
-          </SelectTrigger>
-          <SelectContent>
-            {(props.options || []).map((option) => (
-              <SelectItem key={option.id} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </CardContent>
-    </Card>
+        <HeroSelect
+          defaultValue={props.defaultValue}
+          placeholder={props.placeholder || 'Select an option...'}
+          fullWidth
+        >
+          <HeroSelect.Trigger className="w-full">
+            <HeroSelect.Value />
+          </HeroSelect.Trigger>
+          <HeroSelect.Popover>
+            <HeroListBox>
+              {(props.options || []).map((option) => (
+                <HeroListBox.Item key={option.id} textValue={option.value}>
+                  {option.label}
+                  <HeroListBox.ItemIndicator />
+                </HeroListBox.Item>
+              ))}
+            </HeroListBox>
+          </HeroSelect.Popover>
+        </HeroSelect>
+      </HeroCard.Content>
+    </HeroCard>
   );
 };
 
 export const DropdownComponentPropsRenderer = ({
   props,
   instanceId,
-}: RendererProps<DropdownProps>) => {
+}: RendererProps<DropdownProps, DropdownValidation>) => {
   const updateComponentProps = useFormStore((s) => s.updateComponentProps);
 
   const handleAddOption = () => {
@@ -66,7 +84,11 @@ export const DropdownComponentPropsRenderer = ({
     });
   };
 
-  const handleUpdateOption = (id: string, key: keyof DropdownOption, val: string) => {
+  const handleUpdateOption = (
+    id: string,
+    key: keyof DropdownOption,
+    val: string
+  ) => {
     const updated = (props.options || []).map((opt) =>
       opt.id === id ? { ...opt, [key]: val } : opt
     );
@@ -84,7 +106,9 @@ export const DropdownComponentPropsRenderer = ({
         <ComponentPropTitle title="Question Text" />
         <RichTextEditor
           value={props.questionText || ''}
-          onChange={(html) => updateComponentProps(instanceId, { questionText: html })}
+          onChange={(html) =>
+            updateComponentProps(instanceId, { questionText: html })
+          }
         />
       </div>
 
@@ -92,7 +116,9 @@ export const DropdownComponentPropsRenderer = ({
         <ComponentPropTitle title="Placeholder Text" />
         <Input
           value={props.placeholder || ''}
-          onChange={(e) => updateComponentProps(instanceId, { placeholder: e.target.value })}
+          onChange={(e) =>
+            updateComponentProps(instanceId, { placeholder: e.target.value })
+          }
           placeholder="Select an option..."
         />
       </div>
@@ -100,7 +126,12 @@ export const DropdownComponentPropsRenderer = ({
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <ComponentPropTitle title="Dropdown Options" />
-          <Button type="button" variant="outline" size="sm" onClick={handleAddOption}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleAddOption}
+          >
             <Plus className="mr-1 h-4 w-4" /> Add Option
           </Button>
         </div>
@@ -111,17 +142,23 @@ export const DropdownComponentPropsRenderer = ({
               <Input
                 placeholder="Label"
                 value={option.label}
-                onChange={(e) => handleUpdateOption(option.id, 'label', e.target.value)}
+                onChange={(e) =>
+                  handleUpdateOption(option.id, 'label', e.target.value)
+                }
                 className="flex-1"
               />
               <Input
                 placeholder="Value"
                 value={option.value}
-                onChange={(e) => handleUpdateOption(option.id, 'value', e.target.value)}
+                onChange={(e) =>
+                  handleUpdateOption(option.id, 'value', e.target.value)
+                }
                 className="flex-1"
               />
               <Button
-                type="button" variant="ghost" size="icon"
+                type="button"
+                variant="ghost"
+                size="icon"
                 className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                 onClick={() => handleRemoveOption(option.id)}
               >
@@ -134,20 +171,26 @@ export const DropdownComponentPropsRenderer = ({
 
       <div className="space-y-2">
         <ComponentPropTitle title="Default Value" />
-        <Select 
-          value={props.defaultValue || 'none'} 
-          onValueChange={(val) => updateComponentProps(instanceId, { defaultValue: val === 'none' ? undefined : val })}
+        <ShadSelect
+          value={props.defaultValue || 'none'}
+          onValueChange={(val) =>
+            updateComponentProps(instanceId, {
+              defaultValue: val === 'none' ? undefined : val,
+            })
+          }
         >
-          <SelectTrigger><SelectValue placeholder="Select default..." /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">None</SelectItem>
+          <ShadSelectTrigger>
+            <ShadSelectValue placeholder="Select default..." />
+          </ShadSelectTrigger>
+          <ShadSelectContent>
+            <ShadSelectItem value="none">None</ShadSelectItem>
             {(props.options || []).map((opt) => (
-              <SelectItem key={opt.id} value={opt.value}>
+              <ShadSelectItem key={opt.id} value={opt.value}>
                 {opt.label}
-              </SelectItem>
+              </ShadSelectItem>
             ))}
-          </SelectContent>
-        </Select>
+          </ShadSelectContent>
+        </ShadSelect>
       </div>
     </div>
   );

@@ -150,8 +150,8 @@ export const sharedProseClasses = [
   '[&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:my-2',
   '[&_li]:my-1 [&_li>p]:inline-block [&_li>p]:m-0',
   '[&>p]:my-1',
-  '[&_h1]:text-3xl [&_h1]:font-bold [&_h1]:mt-6 [&_h1]:mb-2',
-  '[&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:mt-4 [&_h2]:mb-2',
+  '[&_h1]:text-3xl [&_h1]:mt-6 [&_h1]:mb-2',
+  '[&_h2]:text-2xl [&_h2]:mt-4 [&_h2]:mb-2',
   '[&_blockquote]:border-l-4 [&_blockquote]:border-primary/50 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:my-4 [&_blockquote]:text-muted-foreground',
   '[&_a]:text-primary [&_a]:underline [&_a]:underline-offset-4 [&_a]:cursor-pointer',
   '[&_mark]:bg-yellow-200 [&_mark]:text-black [&_mark]:px-1 [&_mark]:rounded-sm',
@@ -185,7 +185,11 @@ const ToolbarButton = ({
           {children}
         </Button>
       </TooltipTrigger>
-      <TooltipContent side="top" sideOffset={8} className="px-2 py-1 text-xs [&_svg]:invisible">
+      <TooltipContent
+        side="top"
+        sideOffset={8}
+        className="px-2 py-1 text-xs [&_svg]:invisible"
+      >
         {tooltip}
       </TooltipContent>
     </Tooltip>
@@ -246,7 +250,11 @@ const LinkToolbarButton = ({
             </PopoverTrigger>
           </span>
         </TooltipTrigger>
-        <TooltipContent side="top" sideOffset={8} className="px-2 py-1 text-xs [&_svg]:invisible">
+        <TooltipContent
+          side="top"
+          sideOffset={8}
+          className="px-2 py-1 text-xs [&_svg]:invisible"
+        >
           Link
         </TooltipContent>
       </Tooltip>
@@ -449,6 +457,18 @@ const EditorBubbleMenu = ({ editor }: { editor: Editor }) => {
   );
 };
 
+const normalizeHTML = (html: string) => {
+  if (!html) return '';
+
+  // Remove empty paragraphs (including whitespace, nbsp, <br>)
+  let cleaned = html.replace(/<p[^>]*>(\s|&nbsp;|<br\s*\/?>)*<\/p>/gi, '');
+
+  // Trim leftover whitespace
+  cleaned = cleaned.trim();
+
+  return cleaned;
+};
+
 export interface RichTextEditorProps {
   value: string;
   onChange: (value: string) => void;
@@ -476,9 +496,35 @@ export const RichTextEditor = ({
     ],
     content: value || '',
     onUpdate: ({ editor }) => {
-      const cleanHTML = DOMPurify.sanitize(editor.getHTML(), {
+      let html = editor.getHTML();
+
+      if (editor.isEmpty) {
+        onChange('');
+        return;
+      }
+
+      html = normalizeHTML(html);
+
+      // const isEmpty =
+      //   html === '<p></p>' ||
+      //   html === '<p><br></p>' ||
+      //   html === '<p class=""></p>' ||
+      //   html.replace(/<p[^>]*>(\s|&nbsp;|<br\s*\/?>)*<\/p>/gi, '').trim() ===
+      //     '';
+      // if (isEmpty) {
+      //   onChange('');
+      //   editor.commands.clearContent();
+      //   return;
+      // }
+      if (!html) {
+        onChange('');
+        return;
+      }
+
+      const cleanHTML = DOMPurify.sanitize(html, {
         ALLOWED_ATTR: ['class', 'style', 'href', 'target', 'rel'],
       });
+
       onChange(cleanHTML);
     },
     editorProps: {

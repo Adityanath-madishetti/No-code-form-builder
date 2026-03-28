@@ -29,11 +29,12 @@ export const SelectableComponent = ({
   index,
   children,
 }: Props) => {
-  const selectedId = useFormStore((s) => s.selectedInstanceId);
-  const selectComponent = useFormStore((s) => s.selectComponent);
+  const selectedId = useFormStore((s) => s.activeComponentId);
+  const setActiveComponent = useFormStore((s) => s.setActiveComponent);
   const removeComponent = useFormStore((s) => s.removeComponent);
   const isSelected = selectedId === component.instanceId;
   const setActiveSidePanelTab = useFormStore((s) => s.setActiveSidePanelTab);
+  const setActivePage = useFormStore((s) => s.setActivePage);
 
   const { ref, isDragging } = useSortable({
     id: component.instanceId,
@@ -53,7 +54,8 @@ export const SelectableComponent = ({
       ref={ref}
       onClick={(e) => {
         e.stopPropagation();
-        selectComponent(component.instanceId);
+        setActiveComponent(component.instanceId);
+        setActivePage(null);
         setActiveSidePanelTab('properties');
       }}
       className={`form-component group relative cursor-pointer rounded-xl ${isDragging ? 'opacity-50' : 'opacity-100'} `}
@@ -64,13 +66,13 @@ export const SelectableComponent = ({
         {children}
       </div>
 
-      <div className="absolute top-[1px] -right-12 bottom-[1px] z-10 flex w-12 flex-col items-center justify-start">
+      <div className="absolute top-[1px] -right-12 bottom-[1px] z-10 flex h-0 w-12 flex-col items-center justify-start">
         <button
           onClick={(e) => {
             e.stopPropagation();
             removeComponent(component.instanceId);
           }}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground/60 transition-all hover:text-destructive"
+          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-muted-foreground/60 transition-all hover:text-destructive"
           aria-label="Remove component"
         >
           <Trash2 className="h-5 w-5" />
@@ -92,12 +94,13 @@ export const SelectablePage = ({
   children,
 }: SelectablePageProps) => {
   // const activePageId = useFormStore((s) => s.activePageId);
-  // const selectedInstanceId = useFormStore((s) => s.selectedInstanceId);
+  // const activeComponentId = useFormStore((s) => s.activeComponentId);
   const setActivePage = useFormStore((s) => s.setActivePage);
-  const selectComponent = useFormStore((s) => s.selectComponent);
+  const setActiveComponent = useFormStore((s) => s.setActiveComponent);
   const removePage = useFormStore((s) => s.removePage);
+  const setActiveSidePanelTab = useFormStore((s) => s.setActiveSidePanelTab);
 
-  // const isSelected = activePageId === pageId && !selectedInstanceId;
+  // const isSelected = activePageId === pageId && !activeComponentId;
 
   const { ref, isDragging } = useSortable({
     id: pageId,
@@ -117,7 +120,8 @@ export const SelectablePage = ({
       onClick={(e) => {
         e.stopPropagation();
         setActivePage(pageId);
-        selectComponent(null);
+        setActiveComponent(null);
+        setActiveSidePanelTab('properties');
       }}
       className={`group relative cursor-pointer !overflow-visible transition-all duration-200 ease-in-out ${isDragging ? 'opacity-50' : 'opacity-100'} `}
     >

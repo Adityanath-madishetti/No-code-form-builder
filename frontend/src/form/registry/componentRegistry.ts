@@ -254,7 +254,7 @@ const registry: Registry = {
         instanceId,
         { label: 'Single Choice Question' },
         {
-          questionText: '<p>...</p>',
+          questionText: '<p>Select an option</p>',
           layout: 'vertical',
           options: [
             { id: crypto.randomUUID(), label: 'Option 1', value: 'option-1' },
@@ -288,7 +288,7 @@ const registry: Registry = {
         instanceId,
         { label: 'Multiple Choice Question' },
         {
-          questionText: '<p>Select all that apply...</p>',
+          questionText: '<p>Select all that apply</p>',
           layout: 'vertical',
           defaultValues: [],
           options: [
@@ -324,8 +324,8 @@ const registry: Registry = {
         instanceId,
         { label: 'Dropdown Selection' },
         {
-          questionText: '<p>Please select an option from the list...</p>',
-          placeholder: 'Select an option...',
+          questionText: '<p>Please select an option from the list</p>',
+          placeholder: 'Select an option',
           options: [
             { id: crypto.randomUUID(), label: 'Option 1', value: 'option-1' },
             { id: crypto.randomUUID(), label: 'Option 2', value: 'option-2' },

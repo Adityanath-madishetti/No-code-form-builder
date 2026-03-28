@@ -1,13 +1,13 @@
 // src/form/components/RadioRenderer.tsx
 import { useFormStore } from '../store/formStore';
 import type { RendererProps } from './base';
-import type { RadioProps, RadioOption } from './radio';
+import type { RadioProps, RadioOption, RadioValidation } from './radio';
 import { ComponentPropTitle } from './ComponentRender.Helper';
-import { RichTextEditor } from '@/components/RichTextEditor';
+import {
+  RichTextEditor,
+  sharedProseClasses,
+} from '@/components/RichTextEditor';
 
-import { Card, CardContent } from '@/components/ui/card';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,54 +19,63 @@ import {
 } from '@/components/ui/select';
 import { Plus, Trash2 } from 'lucide-react';
 
+// HeroUI Imports
+import {
+  Card as HeroCard,
+  RadioGroup as HeroRadioGroup,
+  Radio as HeroRadio,
+  Label as HeroLabel,
+} from '@heroui/react';
+
 export const RadioComponentRenderer = ({
   // metadata,
   props,
-}: RendererProps<RadioProps>) => {
+}: RendererProps<RadioProps, RadioValidation>) => {
   const isHorizontal = props.layout === 'horizontal';
 
   return (
-    <Card className="w-full">
-      {/* <CardHeader>
-        <CardTitle>{metadata.label}</CardTitle>
+    <HeroCard className="w-full">
+      {/* <HeroCard.Header>
+        <HeroCard.Title>{metadata.label}</HeroCard.Title>
         {metadata.description && (
-          <CardDescription>{metadata.description}</CardDescription>
+          <HeroCard.Description>{metadata.description}</HeroCard.Description>
         )}
-      </CardHeader> */}
+      </HeroCard.Header> */}
 
-      <CardContent className="space-y-6">
-        {/* Render Rich Text Question Safely */}
+      <HeroCard.Content>
         {props.questionText && (
           <div
-            className="prose prose-sm dark:prose-invert max-w-none break-words"
+            className={sharedProseClasses}
             dangerouslySetInnerHTML={{ __html: props.questionText }}
           />
         )}
 
-        <RadioGroup
+        <HeroRadioGroup
           defaultValue={props.defaultValue}
           className={`flex ${
-            isHorizontal ? 'flex-row flex-wrap gap-6' : 'flex-col space-y-3'
+            isHorizontal ? 'flex-row flex-wrap gap-6' : 'flex-col'
           }`}
         >
           {(props.options || []).map((option) => (
-            <div key={option.id} className="flex items-center space-x-2">
-              <RadioGroupItem value={option.value} id={`radio-${option.id}`} />
-              <Label htmlFor={`radio-${option.id}`} className="cursor-pointer">
-                {option.label}
-              </Label>
-            </div>
+            <HeroRadio key={option.id} value={option.value}>
+              <HeroRadio.Control>
+                <HeroRadio.Indicator />
+              </HeroRadio.Control>
+              <HeroRadio.Content>
+                <HeroLabel className="cursor-pointer">{option.label}</HeroLabel>
+              </HeroRadio.Content>
+            </HeroRadio>
           ))}
-        </RadioGroup>
-      </CardContent>
-    </Card>
+        </HeroRadioGroup>
+      </HeroCard.Content>
+    </HeroCard>
   );
 };
 
 export const RadioComponentPropsRenderer = ({
   props,
   instanceId,
-}: RendererProps<RadioProps>) => {
+}: RendererProps<RadioProps, RadioValidation>) => {
   const updateComponentProps = useFormStore((s) => s.updateComponentProps);
 
   const handleAddOption = () => {

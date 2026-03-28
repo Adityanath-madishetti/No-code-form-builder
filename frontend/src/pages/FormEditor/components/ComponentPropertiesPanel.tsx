@@ -1,43 +1,61 @@
 // src/pages/FormEditor/components/ComponentPropertiesPanel.tsx
-
 import { useFormStore, formSelectors } from '@/form/store/formStore';
 import { getComponentPropsRenderer } from '@/form/registry/componentRegistry';
+import { RenderPageProps } from '@/form/renderer/editRenderer/RenderPage';
 
 export function ComponentPropertiesPanel() {
-  const selectedComponent = useFormStore(formSelectors.selectedComponent);
+  const activeComponent = useFormStore(formSelectors.activeComponent);
+  const activePage = useFormStore(formSelectors.activePage);
 
-  const PropsRenderer = selectedComponent
-    ? getComponentPropsRenderer(selectedComponent.id)
+  if (activeComponent && activePage) {
+    console.warn(
+      '[ComponentPropertiesPanel] Both activeComponent and activePage are set simultaneously:',
+      {
+        activeComponent,
+        activePage,
+      }
+    );
+  }
+
+  const PropsRenderer = activeComponent
+    ? getComponentPropsRenderer(activeComponent.id)
     : null;
 
-  if (!selectedComponent) {
+  if (!activeComponent && !activePage) {
     return (
       <div className="flex h-40 flex-col items-center justify-center text-center text-muted-foreground">
         <p className="text-sm">
-          Select a component on the canvas to edit its properties.
+          Select a page/component on the canvas to edit its properties.
         </p>
       </div>
     );
   }
 
-  return (
-    <div className="">
-      {/* <h3 className="border-b pb-2 text-lg font-semibold">
-        Editing: {selectedComponent.id}
-      </h3> */}
+  if (activePage) {
+    return (
+      <div className="">
+        <RenderPageProps pageId={activePage.id} />
+      </div>
+    );
+  }
 
-      {PropsRenderer ? (
-        // eslint-disable-next-line react-hooks/static-components
-        <PropsRenderer
-          props={selectedComponent.props as never}
-          instanceId={selectedComponent.instanceId}
-          metadata={selectedComponent.metadata}
-        />
-      ) : (
-        <p className="text-sm text-muted-foreground italic">
-          No properties panel available for {selectedComponent.id}.
-        </p>
-      )}
-    </div>
-  );
+  if (activeComponent) {
+    return (
+      <div className="">
+        {PropsRenderer ? (
+          // eslint-disable-next-line react-hooks/static-components
+          <PropsRenderer
+            props={activeComponent.props}
+            validation={activeComponent.validation}
+            instanceId={activeComponent.instanceId}
+            metadata={activeComponent.metadata}
+          />
+        ) : (
+          <p className="text-sm text-muted-foreground italic">
+            No properties panel available for {activeComponent.id}.
+          </p>
+        )}
+      </div>
+    );
+  }
 }

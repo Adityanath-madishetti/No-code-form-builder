@@ -3,6 +3,7 @@ import type { RendererProps } from './base';
 import type { InputProps, InputValidation } from './input';
 import { useFormStore } from '../store/formStore';
 import { Input as ShadInput } from '@/components/ui/input';
+import { Checkbox as ShadCheckbox } from '@/components/ui/checkbox';
 import { Input as HeroInput } from '@heroui/react';
 import { Card as HeroCard } from '@heroui/react';
 import { ComponentPropTitle } from './ComponentRender.Helper';
@@ -13,8 +14,9 @@ import {
 } from '@/components/RichTextEditor';
 
 export const InputComponentRenderer = ({
-  props,
   instanceId,
+  props,
+  validation
 }: RendererProps<InputProps, InputValidation>) => {
   return (
     <FormThemeProvider>
@@ -32,6 +34,9 @@ export const InputComponentRenderer = ({
             placeholder={props.placeholder}
             defaultValue={props.defaultValue}
             className="w-full px-4"
+            required={validation.required}
+            minLength={validation.minLength}
+            maxLength={validation.maxLength}
           />
         </HeroCard.Content>
       </HeroCard>
@@ -40,10 +45,18 @@ export const InputComponentRenderer = ({
 };
 
 export const InputComponentPropsRenderer = ({
-  props,
   instanceId,
+  props,
+  validation,
 }: RendererProps<InputProps, InputValidation>) => {
   const updateComponentProps = useFormStore((s) => s.updateComponentProps);
+  const updateComponentValidation = useFormStore(
+    (s) => s.updateComponentValidation
+  );
+
+  const toggleRequiredValidation = () => {
+    updateComponentValidation(instanceId, { required: !validation?.required });
+  };
 
   return (
     <div className="w-full space-y-6">
@@ -76,6 +89,15 @@ export const InputComponentPropsRenderer = ({
             updateComponentProps(instanceId, { defaultValue: e.target.value })
           }
           placeholder="Enter default value"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <ComponentPropTitle title="Required" />
+        <ShadCheckbox
+          checked={validation.required}
+          onCheckedChange={toggleRequiredValidation}
+          title="Set as default selected"
         />
       </div>
     </div>

@@ -45,6 +45,8 @@ export const RenderComponent = ({
       // Note - some type safety issue
       // @ts-expect-error - forget for now
       props={validComponent.props}
+      // @ts-expect-error - forget for now
+      validation={validComponent.validation}
       instanceId={validComponent.instanceId}
     />
   );

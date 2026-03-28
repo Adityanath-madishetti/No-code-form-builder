@@ -8,9 +8,9 @@ loadFromJSON({
     pages: ['page-1', 'page-2', 'page-3'],
     metadata: {
       description:
-        'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
+        '<p><strong><em>Octopussy and The Living Daylights</em></strong> (sometimes published as <strong><em>Octopussy</em></strong>) is the fourteenth and final <a target="_blank" rel="noopener noreferrer" href="https://en.wikipedia.org/wiki/James_Bond">James Bond</a> book written by <a target="_blank" rel="noopener noreferrer" href="https://en.wikipedia.org/wiki/Ian_Fleming">Ian Fleming</a>. The book is a collection of short stories published in the United Kingdom by <a target="_blank" rel="noopener noreferrer" href="https://en.wikipedia.org/wiki/Jonathan_Cape">Jonathan Cape</a> on 23 June 1966, after Fleming\'s death in August 1964.</p>',
       createdAt: '2024-01-01T00:00:00.000Z',
-      updatedAt: '2024-01-01T00:00:00.000Z',
+      updatedAt: '2026-03-28T17:31:09.245Z',
       version: 1,
     },
   },
@@ -18,7 +18,12 @@ loadFromJSON({
     {
       id: 'page-1',
       title: 'some shit?',
-      children: ['text-box-instance-1', 'input-instance-1'],
+      description: '',
+      children: [
+        'text-box-instance-1',
+        'input-instance-1',
+        'instance-02e36714-000f-4ef8-9a6d-002d89a979db',
+      ],
       isTerminal: false,
     },
     {
@@ -66,6 +71,27 @@ loadFromJSON({
       },
     },
     {
+      id: 'Radio',
+      instanceId: 'instance-02e36714-000f-4ef8-9a6d-002d89a979db',
+      metadata: {
+        label: 'Single Choice Question',
+      },
+      props: {
+        questionText: '<p>Select an option</p>',
+        layout: 'vertical',
+        options: [
+          {
+            id: '7830f79e-f7ab-4bc4-8566-2d9794346b0c',
+            label: 'Option 1',
+            value: 'option-1',
+          },
+        ],
+      },
+      validation: {
+        required: false,
+      },
+    },
+    {
       id: 'Checkbox',
       instanceId: 'instance-b0ce6b23-0ebc-412b-b706-2f35b2632040',
       metadata: {
@@ -90,7 +116,7 @@ loadFromJSON({
       },
       validation: {
         required: false,
-      }
+      },
     },
   ],
 });
@@ -121,8 +147,8 @@ import { useFormDragHandlers } from '@/form/hooks/useFormDragHandlers';
 
 export default function FormEditor() {
   const store = useFormStore();
-  const selectComponent = store.selectComponent;
-  const selectPage = store.setActivePage;
+  const setActiveComponent = store.setActiveComponent;
+  const setActivePage = store.setActivePage;
 
   const activeDragData = store.activeDragData;
 
@@ -146,8 +172,8 @@ export default function FormEditor() {
           <div
             className="relative h-auto w-full flex-1 overflow-y-auto"
             onClick={() => {
-              selectComponent(null);
-              selectPage(null);
+              setActiveComponent(null);
+              setActivePage(null);
             }}
           >
             <FormCanvas />
@@ -185,11 +211,13 @@ export default function FormEditor() {
               <div>
                 {Renderer && (
                   <Renderer
+                    instanceId={previewData.instanceId}
                     metadata={previewData.metadata}
                     // Note - some type safety issue
                     // @ts-expect-error - forget for now
                     props={previewData.props}
-                    instanceId={previewData.instanceId}
+                    // @ts-expect-error - forget for now
+                    validation={previewData.validation}
                   />
                 )}
               </div>
@@ -216,11 +244,13 @@ export default function FormEditor() {
               <div>
                 {Renderer && (
                   <Renderer
+                    instanceId={existingComponent.instanceId}
                     metadata={existingComponent.metadata}
-                    // Note - some type safety issue
+                    // Note - some type safety issue, bs basically
                     // @ts-expect-error - forget for now
                     props={existingComponent.props}
-                    instanceId={existingComponent.instanceId}
+                    // @ts-expect-error - forget for now
+                    validation={existingComponent.validation}
                   />
                 )}
               </div>
