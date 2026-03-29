@@ -426,13 +426,52 @@ export const useFormStore = create<FormStore>()(
     //==================
     setActiveComponent: (instanceId) =>
       set((state) => {
+        console.groupCollapsed(
+          `%c[Store] setActiveComponent`,
+          'color: #d7c0ff; font-weight: bold;'
+        );
+
+        console.log('Prev:', {
+          activeComponentId: state.activeComponentId,
+          activePageId: state.activePageId,
+        });
+
+        console.log('Next:', {
+          activeComponentId: instanceId,
+        });
+
         state.activeComponentId = instanceId;
+
+        console.log('Result:', {
+          activeComponentId: state.activeComponentId,
+        });
+
+        console.groupEnd();
       }),
 
     setActivePage: (pageId) =>
       set((state) => {
+        console.groupCollapsed(
+          `%c[Store] setActivePage`,
+          'color: #d7c0ff; font-weight: bold;'
+        );
+
+        console.log('Prev:', {
+          activePageId: state.activePageId,
+          activeComponentId: state.activeComponentId,
+        });
+
+        console.log('Next:', {
+          activePageId: pageId,
+        });
+
         state.activePageId = pageId;
-        state.activeComponentId = null;
+
+        console.log('Result:', {
+          activePageId: state.activePageId,
+        });
+
+        console.groupEnd();
       }),
 
     setActiveDragData: (data) => set({ activeDragData: data }),
