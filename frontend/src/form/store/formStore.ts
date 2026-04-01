@@ -131,6 +131,7 @@ export type FormDragData =
  */
 interface FormSchemaState {
   form: Form | null;
+  currentVersion: number;
   pages: Record<PageID, FormPage>;
   components: Record<InstanceID, AnyFormComponent>;
 }
@@ -163,8 +164,10 @@ interface FormSchemaActions {
   loadForm: (
     form: Form,
     pages: FormPage[],
-    components: AnyFormComponent[]
+    components: AnyFormComponent[],
+    version?: number
   ) => void;
+  setCurrentVersion: (version: number) => void;
   updateFormName: (name: string) => void;
   updateFormMetadata: (metadata: Partial<FormMetadata>) => void;
 
@@ -273,6 +276,7 @@ export const formSelectors = {
 export const useFormStore = create<FormStore>()(
   immer((set) => ({
     form: null,
+    currentVersion: 1,
     pages: {},
     components: {},
 
@@ -296,9 +300,10 @@ export const useFormStore = create<FormStore>()(
         state.activeComponentId = null;
       }),
 
-    loadForm: (form, pages, components) =>
+    loadForm: (form, pages, components, version) =>
       set((state) => {
         state.form = form;
+        state.currentVersion = version ?? 1;
         state.pages = Object.fromEntries(pages.map((p) => [p.id, p]));
         state.components = Object.fromEntries(
           components.map((c) => [c.instanceId, c])
@@ -306,6 +311,11 @@ export const useFormStore = create<FormStore>()(
         // state.activePageId = pages[0]?.id ?? null;
         state.activePageId = null;
         state.activeComponentId = null;
+      }),
+
+    setCurrentVersion: (version) =>
+      set((state) => {
+        state.currentVersion = version;
       }),
 
     updateFormName: (name) =>

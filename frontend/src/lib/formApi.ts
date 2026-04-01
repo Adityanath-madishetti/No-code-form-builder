@@ -152,7 +152,8 @@ export async function saveFormVersion(
   versionNum: number,
   storeForm: Form,
   storePages: Record<string, FormPage>,
-  storeComponents: Record<string, AnyFormComponent>
+  storeComponents: Record<string, AnyFormComponent>,
+  createdBy: string = 'unknown'
 ): Promise<void> {
   // Build pages array in order
   const orderedPageIds = storeForm.pages;
@@ -194,13 +195,26 @@ export async function saveFormVersion(
     };
   });
 
+  // Update the version
   await api.put(`/forms/${formId}/versions/${versionNum}`, {
     meta: {
-      createdBy: 'user',
+      createdBy,
       name: storeForm.name,
       description: '',
       isDraft: true,
     },
     pages,
   });
+
+  // Also sync the form header title so the dashboard stays in sync
+  await api.patch(`/forms/${formId}`, { title: storeForm.name });
+}
+
+// ── Create New Version: clones latest → increments version ──
+
+export async function createNewVersion(formId: string): Promise<number> {
+  const res = await api.post<{ version: { version: number } }>(
+    `/forms/${formId}/versions`
+  );
+  return res.version.version;
 }

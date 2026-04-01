@@ -1,6 +1,7 @@
 // src/pages/FormEditor/FormEditor.tsx
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import { useFormStore } from '@/form/store/formStore';
 import { DragDropProvider, DragOverlay } from '@dnd-kit/react';
 import { componentRenderers } from '@/form/registry/componentRegistry';
@@ -29,7 +30,7 @@ import { ComponentPropertiesPanel } from './components/ComponentPropertiesPanel'
 import { RightFloatingPanel } from './components/RightFloatingPanel';
 import { Bug, PanelRightOpen, PanelLeftClose, PanelRightClose, Save, ArrowLeft, Loader2 } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
-import { loadFormVersion, saveFormVersion } from '@/lib/formApi';
+import { loadFormVersion, saveFormVersion, createNewVersion } from '@/lib/formApi';
 
 const PANEL_TITLES: Record<SidebarPanelId, string> = {
   form: 'Form Properties',
@@ -59,6 +60,7 @@ export default function FormEditor() {
   const store = useFormStore();
   const addPage = store.addPage;
   const setActiveComponent = store.setActiveComponent;
+  const { user } = useAuth();
 
   const { onDragStart, onDragOver, onDragEnd } = useFormDragHandlers();
   const activeDragData = store.activeDragData;
@@ -78,28 +80,35 @@ export default function FormEditor() {
   const [debugWidth, setDebugWidth] = useState(400);
   const [saving, setSaving] = useState(false);
   const [formLoaded, setFormLoaded] = useState(false);
-  const versionRef = useRef(1);
 
   const { formId } = useParams<{ formId: string }>();
   const navigate = useNavigate();
 
-  // Load form from backend
+  // Load form from backend — reset store immediately to avoid stale flash
   useEffect(() => {
     if (!formId) return;
     let cancelled = false;
 
+    // Clear the old form immediately so stale data doesn't flash
+    setFormLoaded(false);
+    store.loadForm(
+      { id: formId, name: '', metadata: { createdAt: '', updatedAt: '' }, theme: null, pages: [] },
+      [],
+      [],
+      1
+    );
+
     loadFormVersion(formId)
       .then(({ form, pages, components, version }) => {
         if (cancelled) return;
-        store.loadForm(form, pages, components);
-        versionRef.current = version;
+        store.loadForm(form, pages, components, version);
         setFormLoaded(true);
       })
       .catch(() => {
         if (cancelled) return;
         // Form just created — init locally
         store.initForm(formId, 'Untitled Form');
-        versionRef.current = 1;
+        store.setCurrentVersion(1);
         setFormLoaded(true);
       });
 
@@ -142,23 +151,31 @@ export default function FormEditor() {
 
   const hasSelection = !!activeComponentId || !!activePageId;
 
+  const currentVersion = useFormStore((s) => s.currentVersion);
+
   const handleSave = useCallback(async () => {
     if (!formId || !store.form) return;
     setSaving(true);
     try {
+      // Always create a new version on save
+      const newVersionNum = await createNewVersion(formId);
+      store.setCurrentVersion(newVersionNum);
+
+      // Save current editor state to the new version
       await saveFormVersion(
         formId,
-        versionRef.current,
+        newVersionNum,
         store.form,
         store.pages,
-        store.components
+        store.components,
+        user?.email || 'unknown'
       );
     } catch (err) {
       console.error('Save failed:', err);
     } finally {
       setSaving(false);
     }
-  }, [formId, store.form, store.pages, store.components]);
+  }, [formId, store.form, store.pages, store.components, user]);
 
   return (
     <DragDropProvider
@@ -324,6 +341,12 @@ export default function FormEditor() {
             )}
             <span className="text-xs font-medium">{saving ? 'Saving...' : 'Save'}</span>
           </button>
+          <span
+            title={`Currently editing version ${currentVersion}`}
+            className="flex h-8 items-center rounded-sm border border-border bg-muted px-2 text-[10px] font-semibold text-muted-foreground"
+          >
+            v{currentVersion}
+          </span>
           <button
             onClick={() => setShowProperties((p) => !p)}
             title="Toggle properties panel"
