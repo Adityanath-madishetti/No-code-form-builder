@@ -1,5 +1,5 @@
 // src/pages/Login/page.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -23,6 +23,10 @@ export default function Login() {
   if (user) {
     return <Navigate to="/" replace />;
   }
+
+  useEffect(() => {
+    document.title = 'Login — Form Builder';
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

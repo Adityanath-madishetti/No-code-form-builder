@@ -130,6 +130,13 @@ export default function FormEditor() {
     }
   }, [totalPages]);
 
+  // Update tab title with form name
+  useEffect(() => {
+    document.title = store.form?.name
+      ? `${store.form.name} — Form Builder`
+      : 'Editor — Form Builder';
+  }, [store.form?.name]);
+
   // Auto-show/hide properties based on selection
   useEffect(() => {
     if (activeComponentId || activePageId) {

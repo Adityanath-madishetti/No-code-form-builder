@@ -1,10 +1,15 @@
 // src/pages/FormFill/FormSuccess.tsx
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, Home } from 'lucide-react';
 
 export default function FormSuccess() {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.title = 'Submitted — Form Builder';
+  }, []);
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-neutral-50 dark:bg-neutral-950 p-4">

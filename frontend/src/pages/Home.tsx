@@ -45,6 +45,10 @@ export default function Home() {
     ]).finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    document.title = 'Dashboard — Form Builder';
+  }, []);
+
   const handleCreate = async () => {
     setCreating(true);
     try {
@@ -84,7 +88,10 @@ export default function Home() {
     <div className="flex min-h-screen flex-col bg-neutral-50 dark:bg-neutral-950">
       {/* Top bar */}
       <header className="flex items-center justify-between border-b border-border bg-background px-6 py-3">
-        <h1 className="text-lg font-semibold tracking-tight">Form Builder</h1>
+        <h1 className="flex items-center gap-2 text-lg font-semibold tracking-tight">
+          <img src="/logo.png" alt="Form Builder" className="h-6 w-6" />
+          Form Builder
+        </h1>
         <div className="flex items-center gap-3">
           <span className="text-sm text-muted-foreground">{user?.email}</span>
           <Button variant="ghost" size="sm" onClick={handleLogout}>

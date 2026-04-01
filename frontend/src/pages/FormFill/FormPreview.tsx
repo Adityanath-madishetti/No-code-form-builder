@@ -59,6 +59,12 @@ export default function FormPreview() {
       .finally(() => setLoading(false));
   }, [formId]);
 
+  useEffect(() => {
+    document.title = version?.meta.name
+      ? `Preview: ${version.meta.name} — Form Builder`
+      : 'Preview — Form Builder';
+  }, [version]);
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">

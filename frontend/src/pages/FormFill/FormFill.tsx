@@ -67,6 +67,12 @@ export default function FormFill() {
       .finally(() => setLoading(false));
   }, [formId]);
 
+  useEffect(() => {
+    document.title = data?.version.meta.name
+      ? `${data.version.meta.name} — Form Builder`
+      : 'Form — Form Builder';
+  }, [data]);
+
   const handleResponseChange = useCallback(
     (componentId: string, value: unknown) => {
       setResponses((prev) => ({ ...prev, [componentId]: value }));
