@@ -140,3 +140,40 @@ export const getSubmission = async (req, res, next) => {
         next(err);
     }
 };
+
+/**
+ * GET /api/submissions/mine
+ * List all submissions by the logged-in user (across all forms).
+ */
+export const getMySubmissions = async (req, res, next) => {
+    try {
+        const uid = req.user.uid;
+
+        const submissions = await Submission.find({ submittedBy: uid })
+            .sort({ createdAt: -1 })
+            .select("submissionId formId version status createdAt")
+            .limit(50);
+
+        // Enrich with form titles
+        const formIds = [...new Set(submissions.map((s) => s.formId))];
+        const forms = await Form.find({ formId: { $in: formIds } }).select(
+            "formId title"
+        );
+        const titleMap = Object.fromEntries(
+            forms.map((f) => [f.formId, f.title])
+        );
+
+        const enriched = submissions.map((s) => ({
+            submissionId: s.submissionId,
+            formId: s.formId,
+            formTitle: titleMap[s.formId] || "Unknown Form",
+            version: s.version,
+            status: s.status,
+            submittedAt: s.createdAt,
+        }));
+
+        res.status(200).json({ submissions: enriched });
+    } catch (err) {
+        next(err);
+    }
+};

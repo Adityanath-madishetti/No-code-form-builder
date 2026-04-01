@@ -24,7 +24,7 @@ export const syncUser = async (req, res, next) => {
                     accountStatus: "active",
                 },
             },
-            { upsert: true, new: true, runValidators: true }
+            { upsert: true, returnDocument: 'after', runValidators: true }
         );
 
         res.status(200).json({ user });
@@ -73,7 +73,7 @@ export const updateMe = async (req, res, next) => {
         const user = await User.findOneAndUpdate(
             { uid: req.user.uid },
             { $set: updates },
-            { new: true, runValidators: true }
+            { returnDocument: 'after', runValidators: true }
         );
 
         if (!user) {

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
-import { Plus, FileText, LogOut, Loader2 } from 'lucide-react';
+import { Plus, FileText, LogOut, Loader2, Inbox } from 'lucide-react';
 
 interface FormHeader {
   formId: string;
@@ -15,19 +15,34 @@ interface FormHeader {
   createdAt: string;
 }
 
+interface MySubmission {
+  submissionId: string;
+  formId: string;
+  formTitle: string;
+  version: number;
+  status: string;
+  submittedAt: string;
+}
+
 export default function Home() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [forms, setForms] = useState<FormHeader[]>([]);
+  const [submissions, setSubmissions] = useState<MySubmission[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
-    api
-      .get<{ forms: FormHeader[] }>('/forms')
-      .then((res) => setForms(res.forms))
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    Promise.all([
+      api
+        .get<{ forms: FormHeader[] }>('/forms')
+        .then((res) => setForms(res.forms))
+        .catch(() => {}),
+      api
+        .get<{ submissions: MySubmission[] }>('/submissions/mine')
+        .then((res) => setSubmissions(res.submissions))
+        .catch(() => {}),
+    ]).finally(() => setLoading(false));
   }, []);
 
   const handleCreate = async () => {
@@ -57,6 +72,14 @@ export default function Home() {
     });
   };
 
+  const statusColor: Record<string, string> = {
+    submitted: 'bg-blue-500',
+    approved: 'bg-green-500',
+    rejected: 'bg-red-500',
+    under_review: 'bg-amber-500',
+    draft: 'bg-neutral-400',
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-neutral-50 dark:bg-neutral-950">
       {/* Top bar */}
@@ -73,6 +96,7 @@ export default function Home() {
 
       {/* Content */}
       <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-8">
+        {/* ── My Forms ── */}
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-xl font-semibold">My Forms</h2>
           <Button onClick={handleCreate} disabled={creating}>
@@ -122,11 +146,62 @@ export default function Home() {
                     }`}
                   />
                   <span className="text-[10px] text-muted-foreground">
-                    {form.isActive ? 'Active' : 'Draft'}
+                    {form.isActive ? 'Published' : 'Draft'}
                   </span>
                 </div>
               </button>
             ))}
+          </div>
+        )}
+
+        {/* ── My Submissions ── */}
+        <div className="mt-12 mb-6">
+          <h2 className="text-xl font-semibold">My Submissions</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Forms you have filled and submitted.
+          </p>
+        </div>
+
+        {loading ? null : submissions.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border py-12 text-center">
+            <Inbox className="mb-3 h-8 w-8 text-muted-foreground/40" />
+            <p className="text-sm text-muted-foreground">
+              No submissions yet.
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-hidden rounded-lg border border-border bg-background">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-border bg-muted/30">
+                <tr>
+                  <th className="px-4 py-2.5 font-medium text-muted-foreground">Form</th>
+                  <th className="px-4 py-2.5 font-medium text-muted-foreground">Submitted</th>
+                  <th className="px-4 py-2.5 font-medium text-muted-foreground">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {submissions.map((sub) => (
+                  <tr key={sub.submissionId} className="border-b border-border last:border-0">
+                    <td className="px-4 py-3 font-medium">{sub.formTitle}</td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {formatDate(sub.submittedAt)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="inline-flex items-center gap-1.5">
+                        <span
+                          className={`h-1.5 w-1.5 rounded-full ${
+                            statusColor[sub.status] || 'bg-neutral-400'
+                          }`}
+                        />
+                        <span className="text-xs capitalize">
+                          {sub.status.replace('_', ' ')}
+                        </span>
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </main>

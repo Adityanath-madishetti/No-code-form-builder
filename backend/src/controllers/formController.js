@@ -163,3 +163,68 @@ export const deleteForm = async (req, res, next) => {
         next(err);
     }
 };
+
+/**
+ * POST /api/forms/:formId/publish
+ * Publish a form — sets isActive=true and marks the latest version as published (isDraft=false).
+ */
+export const publishForm = async (req, res, next) => {
+    try {
+        const { formId } = req.params;
+        const uid = req.user.uid;
+
+        const form = await Form.findOne({ formId, isDeleted: false });
+        if (!form) throw createError(404, "Form not found");
+        if (form.createdBy !== uid) throw createError(403, "Access denied");
+
+        // Activate the form
+        form.isActive = true;
+        await form.save();
+
+        // Mark the latest version as published
+        const latestVersion = await FormVersion.findOne({ formId }).sort({
+            version: -1,
+        });
+        if (!latestVersion)
+            throw createError(400, "No version to publish");
+
+        latestVersion.meta.isDraft = false;
+        await latestVersion.save();
+
+        res.status(200).json({
+            message: "Form published successfully",
+            form,
+            publishedVersion: latestVersion.version,
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+/**
+ * GET /api/forms/:formId/public
+ * Get the published version of a form for filling. Any authenticated user can access.
+ */
+export const getPublicForm = async (req, res, next) => {
+    try {
+        const { formId } = req.params;
+
+        const form = await Form.findOne({ formId, isDeleted: false });
+        if (!form) throw createError(404, "Form not found");
+        if (!form.isActive)
+            throw createError(400, "This form is not currently accepting responses");
+
+        // Get the latest published (non-draft) version
+        const version = await FormVersion.findOne({
+            formId,
+            "meta.isDraft": false,
+        }).sort({ version: -1 });
+
+        if (!version)
+            throw createError(400, "No published version available");
+
+        res.status(200).json({ form, version });
+    } catch (err) {
+        next(err);
+    }
+};

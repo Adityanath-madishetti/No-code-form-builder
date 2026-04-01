@@ -6,6 +6,8 @@ import {
     getForm,
     updateForm,
     deleteForm,
+    publishForm,
+    getPublicForm,
 } from "../controllers/formController.js";
 import formVersionRoutes from "./formVersionRoutes.js";
 import submissionRoutes from "./submissionRoutes.js";
@@ -18,6 +20,12 @@ router.get("/", verifyToken, listForms);
 router.get("/:formId", verifyToken, getForm);
 router.patch("/:formId", verifyToken, updateForm);
 router.delete("/:formId", verifyToken, deleteForm);
+
+// Publish
+router.post("/:formId/publish", verifyToken, publishForm);
+
+// Public form access (any authenticated user can fill)
+router.get("/:formId/public", verifyToken, getPublicForm);
 
 // Nested routes
 router.use("/:formId/versions", formVersionRoutes);

@@ -39,7 +39,7 @@ export const loginByEmail = async (req, res, next) => {
                     accountStatus: "active",
                 },
             },
-            { upsert: true, new: true, runValidators: true }
+            { upsert: true, returnDocument: 'after', runValidators: true }
         );
 
         // Issue JWT

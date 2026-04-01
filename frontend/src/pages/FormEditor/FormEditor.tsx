@@ -28,7 +28,7 @@ import { PageNavigator } from './components/PageNavigator';
 import { DebugPanel } from './components/DebugPanel';
 import { ComponentPropertiesPanel } from './components/ComponentPropertiesPanel';
 import { RightFloatingPanel } from './components/RightFloatingPanel';
-import { Bug, PanelRightOpen, PanelLeftClose, PanelRightClose, Save, ArrowLeft, Loader2 } from 'lucide-react';
+import { Bug, PanelLeftClose, PanelRightClose, Save, ArrowLeft, Loader2, Eye, Globe } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 import { loadFormVersion, saveFormVersion, createNewVersion } from '@/lib/formApi';
 
@@ -79,6 +79,7 @@ export default function FormEditor() {
   const [rightWidth, setRightWidth] = useState(340);
   const [debugWidth, setDebugWidth] = useState(400);
   const [saving, setSaving] = useState(false);
+  const [publishing, setPublishing] = useState(false);
   const [formLoaded, setFormLoaded] = useState(false);
 
   const { formId } = useParams<{ formId: string }>();
@@ -129,10 +130,12 @@ export default function FormEditor() {
     }
   }, [totalPages]);
 
-  // Auto-show properties when a component is selected
+  // Auto-show/hide properties based on selection
   useEffect(() => {
     if (activeComponentId || activePageId) {
       setShowProperties(true);
+    } else {
+      setShowProperties(false);
     }
   }, [activeComponentId, activePageId]);
 
@@ -315,57 +318,95 @@ export default function FormEditor() {
           )}
         </div>
 
-        {/* ── Bottom-right floating buttons ── */}
-        <div className="fixed bottom-4 right-4 z-[60] flex gap-1.5">
-          <button
-            onClick={() => navigate('/')}
-            title="Back to Dashboard"
-            className="flex h-8 w-8 items-center justify-center border border-border bg-background text-muted-foreground shadow-sm hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-          </button>
+        {/* ── Top-right action buttons ── */}
+        <div
+          className="fixed top-3 right-4 z-[60] flex items-center gap-1 will-change-transform"
+          style={{ transform: `translateX(-${(showProperties ? rightWidth : 0) + (showDebug ? debugWidth : 0)}px)`, transition: 'transform 100ms ease-out' }}
+        >
           <button
             onClick={handleSave}
             disabled={saving}
             title="Save form"
-            className={`flex h-8 items-center gap-1.5 border px-2.5 shadow-sm transition-colors ${
+            className={`group flex h-7 items-center gap-0 border px-1.5 shadow-sm transition-all duration-300 rounded-sm hover:gap-1 hover:px-2 ${
               saving
                 ? 'border-primary/40 bg-primary/10 text-primary cursor-wait'
                 : 'border-primary/60 bg-primary text-primary-foreground hover:bg-primary/90'
             }`}
           >
             {saving ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              <Loader2 className="h-3 w-3 animate-spin" />
             ) : (
-              <Save className="h-3.5 w-3.5" />
+              <Save className="h-3 w-3" />
             )}
-            <span className="text-xs font-medium">{saving ? 'Saving...' : 'Save'}</span>
+            <span className="max-w-0 overflow-hidden whitespace-nowrap text-[11px] font-medium transition-all duration-300 group-hover:max-w-[60px]">{saving ? 'Saving...' : 'Save'}</span>
+          </button>
+          <button
+            onClick={() => window.open(`/forms/${formId}/preview`, '_blank')}
+            title="Preview form"
+            className="group flex h-7 items-center gap-0 rounded-sm border border-border bg-background px-1.5 shadow-sm transition-all duration-300 text-muted-foreground hover:text-foreground hover:bg-muted hover:gap-1 hover:px-2"
+          >
+            <Eye className="h-3 w-3" />
+            <span className="max-w-0 overflow-hidden whitespace-nowrap text-[11px] font-medium transition-all duration-300 group-hover:max-w-[60px]">Preview</span>
+          </button>
+          <button
+            onClick={async () => {
+              if (!formId) return;
+              setPublishing(true);
+              try {
+                await handleSave();
+                const { api: apiClient } = await import('@/lib/api');
+                await apiClient.post(`/forms/${formId}/publish`);
+                alert('Form published! Share this link:\n' + window.location.origin + '/forms/' + formId);
+              } catch (err) {
+                console.error('Publish failed:', err);
+              } finally {
+                setPublishing(false);
+              }
+            }}
+            disabled={publishing || saving}
+            title="Publish form"
+            className={`group flex h-7 items-center gap-0 rounded-sm border px-1.5 shadow-sm transition-all duration-300 hover:gap-1 hover:px-2 ${
+              publishing
+                ? 'border-green-400/40 bg-green-400/10 text-green-600 cursor-wait'
+                : 'border-green-600/60 bg-green-600 text-white hover:bg-green-700'
+            }`}
+          >
+            {publishing ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <Globe className="h-3 w-3" />
+            )}
+            <span className="max-w-0 overflow-hidden whitespace-nowrap text-[11px] font-medium transition-all duration-300 group-hover:max-w-[70px]">{publishing ? 'Publishing...' : 'Publish'}</span>
+          </button>
+        </div>
+
+        {/* ── Bottom-right utility buttons ── */}
+        <div
+          className="fixed bottom-4 right-4 z-[60] flex gap-1 will-change-transform"
+          style={{ transform: `translateX(-${(showProperties ? rightWidth : 0) + (showDebug ? debugWidth : 0)}px)`, transition: 'transform 100ms ease-out' }}
+        >
+          <button
+            onClick={() => navigate('/')}
+            title="Back to Dashboard"
+            className="flex h-7 w-7 items-center justify-center border border-border bg-background text-muted-foreground shadow-sm hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="h-3 w-3" />
           </button>
           <span
             title={`Currently editing version ${currentVersion}`}
-            className="flex h-8 items-center rounded-sm border border-border bg-muted px-2 text-[10px] font-semibold text-muted-foreground"
+            className="flex h-7 items-center rounded-sm border border-border bg-muted px-1.5 text-[10px] font-semibold text-muted-foreground"
           >
             v{currentVersion}
           </span>
           <button
-            onClick={() => setShowProperties((p) => !p)}
-            title="Toggle properties panel"
-            className={`flex h-8 w-8 items-center justify-center border shadow-sm transition-colors ${showProperties
-              ? 'border-primary/60 bg-primary/10 text-primary'
-              : 'border-border bg-background text-muted-foreground hover:text-primary'
-              }`}
-          >
-            <PanelRightOpen className="h-3.5 w-3.5" />
-          </button>
-          <button
             onClick={() => setShowDebug((p) => !p)}
             title="Toggle debug panel"
-            className={`flex h-8 w-8 items-center justify-center border shadow-sm transition-colors ${showDebug
+            className={`flex h-7 w-7 items-center justify-center border shadow-sm transition-colors ${showDebug
               ? 'border-amber-400/60 bg-amber-400/10 text-amber-500'
               : 'border-border bg-background text-muted-foreground hover:text-amber-500'
               }`}
           >
-            <Bug className="h-3.5 w-3.5" />
+            <Bug className="h-3 w-3" />
           </button>
         </div>
       </div>
