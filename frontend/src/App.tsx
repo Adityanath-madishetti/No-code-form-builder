@@ -7,11 +7,20 @@ import FormEditor from "./pages/FormEditor/FormEditor";
 import FormFill from "./pages/FormFill/FormFill";
 import FormPreview from "./pages/FormFill/FormPreview";
 import FormSuccess from "./pages/FormFill/FormSuccess";
+import FormReview from "./pages/FormReview/FormReview";
 
 const router = createBrowserRouter([
   {
     path: "/login",
     element: <Login />,
+  },
+  {
+    path: "/forms/:formId",
+    element: <FormFill />,
+  },
+  {
+    path: "/forms/:formId/success",
+    element: <FormSuccess />,
   },
   {
     path: "/",
@@ -26,16 +35,12 @@ const router = createBrowserRouter([
         element: <FormEditor />,
       },
       {
-        path: "forms/:formId",
-        element: <FormFill />,
-      },
-      {
         path: "forms/:formId/preview",
         element: <FormPreview />,
       },
       {
-        path: "forms/:formId/success",
-        element: <FormSuccess />,
+        path: "reviews/:formId",
+        element: <FormReview />,
       },
     ],
   },

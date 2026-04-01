@@ -2,6 +2,23 @@ import mongoose from "mongoose";
 
 const { Schema } = mongoose;
 
+const IdentitySchema = new Schema(
+    {
+        uid: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        email: {
+            type: String,
+            required: true,
+            lowercase: true,
+            trim: true,
+        },
+    },
+    { _id: false }
+);
+
 /* ──────────────── COMPONENT ──────────────── */
 
 const ComponentSchema = new Schema(
@@ -278,9 +295,20 @@ const AccessSchema = new Schema(
             default: "private",
         },
 
-        editors: [String],
+        editors: {
+            type: [IdentitySchema],
+            default: [],
+        },
 
-        viewers: [String],
+        reviewers: {
+            type: [IdentitySchema],
+            default: [],
+        },
+
+        viewers: {
+            type: [IdentitySchema],
+            default: [],
+        },
 
         roles: {
             type: Schema.Types.Mixed,
@@ -305,6 +333,23 @@ const SettingsSchema = new Schema(
         },
 
         collectEmail: {
+            type: Boolean,
+            default: false,
+        },
+
+        collectEmailMode: {
+            type: String,
+            enum: ["none", "optional", "required"],
+            default: "none",
+        },
+
+        submissionPolicy: {
+            type: String,
+            enum: ["none", "edit_only", "resubmit_only", "edit_and_resubmit"],
+            default: "none",
+        },
+
+        canViewOwnSubmission: {
             type: Boolean,
             default: false,
         },

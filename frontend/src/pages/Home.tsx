@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
-import { Plus, FileText, LogOut, Loader2, Inbox } from 'lucide-react';
+import { Plus, FileText, LogOut, Loader2, Inbox, Eye } from 'lucide-react';
 
 interface FormHeader {
   formId: string;
@@ -13,6 +13,11 @@ interface FormHeader {
   isActive: boolean;
   updatedAt: string;
   createdAt: string;
+}
+
+interface SharedFormHeader extends FormHeader {
+  sharedRole: 'reviewer';
+  submissionCount: number;
 }
 
 interface MySubmission {
@@ -28,6 +33,7 @@ export default function Home() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [forms, setForms] = useState<FormHeader[]>([]);
+  const [sharedForms, setSharedForms] = useState<SharedFormHeader[]>([]);
   const [submissions, setSubmissions] = useState<MySubmission[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -37,6 +43,10 @@ export default function Home() {
       api
         .get<{ forms: FormHeader[] }>('/api/forms')
         .then((res) => setForms(res.forms))
+        .catch(() => {}),
+      api
+        .get<{ forms: SharedFormHeader[] }>('/api/forms/shared')
+        .then((res) => setSharedForms(res.forms))
         .catch(() => {}),
       api
         .get<{ submissions: MySubmission[] }>('/api/submissions/mine')
@@ -157,6 +167,57 @@ export default function Home() {
                   </span>
                 </div>
               </button>
+            ))}
+          </div>
+        )}
+
+        {/* ── Forms Shared With You ── */}
+        <div className="mt-12 mb-6">
+          <h2 className="text-xl font-semibold">
+            Forms Shared With You ({sharedForms.length})
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Forms assigned to you as reviewer.
+          </p>
+        </div>
+
+        {loading ? null : sharedForms.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border py-12 text-center">
+            <FileText className="mb-3 h-8 w-8 text-muted-foreground/40" />
+            <p className="text-sm text-muted-foreground">
+              No forms shared with you yet.
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {sharedForms.map((form) => (
+              <div
+                key={form.formId}
+                className="rounded-lg border border-border bg-background p-4 shadow-sm"
+              >
+                <div className="flex w-full items-start justify-between">
+                  <h3 className="text-sm font-medium">{form.title}</h3>
+                  <span className="ml-2 shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                    Reviewer
+                  </span>
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Updated {formatDate(form.updatedAt)}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {form.submissionCount} submission
+                  {form.submissionCount === 1 ? '' : 's'}
+                </p>
+                <Button
+                  className="mt-3 w-full"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => navigate(`/reviews/${form.formId}`)}
+                >
+                  <Eye className="mr-1.5 h-3.5 w-3.5" />
+                  View Submissions
+                </Button>
+              </div>
             ))}
           </div>
         )}

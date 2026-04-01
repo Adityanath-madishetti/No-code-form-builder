@@ -1,6 +1,88 @@
 import Form from "../models/Form.js";
 import FormVersion from "../models/FormVersion.js";
 import { createError } from "../middleware/errorHandler.js";
+import {
+    canEditForm,
+    normalizeAccess,
+    normalizeSettings,
+    normalizeVersionForResponse,
+    resolveAccessPayload,
+} from "../utils/formPermissions.js";
+
+async function getFormWithLatest(formId) {
+    const [form, latestVersion] = await Promise.all([
+        Form.findOne({ formId, isDeleted: false }),
+        FormVersion.findOne({ formId }).sort({ version: -1 }),
+    ]);
+    return { form, latestVersion };
+}
+
+async function assertCanEdit(formId, user) {
+    const { form, latestVersion } = await getFormWithLatest(formId);
+
+    if (!form) throw createError(404, "Form not found");
+    if (!latestVersion) throw createError(404, "No versions found");
+    if (!canEditForm(form, latestVersion, user)) {
+        throw createError(403, "Access denied");
+    }
+
+    return { form, latestVersion };
+}
+
+async function applyVersionUpdates({ formId, versionNum, uid, user, payload }) {
+    const { form } = await assertCanEdit(formId, user);
+
+    const allowedFields = ["meta", "settings", "pages", "logic", "workflow", "access"];
+    const updates = {};
+    for (const field of allowedFields) {
+        if (payload[field] !== undefined) {
+            updates[field] = payload[field];
+        }
+    }
+
+    if (Object.keys(updates).length === 0) {
+        throw createError(400, "No valid fields to update");
+    }
+
+    if (updates.settings !== undefined) {
+        updates.settings = normalizeSettings(updates.settings || {});
+    }
+
+    if (updates.access !== undefined) {
+        const { access, unresolved } = await resolveAccessPayload(
+            updates.access || {},
+            form.createdBy
+        );
+        if (unresolved.emails.length || unresolved.uids.length) {
+            const err = createError(
+                422,
+                "Some invited users were not found"
+            );
+            err.details = {
+                unresolvedEmails: [...new Set(unresolved.emails)],
+                unresolvedUids: [...new Set(unresolved.uids)],
+            };
+            throw err;
+        }
+        updates.access = access;
+    }
+
+    if (updates.meta && updates.meta.createdBy === undefined) {
+        updates.meta = {
+            ...updates.meta,
+            createdBy: uid,
+        };
+    }
+
+    const versionDoc = await FormVersion.findOneAndUpdate(
+        { formId, version: versionNum },
+        { $set: updates },
+        { returnDocument: "after", runValidators: true }
+    );
+
+    if (!versionDoc) throw createError(404, "Version not found");
+    return normalizeVersionForResponse(versionDoc);
+}
 
 /**
  * GET /api/forms/:formId/versions
@@ -9,11 +91,7 @@ import { createError } from "../middleware/errorHandler.js";
 export const listVersions = async (req, res, next) => {
     try {
         const { formId } = req.params;
-
-        // Verify form exists and user owns it
-        const form = await Form.findOne({ formId, isDeleted: false });
-        if (!form) throw createError(404, "Form not found");
-        if (form.createdBy !== req.user.uid) throw createError(403, "Access denied");
+        await assertCanEdit(formId, req.user);
 
         const versions = await FormVersion.find({ formId })
             .select("formId version meta.name meta.isDraft createdAt updatedAt")
@@ -32,16 +110,14 @@ export const listVersions = async (req, res, next) => {
 export const getLatestVersion = async (req, res, next) => {
     try {
         const { formId } = req.params;
+        await assertCanEdit(formId, req.user);
 
-        const form = await Form.findOne({ formId, isDeleted: false });
-        if (!form) throw createError(404, "Form not found");
-        if (form.createdBy !== req.user.uid) throw createError(403, "Access denied");
+        const versionDoc = await FormVersion.findOne({ formId }).sort({
+            version: -1,
+        });
+        if (!versionDoc) throw createError(404, "No versions found");
 
-        const version = await FormVersion.findOne({ formId }).sort({ version: -1 });
-
-        if (!version) throw createError(404, "No versions found");
-
-        res.status(200).json({ version });
+        res.status(200).json({ version: normalizeVersionForResponse(versionDoc) });
     } catch (err) {
         next(err);
     }
@@ -55,18 +131,14 @@ export const getVersion = async (req, res, next) => {
     try {
         const { formId } = req.params;
         const versionNum = parseInt(req.params.version, 10);
-
         if (isNaN(versionNum)) throw createError(400, "Invalid version number");
 
-        const form = await Form.findOne({ formId, isDeleted: false });
-        if (!form) throw createError(404, "Form not found");
-        if (form.createdBy !== req.user.uid) throw createError(403, "Access denied");
+        await assertCanEdit(formId, req.user);
 
-        const version = await FormVersion.findOne({ formId, version: versionNum });
+        const versionDoc = await FormVersion.findOne({ formId, version: versionNum });
+        if (!versionDoc) throw createError(404, "Version not found");
 
-        if (!version) throw createError(404, "Version not found");
-
-        res.status(200).json({ version });
+        res.status(200).json({ version: normalizeVersionForResponse(versionDoc) });
     } catch (err) {
         next(err);
     }
@@ -81,17 +153,13 @@ export const createVersion = async (req, res, next) => {
         const { formId } = req.params;
         const uid = req.user.uid;
 
-        const form = await Form.findOne({ formId, isDeleted: false });
-        if (!form) throw createError(404, "Form not found");
-        if (form.createdBy !== uid) throw createError(403, "Access denied");
+        await assertCanEdit(formId, req.user);
 
-        // Get latest version to clone from
         const latest = await FormVersion.findOne({ formId }).sort({ version: -1 });
         if (!latest) throw createError(404, "No existing version to clone");
 
         const newVersionNum = latest.version + 1;
 
-        // Clone the latest version, stripping all Mongoose internals
         const cloned = latest.toObject();
         delete cloned._id;
         delete cloned.__v;
@@ -104,28 +172,30 @@ export const createVersion = async (req, res, next) => {
             ...cloned.meta,
             isDraft: true,
         };
+        cloned.settings = normalizeSettings(cloned.settings || {});
+        cloned.access = normalizeAccess(cloned.access || {});
 
-        // Add to version history
         cloned.versionHistory = [
             ...(cloned.versionHistory || []),
             {
                 version: newVersionNum,
                 createdBy: uid,
                 createdAt: new Date(),
-                message: (req.body && req.body.message) || `Created version ${newVersionNum}`,
+                message:
+                    (req.body && req.body.message) ||
+                    `Created version ${newVersionNum}`,
             },
         ];
 
         const newVersion = await FormVersion.create(cloned);
 
-        // Update form header
         await Form.findOneAndUpdate(
             { formId },
             { currentVersion: newVersionNum },
             { returnDocument: "after" }
         );
 
-        res.status(201).json({ version: newVersion });
+        res.status(201).json({ version: normalizeVersionForResponse(newVersion) });
     } catch (err) {
         next(err);
     }
@@ -133,7 +203,7 @@ export const createVersion = async (req, res, next) => {
 
 /**
  * PUT /api/forms/:formId/versions/:version
- * Save/update a specific draft version (auto-save from the builder).
+ * Save/update a specific draft version (owner/editor).
  */
 export const updateVersion = async (req, res, next) => {
     try {
@@ -143,38 +213,65 @@ export const updateVersion = async (req, res, next) => {
 
         if (isNaN(versionNum)) throw createError(400, "Invalid version number");
 
-        const form = await Form.findOne({ formId, isDeleted: false });
-        if (!form) throw createError(404, "Form not found");
-        if (form.createdBy !== uid) throw createError(403, "Access denied");
+        const version = await applyVersionUpdates({
+            formId,
+            versionNum,
+            uid,
+            user: req.user,
+            payload: req.body,
+        });
 
-        // Only updatable fields — prevent overwriting formId, version, etc.
-        const allowedFields = [
-            "meta",
-            "settings",
-            "pages",
-            "logic",
-            "workflow",
-            "access",
-        ];
+        res.status(200).json({ version });
+    } catch (err) {
+        next(err);
+    }
+};
 
-        const updates = {};
-        for (const field of allowedFields) {
-            if (req.body[field] !== undefined) {
-                updates[field] = req.body[field];
-            }
-        }
+/**
+ * PATCH /api/forms/:formId/versions/:version/settings
+ * Patch only settings fields for a version.
+ */
+export const updateVersionSettings = async (req, res, next) => {
+    try {
+        const { formId } = req.params;
+        const versionNum = parseInt(req.params.version, 10);
+        const uid = req.user.uid;
+        if (isNaN(versionNum)) throw createError(400, "Invalid version number");
 
-        if (Object.keys(updates).length === 0) {
-            throw createError(400, "No valid fields to update");
-        }
+        const settingsPayload = req.body?.settings ?? req.body;
+        const version = await applyVersionUpdates({
+            formId,
+            versionNum,
+            uid,
+            user: req.user,
+            payload: { settings: settingsPayload },
+        });
 
-        const version = await FormVersion.findOneAndUpdate(
-            { formId, version: versionNum },
-            { $set: updates },
-            { returnDocument: "after", runValidators: true }
-        );
+        res.status(200).json({ version });
+    } catch (err) {
+        next(err);
+    }
+};
 
-        if (!version) throw createError(404, "Version not found");
+/**
+ * PATCH /api/forms/:formId/versions/:version/access
+ * Patch only access fields for a version.
+ */
+export const updateVersionAccess = async (req, res, next) => {
+    try {
+        const { formId } = req.params;
+        const versionNum = parseInt(req.params.version, 10);
+        const uid = req.user.uid;
+        if (isNaN(versionNum)) throw createError(400, "Invalid version number");
+
+        const accessPayload = req.body?.access ?? req.body;
+        const version = await applyVersionUpdates({
+            formId,
+            versionNum,
+            uid,
+            user: req.user,
+            payload: { access: accessPayload },
+        });
 
         res.status(200).json({ version });
     } catch (err) {
@@ -184,7 +281,7 @@ export const updateVersion = async (req, res, next) => {
 
 /**
  * POST /api/forms/:formId/versions/publish
- * Publish the latest version (set isDraft to false, activate form).
+ * Publish the latest version (owner only).
  */
 export const publishVersion = async (req, res, next) => {
     try {
@@ -195,7 +292,6 @@ export const publishVersion = async (req, res, next) => {
         if (!form) throw createError(404, "Form not found");
         if (form.createdBy !== uid) throw createError(403, "Access denied");
 
-        // Publish the latest version
         const version = await FormVersion.findOneAndUpdate(
             { formId, version: form.currentVersion },
             {
@@ -214,10 +310,16 @@ export const publishVersion = async (req, res, next) => {
 
         if (!version) throw createError(404, "Version not found");
 
-        // Activate the form
-        await Form.findOneAndUpdate({ formId }, { isActive: true }, { returnDocument: "after" });
+        await Form.findOneAndUpdate(
+            { formId },
+            { isActive: true },
+            { returnDocument: "after" }
+        );
 
-        res.status(200).json({ message: "Form published", version });
+        res.status(200).json({
+            message: "Form published",
+            version: normalizeVersionForResponse(version),
+        });
     } catch (err) {
         next(err);
     }

@@ -7,7 +7,10 @@ import {
     createVersion,
     updateVersion,
     publishVersion,
+    updateVersionSettings,
+    updateVersionAccess,
 } from "../controllers/formVersionController.js";
+import { validateFormVersionMiddleware } from "../utils/validators.js";
 
 // mergeParams: true allows access to :formId from parent router
 const router = Router({ mergeParams: true });
@@ -22,7 +25,8 @@ router.post("/", verifyToken, createVersion);
 
 // ── Dynamic routes ──
 router.get("/:version", verifyToken, getVersion);
-router.put("/:version", verifyToken, updateVersion);
+router.put("/:version", verifyToken, validateFormVersionMiddleware, updateVersion);
+router.patch("/:version/settings", verifyToken, updateVersionSettings);
+router.patch("/:version/access", verifyToken, updateVersionAccess);
 
 export default router;
-

@@ -1,8 +1,9 @@
 import { Router } from "express";
-import { verifyToken } from "../middleware/auth.js";
+import { optionalAuth, verifyToken } from "../middleware/auth.js";
 import {
     createForm,
     listForms,
+    listSharedForms,
     getForm,
     updateForm,
     deleteForm,
@@ -22,6 +23,7 @@ const router = Router();
 // Form CRUD
 router.post("/", verifyToken, createForm);
 router.get("/", verifyToken, listForms);
+router.get("/shared", verifyToken, listSharedForms);
 router.get("/:formId", verifyToken, getForm);
 router.patch("/:formId", verifyToken, updateForm);
 router.delete("/:formId", verifyToken, deleteForm);
@@ -29,8 +31,8 @@ router.delete("/:formId", verifyToken, deleteForm);
 // Publish
 router.post("/:formId/publish", verifyToken, publishForm);
 
-// Public form access (any authenticated user can fill)
-router.get("/:formId/public", verifyToken, getPublicForm);
+// Public form access (auth optional; policy enforcement in controller)
+router.get("/:formId/public", optionalAuth, getPublicForm);
 
 // Workflow transition endpoints (on submissions)
 router.post("/:formId/submissions/:submissionId/transition", verifyToken, transitionSubmission);

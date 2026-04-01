@@ -1,7 +1,18 @@
 import crypto from "crypto";
 import Form from "../models/Form.js";
 import FormVersion from "../models/FormVersion.js";
+import Submission from "../models/Submission.js";
 import { createError } from "../middleware/errorHandler.js";
+import {
+    canEditForm,
+    canFillForm,
+    normalizeEmail,
+    normalizeVersionForResponse,
+} from "../utils/formPermissions.js";
+
+async function getLatestVersion(formId) {
+    return FormVersion.findOne({ formId }).sort({ version: -1 });
+}
 
 /**
  * POST /api/forms
@@ -13,7 +24,6 @@ export const createForm = async (req, res, next) => {
         const { title, description } = req.body;
         const formId = crypto.randomUUID();
 
-        // Create header
         const form = await Form.create({
             formId,
             title: title || "Untitled Form",
@@ -21,7 +31,6 @@ export const createForm = async (req, res, next) => {
             createdBy: uid,
         });
 
-        // Create initial version (v1 draft)
         const formVersion = await FormVersion.create({
             formId,
             version: 1,
@@ -31,7 +40,17 @@ export const createForm = async (req, res, next) => {
                 description: description || "",
                 isDraft: true,
             },
-            settings: {},
+            settings: {
+                collectEmailMode: "none",
+                submissionPolicy: "none",
+                canViewOwnSubmission: false,
+            },
+            access: {
+                visibility: "private",
+                editors: [],
+                reviewers: [],
+                viewers: [],
+            },
             pages: [
                 {
                     pageId: crypto.randomUUID(),
@@ -58,13 +77,34 @@ export const createForm = async (req, res, next) => {
 
 /**
  * GET /api/forms
- * List all forms for the logged-in user (excludes soft-deleted).
+ * List forms owned by or editable by the logged-in user.
  */
 export const listForms = async (req, res, next) => {
     try {
+        const uid = req.user.uid;
+
+        const editableFormIds = await FormVersion.aggregate([
+            { $sort: { version: -1 } },
+            {
+                $group: {
+                    _id: "$formId",
+                    latestAccess: { $first: "$access" },
+                },
+            },
+            { $match: { "latestAccess.editors.uid": uid } },
+            { $project: { _id: 0, formId: "$_id" } },
+        ]);
+
         const forms = await Form.find({
-            createdBy: req.user.uid,
             isDeleted: false,
+            $or: [
+                { createdBy: uid },
+                {
+                    formId: {
+                        $in: editableFormIds.map((row) => row.formId),
+                    },
+                },
+            ],
         }).sort({ updatedAt: -1 });
 
         res.status(200).json({ forms });
@@ -74,22 +114,87 @@ export const listForms = async (req, res, next) => {
 };
 
 /**
+ * GET /api/forms/shared
+ * List forms shared with the logged-in user as reviewer.
+ */
+export const listSharedForms = async (req, res, next) => {
+    try {
+        const uid = req.user.uid;
+        const email = normalizeEmail(req.user.email);
+
+        const reviewerMatches = [{ "latestAccess.reviewers.uid": uid }];
+        if (email) {
+            reviewerMatches.push({ "latestAccess.reviewers.email": email });
+        }
+
+        const sharedFormRows = await FormVersion.aggregate([
+            { $sort: { version: -1 } },
+            {
+                $group: {
+                    _id: "$formId",
+                    latestAccess: { $first: "$access" },
+                },
+            },
+            { $match: { $or: reviewerMatches } },
+            { $project: { _id: 0, formId: "$_id" } },
+        ]);
+
+        const sharedFormIds = sharedFormRows.map((row) => row.formId);
+        if (sharedFormIds.length === 0) {
+            return res.status(200).json({ forms: [] });
+        }
+
+        const [forms, submissionCounts] = await Promise.all([
+            Form.find({
+                formId: { $in: sharedFormIds },
+                isDeleted: false,
+            }).sort({ updatedAt: -1 }),
+            Submission.aggregate([
+                { $match: { formId: { $in: sharedFormIds } } },
+                {
+                    $group: {
+                        _id: "$formId",
+                        count: { $sum: 1 },
+                    },
+                },
+            ]),
+        ]);
+
+        const countMap = new Map(
+            submissionCounts.map((entry) => [entry._id, entry.count])
+        );
+
+        const sharedForms = forms.map((form) => ({
+            formId: form.formId,
+            title: form.title,
+            currentVersion: form.currentVersion,
+            isActive: form.isActive,
+            updatedAt: form.updatedAt,
+            createdAt: form.createdAt,
+            sharedRole: "reviewer",
+            submissionCount: countMap.get(form.formId) || 0,
+        }));
+
+        res.status(200).json({ forms: sharedForms });
+    } catch (err) {
+        next(err);
+    }
+};
+
+/**
  * GET /api/forms/:formId
- * Get a single form's header.
+ * Get a single form header if the user can edit the form.
  */
 export const getForm = async (req, res, next) => {
     try {
-        const form = await Form.findOne({
-            formId: req.params.formId,
-            isDeleted: false,
-        });
+        const { formId } = req.params;
+        const form = await Form.findOne({ formId, isDeleted: false });
+        if (!form) throw createError(404, "Form not found");
 
-        if (!form) {
-            throw createError(404, "Form not found");
-        }
+        const latestVersion = await getLatestVersion(formId);
+        if (!latestVersion) throw createError(404, "Form version not found");
 
-        // Only the owner can view the form header
-        if (form.createdBy !== req.user.uid) {
+        if (!canEditForm(form, latestVersion, req.user)) {
             throw createError(403, "Access denied");
         }
 
@@ -101,10 +206,11 @@ export const getForm = async (req, res, next) => {
 
 /**
  * PATCH /api/forms/:formId
- * Update form header (title, isActive).
+ * Update form header (title, isActive) — owner or editor.
  */
 export const updateForm = async (req, res, next) => {
     try {
+        const { formId } = req.params;
         const allowedFields = ["title", "isActive"];
         const updates = {};
 
@@ -118,21 +224,23 @@ export const updateForm = async (req, res, next) => {
             throw createError(400, "No valid fields to update");
         }
 
-        const form = await Form.findOneAndUpdate(
-            {
-                formId: req.params.formId,
-                createdBy: req.user.uid,
-                isDeleted: false,
-            },
+        const form = await Form.findOne({ formId, isDeleted: false });
+        if (!form) throw createError(404, "Form not found");
+
+        const latestVersion = await getLatestVersion(formId);
+        if (!latestVersion) throw createError(404, "Form version not found");
+
+        if (!canEditForm(form, latestVersion, req.user)) {
+            throw createError(403, "Access denied");
+        }
+
+        const updated = await Form.findOneAndUpdate(
+            { formId, isDeleted: false },
             { $set: updates },
             { returnDocument: "after", runValidators: true }
         );
 
-        if (!form) {
-            throw createError(404, "Form not found");
-        }
-
-        res.status(200).json({ form });
+        res.status(200).json({ form: updated });
     } catch (err) {
         next(err);
     }
@@ -140,7 +248,7 @@ export const updateForm = async (req, res, next) => {
 
 /**
  * DELETE /api/forms/:formId
- * Soft-delete a form.
+ * Soft-delete a form (owner only).
  */
 export const deleteForm = async (req, res, next) => {
     try {
@@ -166,7 +274,7 @@ export const deleteForm = async (req, res, next) => {
 
 /**
  * POST /api/forms/:formId/publish
- * Publish a form — sets isActive=true and marks the latest version as published (isDraft=false).
+ * Publish a form (owner only).
  */
 export const publishForm = async (req, res, next) => {
     try {
@@ -177,16 +285,13 @@ export const publishForm = async (req, res, next) => {
         if (!form) throw createError(404, "Form not found");
         if (form.createdBy !== uid) throw createError(403, "Access denied");
 
-        // Activate the form
         form.isActive = true;
         await form.save();
 
-        // Mark the latest version as published
         const latestVersion = await FormVersion.findOne({ formId }).sort({
             version: -1,
         });
-        if (!latestVersion)
-            throw createError(400, "No version to publish");
+        if (!latestVersion) throw createError(400, "No version to publish");
 
         latestVersion.meta.isDraft = false;
         await latestVersion.save();
@@ -203,7 +308,7 @@ export const publishForm = async (req, res, next) => {
 
 /**
  * GET /api/forms/:formId/public
- * Get the published version of a form for filling. Any authenticated user can access.
+ * Get the latest published version for filling (authorization depends on access policy).
  */
 export const getPublicForm = async (req, res, next) => {
     try {
@@ -211,17 +316,26 @@ export const getPublicForm = async (req, res, next) => {
 
         const form = await Form.findOne({ formId, isDeleted: false });
         if (!form) throw createError(404, "Form not found");
-        if (!form.isActive)
+        if (!form.isActive) {
             throw createError(400, "This form is not currently accepting responses");
+        }
 
-        // Get the latest published (non-draft) version
-        const version = await FormVersion.findOne({
+        const versionDoc = await FormVersion.findOne({
             formId,
             "meta.isDraft": false,
         }).sort({ version: -1 });
-
-        if (!version)
+        if (!versionDoc) {
             throw createError(400, "No published version available");
+        }
+
+        const version = normalizeVersionForResponse(versionDoc);
+
+        if (!canFillForm(form, version, req.user)) {
+            if (!req.user) {
+                throw createError(401, "Authentication required to access this form");
+            }
+            throw createError(403, "You do not have access to this form");
+        }
 
         res.status(200).json({ form, version });
     } catch (err) {

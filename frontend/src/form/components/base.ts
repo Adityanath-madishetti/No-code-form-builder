@@ -114,6 +114,13 @@ export type InstanceID = string;
 export type PageID = string;
 export type FormID = string;
 export type ThemeID = string;
+export type FormVisibility = 'public' | 'private' | 'link-only';
+export type CollectEmailMode = 'none' | 'optional' | 'required';
+export type SubmissionPolicy =
+  | 'none'
+  | 'edit_only'
+  | 'resubmit_only'
+  | 'edit_and_resubmit';
 
 export interface ComponentMetadata {
   label: string;
@@ -201,6 +208,27 @@ export interface FormTheme {
   bodyFont: Font;
 }
 
+export interface AccessIdentity {
+  uid?: string;
+  email: string;
+}
+
+export interface FormAccess {
+  visibility: FormVisibility;
+  editors: AccessIdentity[];
+  reviewers: AccessIdentity[];
+  viewers: AccessIdentity[];
+}
+
+export interface FormSettings {
+  submissionLimit: number | null;
+  closeDate: string | null;
+  collectEmailMode: CollectEmailMode;
+  submissionPolicy: SubmissionPolicy;
+  canViewOwnSubmission: boolean;
+  confirmationMessage: string;
+}
+
 /**
  * The root container for a form.
  * Manages form-level settings, metadata, and the ordered list of pages.
@@ -210,5 +238,7 @@ export interface Form {
   name: string;
   theme: FormTheme | null;
   metadata: FormMetadata;
+  access: FormAccess;
+  settings: FormSettings;
   pages: PageID[];
 }

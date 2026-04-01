@@ -39,12 +39,70 @@ const formVersionPayloadSchema = {
                 allowMultipleSubmissions: { type: "boolean" },
                 requireLogin: { type: "boolean" },
                 collectEmail: { type: "boolean" },
+                collectEmailMode: {
+                    type: "string",
+                    enum: ["none", "optional", "required"],
+                },
+                submissionPolicy: {
+                    type: "string",
+                    enum: ["none", "edit_only", "resubmit_only", "edit_and_resubmit"],
+                },
+                canViewOwnSubmission: { type: "boolean" },
                 saveDraft: { type: "boolean" },
                 showProgressBar: { type: "boolean" },
-                submissionLimit: { type: "number", minimum: 0 },
-                closeDate: { type: "string" },
+                submissionLimit: {
+                    anyOf: [
+                        { type: "number", minimum: 0 },
+                        { type: "null" },
+                    ],
+                },
+                closeDate: {
+                    anyOf: [
+                        { type: "string" },
+                        { type: "null" },
+                    ],
+                },
                 confirmationMessage: { type: "string" },
                 notifyOnSubmission: { type: "boolean" },
+            },
+        },
+        access: {
+            type: "object",
+            properties: {
+                visibility: {
+                    type: "string",
+                    enum: ["public", "private", "link-only"],
+                },
+                editors: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        properties: {
+                            uid: { type: "string" },
+                            email: { type: "string" },
+                        },
+                    },
+                },
+                reviewers: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        properties: {
+                            uid: { type: "string" },
+                            email: { type: "string" },
+                        },
+                    },
+                },
+                viewers: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        properties: {
+                            uid: { type: "string" },
+                            email: { type: "string" },
+                        },
+                    },
+                },
             },
         },
         pages: {

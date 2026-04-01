@@ -36,9 +36,11 @@ import { immer } from 'zustand/middleware/immer';
 import type {
   ComponentMetadata,
   Form,
+  FormAccess,
   FormID,
   FormMetadata,
   FormPage,
+  FormSettings,
   InstanceID,
   PageID,
   FormTheme,
@@ -56,6 +58,20 @@ const createForm = (id: FormID, name: string, metadata?: Partial<FormMetadata>):
     ...metadata,
   },
   theme: null,
+  access: {
+    visibility: 'private',
+    editors: [],
+    reviewers: [],
+    viewers: [],
+  },
+  settings: {
+    submissionLimit: null,
+    closeDate: null,
+    collectEmailMode: 'none',
+    submissionPolicy: 'none',
+    canViewOwnSubmission: false,
+    confirmationMessage: 'Thank you for your response!',
+  },
   pages: [],
 });
 
@@ -172,6 +188,8 @@ interface FormSchemaActions {
   updateFormMetadata: (metadata: Partial<FormMetadata>) => void;
 
   updateFormTheme: (theme: Partial<FormTheme>) => void;
+  updateFormAccess: (access: Partial<FormAccess>) => void;
+  updateFormSettings: (settings: Partial<FormSettings>) => void;
 
   addPage: (insertIndex?: number, customId?: PageID) => PageID;
   removePage: (pageId: PageID) => void;
@@ -256,6 +274,8 @@ export const formSelectors = {
   form: (s: FormStore) => s.form,
   formMetadata: (s: FormStore) => s.form?.metadata,
   formTheme: (s: FormStore) => s.form?.theme ?? null, // <-- Add this selector
+  formAccess: (s: FormStore) => s.form?.access ?? null,
+  formSettings: (s: FormStore) => s.form?.settings ?? null,
   pages: (s: FormStore) => s.pages,
   components: (s: FormStore) => s.components,
   activePage: (s: FormStore) =>
@@ -345,6 +365,20 @@ export const useFormStore = create<FormStore>()(
         Object.assign(state.form.theme, themeUpdates);
 
         // Optionally bump the updatedAt timestamp
+        state.form.metadata.updatedAt = new Date().toISOString();
+      }),
+
+    updateFormAccess: (accessUpdates: Partial<FormAccess>) =>
+      set((state) => {
+        if (!state.form) return;
+        Object.assign(state.form.access, accessUpdates);
+        state.form.metadata.updatedAt = new Date().toISOString();
+      }),
+
+    updateFormSettings: (settingsUpdates: Partial<FormSettings>) =>
+      set((state) => {
+        if (!state.form) return;
+        Object.assign(state.form.settings, settingsUpdates);
         state.form.metadata.updatedAt = new Date().toISOString();
       }),
 
@@ -576,5 +610,4 @@ export const useFormStore = create<FormStore>()(
       set((state) => ({ catalogRefreshKey: state.catalogRefreshKey + 1 })),
   }))
 );
-
 

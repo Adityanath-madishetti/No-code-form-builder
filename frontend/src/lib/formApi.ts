@@ -1,16 +1,17 @@
 // src/lib/formApi.ts
-/**
- * Bridge between the backend FormVersion schema and the frontend Zustand store.
- * Handles loading from API → store hydration and store → API serialization.
- */
 import { api } from './api';
-import type { Form, FormPage } from '@/form/components/base';
+import type {
+  AccessIdentity,
+  CollectEmailMode,
+  Form,
+  FormAccess,
+  FormPage,
+  FormSettings,
+  SubmissionPolicy,
+} from '@/form/components/base';
 import type { AnyFormComponent } from '@/form/registry/componentRegistry';
 import { deserializeComponent } from '@/form/registry/componentRegistry';
 import type { ComponentID } from '@/form/components/base';
-import type { LogicRule, FormulaRule } from '@/form/logic/logicTypes';
-import type { Workflow } from '@/form/workflow/workflowTypes';
-// ── Frontend ComponentID ↔ Backend componentType mapping ──
 
 const frontendToBackend: Record<string, string> = {
   Header: 'heading',
@@ -48,13 +49,31 @@ const frontendToBackend: Record<string, string> = {
 
 const backendToFrontend: Record<string, string> = {};
 for (const [fe, be] of Object.entries(frontendToBackend)) {
-  // Don't overwrite if already exists (first mapping wins)
-  if (!backendToFrontend[be]) {
-    backendToFrontend[be] = fe;
-  }
+  if (!backendToFrontend[be]) backendToFrontend[be] = fe;
 }
 
-// ── Types for backend responses ──
+interface BackendIdentity {
+  uid?: string;
+  email: string;
+}
+
+interface BackendAccess {
+  visibility?: 'public' | 'private' | 'link-only';
+  editors?: BackendIdentity[];
+  reviewers?: BackendIdentity[];
+  viewers?: BackendIdentity[];
+}
+
+interface BackendSettings {
+  submissionLimit?: number;
+  closeDate?: string;
+  collectEmailMode?: CollectEmailMode;
+  submissionPolicy?: SubmissionPolicy;
+  canViewOwnSubmission?: boolean;
+  confirmationMessage?: string;
+  collectEmail?: boolean;
+  allowMultipleSubmissions?: boolean;
+}
 
 interface BackendComponent {
   componentId: string;
@@ -85,7 +104,8 @@ interface BackendFormVersion {
     description: string;
     isDraft: boolean;
   };
-  settings: Record<string, unknown>;
+  settings?: BackendSettings;
+  access?: BackendAccess;
   pages: BackendPage[];
   logic?: {
     rules?: LogicRule[];
@@ -93,7 +113,62 @@ interface BackendFormVersion {
   };
 }
 
-// ── Load: API → Store ──
+function normalizeIdentityList(list: BackendIdentity[] | undefined): AccessIdentity[] {
+  if (!Array.isArray(list)) return [];
+  const seen = new Set<string>();
+  const out: AccessIdentity[] = [];
+
+  for (const entry of list) {
+    const email = typeof entry?.email === 'string' ? entry.email.trim().toLowerCase() : '';
+    const uid = typeof entry?.uid === 'string' ? entry.uid.trim() : '';
+    if (!email) continue;
+    const key = uid || email;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(uid ? { uid, email } : { email });
+  }
+
+  return out;
+}
+
+function normalizeAccess(access: BackendAccess | undefined): FormAccess {
+  const visibility =
+    access?.visibility === 'public' ||
+    access?.visibility === 'private' ||
+    access?.visibility === 'link-only'
+      ? access.visibility
+      : 'private';
+
+  return {
+    visibility,
+    editors: normalizeIdentityList(access?.editors),
+    reviewers: normalizeIdentityList(access?.reviewers),
+    viewers: normalizeIdentityList(access?.viewers),
+  };
+}
+
+function normalizeSettings(settings: BackendSettings | undefined): FormSettings {
+  const collectEmailMode: CollectEmailMode =
+    settings?.collectEmailMode ??
+    (settings?.collectEmail ? 'required' : 'none');
+
+  const submissionPolicy: SubmissionPolicy =
+    settings?.submissionPolicy ??
+    (settings?.allowMultipleSubmissions ? 'resubmit_only' : 'none');
+
+  return {
+    submissionLimit:
+      typeof settings?.submissionLimit === 'number'
+        ? settings.submissionLimit
+        : null,
+    closeDate: settings?.closeDate || null,
+    collectEmailMode,
+    submissionPolicy,
+    canViewOwnSubmission: settings?.canViewOwnSubmission === true,
+    confirmationMessage:
+      settings?.confirmationMessage || 'Thank you for your response!',
+  };
+}
 
 export async function loadFormVersion(formId: string): Promise<{
   form: Form;
@@ -108,15 +183,19 @@ export async function loadFormVersion(formId: string): Promise<{
   );
   const v = res.version;
 
-  // Build Form object
   const form: Form = {
     id: v.formId,
     name: v.meta.name,
     metadata: {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      description: v.meta.description || '',
+      authorId: v.meta.createdBy,
+      version: v.version,
     },
     theme: null,
+    access: normalizeAccess(v.access),
+    settings: normalizeSettings(v.settings),
     pages: v.pages.map((p) => p.pageId),
   };
 
@@ -145,6 +224,8 @@ export async function loadFormVersion(formId: string): Promise<{
 
     pages.push({
       id: bp.pageId,
+      title: bp.title,
+      description: bp.description,
       children: childIds,
       isTerminal: false,
     });
@@ -160,8 +241,6 @@ export async function loadFormVersion(formId: string): Promise<{
   };
 }
 
-// ── Save: Store → API ──
-
 export async function saveFormVersion(
   formId: string,
   versionNum: number,
@@ -172,7 +251,6 @@ export async function saveFormVersion(
   logicRules: LogicRule[] = [],
   logicFormulas: FormulaRule[] = []
 ): Promise<void> {
-  // Build pages array in order
   const orderedPageIds = storeForm.pages;
   const pages: BackendPage[] = orderedPageIds.map((pageId, idx) => {
     const page = storePages[pageId];
@@ -195,9 +273,11 @@ export async function saveFormVersion(
           componentType: frontendToBackend[comp.id] || comp.id.toLowerCase(),
           label: comp.metadata?.label || comp.id,
           description: '',
-          required: (comp.validation as unknown as Record<string, unknown>)?.required === true,
+          required:
+            (comp.validation as unknown as Record<string, unknown>)?.required ===
+            true,
           group: 'input',
-          props: comp.props as unknown as Record<string, unknown>,
+          props: comp.props as Record<string, unknown>,
           validation: comp.validation as unknown as Record<string, unknown>,
           order,
         };
@@ -207,18 +287,42 @@ export async function saveFormVersion(
     return {
       pageId,
       pageNo: idx + 1,
-      title: `Page ${idx + 1}`,
+      title: page?.title || `Page ${idx + 1}`,
+      description: page?.description || '',
       components: comps,
     };
   });
 
-  // Update the version
   await api.put(`/api/forms/${formId}/versions/${versionNum}`, {
     meta: {
       createdBy,
       name: storeForm.name,
-      description: '',
+      description: storeForm.metadata.description || '',
       isDraft: true,
+    },
+    settings: {
+      collectEmailMode: storeForm.settings.collectEmailMode,
+      submissionPolicy: storeForm.settings.submissionPolicy,
+      canViewOwnSubmission: storeForm.settings.canViewOwnSubmission,
+      confirmationMessage: storeForm.settings.confirmationMessage,
+      ...(storeForm.settings.submissionLimit !== null
+        ? { submissionLimit: storeForm.settings.submissionLimit }
+        : {}),
+      ...(storeForm.settings.closeDate
+        ? { closeDate: storeForm.settings.closeDate }
+        : {}),
+    },
+    access: {
+      visibility: storeForm.access.visibility,
+      editors: storeForm.access.editors.map((entry) =>
+        entry.uid ? { uid: entry.uid, email: entry.email } : { email: entry.email }
+      ),
+      reviewers: storeForm.access.reviewers.map((entry) =>
+        entry.uid ? { uid: entry.uid, email: entry.email } : { email: entry.email }
+      ),
+      viewers: storeForm.access.viewers.map((entry) =>
+        entry.uid ? { uid: entry.uid, email: entry.email } : { email: entry.email }
+      ),
     },
     pages,
     logic: {
@@ -227,11 +331,8 @@ export async function saveFormVersion(
     },
   });
 
-  // Also sync the form header title so the dashboard stays in sync
   await api.patch(`/api/forms/${formId}`, { title: storeForm.name });
 }
-
-// ── Create New Version: clones latest → increments version ──
 
 export async function createNewVersion(formId: string): Promise<number> {
   const res = await api.post<{ version: { version: number } }>(

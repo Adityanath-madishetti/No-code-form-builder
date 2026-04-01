@@ -100,7 +100,22 @@ export default function FormEditor() {
     // Clear the old form immediately so stale data doesn't flash
     setFormLoaded(false);
     store.loadForm(
-      { id: formId, name: '', metadata: { createdAt: '', updatedAt: '' }, theme: null, pages: [] },
+      {
+        id: formId,
+        name: '',
+        metadata: { createdAt: '', updatedAt: '' },
+        theme: null,
+        access: { visibility: 'private', editors: [], reviewers: [], viewers: [] },
+        settings: {
+          submissionLimit: null,
+          closeDate: null,
+          collectEmailMode: 'none',
+          submissionPolicy: 'none',
+          canViewOwnSubmission: false,
+          confirmationMessage: 'Thank you for your response!',
+        },
+        pages: [],
+      },
       [],
       [],
       1
@@ -205,17 +220,8 @@ export default function FormEditor() {
         store.form,
         store.pages,
         store.components,
-        user?.email || 'unknown',
-        logicState.rules,
-        logicState.formulas
+        user?.uid || 'unknown'
       );
-
-      // Save workflow (stored on Form, not FormVersion)
-      const workflowState = useWorkflowStore.getState();
-      if (workflowState.dirty) {
-        await saveWorkflow(formId, workflowState.workflow);
-        workflowState.markClean();
-      }
     } catch (err) {
       console.error('Save failed:', err);
     } finally {
