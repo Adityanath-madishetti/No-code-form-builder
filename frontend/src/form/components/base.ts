@@ -53,11 +53,60 @@
  * Acts as the canonical source of truth for component type IDs.
  */
 export const ComponentIDs = {
+  // ── Existing ──
   TextBox: 'Textbox',
   Input: 'Input',
   Radio: 'Radio',
   Checkbox: 'Checkbox',
   Dropdown: 'Dropdown',
+
+  // ── Layout ──
+  Header: 'Header',
+  SectionDivider: 'SectionDivider',
+  LineDivider: 'LineDivider',
+  ColumnLayout: 'ColumnLayout',
+
+  // ── Text Inputs ──
+  MultiLineText: 'MultiLineText',
+  Email: 'Email',
+  Phone: 'Phone',
+  Number: 'Number',
+  Decimal: 'Decimal',
+  URL: 'URL',
+
+  // ── Date & Time ──
+  Date: 'Date',
+  Time: 'Time',
+
+  // ── File / Media ──
+  FileUpload: 'FileUpload',
+  ImageUpload: 'ImageUpload',
+
+  // ── Selection / Grids ──
+  SingleChoiceGrid: 'SingleChoiceGrid',
+  MultiChoiceGrid: 'MultiChoiceGrid',
+  MatrixTable: 'MatrixTable',
+
+  // ── Scales ──
+  RatingScale: 'RatingScale',
+  LinearScale: 'LinearScale',
+  Slider: 'Slider',
+
+  // ── Composite / Blocks ──
+  AddressBlock: 'AddressBlock',
+  NameBlock: 'NameBlock',
+
+  // ── Specialty ──
+  ColorPicker: 'ColorPicker',
+  Signature: 'Signature',
+  Location: 'Location',
+
+  // ── Extra (suggested) ──
+  PasswordInput: 'PasswordInput',
+  Toggle: 'Toggle',
+  RichTextInput: 'RichTextInput',
+  Payment: 'Payment',
+  Captcha: 'Captcha',
 } as const;
 
 export type ComponentID = (typeof ComponentIDs)[keyof typeof ComponentIDs];

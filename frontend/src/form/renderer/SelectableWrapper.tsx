@@ -38,7 +38,6 @@ export const SelectableComponent = ({
   const selectedId = useFormStore((s) => s.activeComponentId);
   const setActiveComponent = useFormStore((s) => s.setActiveComponent);
   const removeComponent = useFormStore((s) => s.removeComponent);
-  const setActiveSidePanelTab = useFormStore((s) => s.setActiveSidePanelTab);
   const setActivePage = useFormStore((s) => s.setActivePage);
 
   const isSelected = selectedId === component.instanceId;
@@ -87,7 +86,6 @@ export const SelectableComponent = ({
 
         setActiveComponent(component.instanceId);
         setActivePage(null);
-        setActiveSidePanelTab('properties');
 
         setTimeout(() => {
           const state = useFormStore.getState();
@@ -184,7 +182,6 @@ export const SelectablePage = ({
   const setActivePage = useFormStore((s) => s.setActivePage);
   const setActiveComponent = useFormStore((s) => s.setActiveComponent);
   const removePage = useFormStore((s) => s.removePage);
-  const setActiveSidePanelTab = useFormStore((s) => s.setActiveSidePanelTab);
 
   const { ref, isDragging } = useSortable({
     id: pageId,
@@ -229,7 +226,6 @@ export const SelectablePage = ({
 
         setActivePage(pageId);
         setActiveComponent(null);
-        setActiveSidePanelTab('properties');
 
         setTimeout(() => {
           const state = useFormStore.getState();

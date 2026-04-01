@@ -1,20 +1,112 @@
-// src/form/components/ComponentCatalogPanel.tsx
+// src/pages/FormEditor/components/ComponentCatalogPanel.tsx
 import { useState, useMemo } from 'react';
 import { useDraggable } from '@dnd-kit/react';
-import { Search } from 'lucide-react';
+import {
+  Search,
+  // Layout icons
+  Heading,
+  Minus,
+  SeparatorHorizontal,
+  Columns2,
+  // Text input icons
+  Type,
+  AlignLeft,
+  Mail,
+  Phone,
+  Hash,
+  Link,
+  // Date / Time
+  Calendar,
+  Clock,
+  // File / Media
+  Upload,
+  Image,
+  // Selection
+  CircleDot,
+  CheckSquare,
+  ChevronDown,
+  Grid3X3,
+  Table,
+  // Scales
+  Star,
+  Gauge,
+  SlidersHorizontal,
+  // Blocks
+  MapPin,
+  User,
+  // Specialty
+  Palette,
+  PenTool,
+  Lock,
+  ToggleLeft,
+  FileText,
+  CreditCard,
+  ShieldCheck,
+} from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { catalogRegistry } from '@/form/registry/componentRegistry';
 import { useFormStore } from '@/form/store/formStore';
+import { DRAG_CATALOG_COMPONENT_ID } from '@/form/utils/DndUtils';
 
-import { DRAG_CATALOG_PAGE_ID, DRAG_CATALOG_COMPONENT_ID } from '@/form/utils/DndUtils';
+// Icons mapped to component IDs
+const COMPONENT_ICONS: Record<string, React.ElementType> = {
+  // Layout
+  Header: Heading,
+  SectionDivider: SeparatorHorizontal,
+  LineDivider: Minus,
+  ColumnLayout: Columns2,
+  // Existing
+  Textbox: AlignLeft,
+  Input: Type,
+  Radio: CircleDot,
+  Checkbox: CheckSquare,
+  Dropdown: ChevronDown,
+  // Text
+  MultiLineText: AlignLeft,
+  Email: Mail,
+  Phone: Phone,
+  Number: Hash,
+  Decimal: Hash,
+  URL: Link,
+  // Date / Time
+  Date: Calendar,
+  Time: Clock,
+  // File
+  FileUpload: Upload,
+  ImageUpload: Image,
+  // Grids
+  SingleChoiceGrid: Grid3X3,
+  MultiChoiceGrid: Grid3X3,
+  MatrixTable: Table,
+  // Scales
+  RatingScale: Star,
+  LinearScale: Gauge,
+  Slider: SlidersHorizontal,
+  // Blocks
+  AddressBlock: MapPin,
+  NameBlock: User,
+  // Specialty
+  ColorPicker: Palette,
+  Signature: PenTool,
+  Location: MapPin,
+  PasswordInput: Lock,
+  Toggle: ToggleLeft,
+  RichTextInput: FileText,
+  Payment: CreditCard,
+  Captcha: ShieldCheck,
+};
 
-const STRUCTURE_ITEMS = [
-  {
-    id: DRAG_CATALOG_PAGE_ID,
-    type: DRAG_CATALOG_PAGE_ID,
-    label: 'New Page',
-    description: 'Add a new blank page to your form.',
-  },
+// Category ordering
+const CATEGORY_ORDER = [
+  'Layout',
+  'Text Inputs',
+  'Selection',
+  'Date & Time',
+  'File / Media',
+  'Grids & Tables',
+  'Scales & Sliders',
+  'Blocks',
+  'Specialty',
 ];
 
 function DraggableCatalogItem({
@@ -22,39 +114,48 @@ function DraggableCatalogItem({
   data,
   label,
   description,
+  icon: Icon,
 }: {
   id: string;
   data: unknown;
   label: string;
   description: string;
+  icon?: React.ElementType;
 }) {
   const { ref, isDragging } = useDraggable({
-    id: id,
+    id,
     type: (data as Record<string, unknown>).type as string,
     data: data as Record<string, unknown> | undefined,
   });
 
+  const IconComp = Icon ?? Type;
+
   return (
     <div className="relative w-full">
-      {/* The replica */}
+      {/* Ghost */}
       <div
-        className={`flex w-full flex-col items-start rounded-md border bg-muted p-3 text-muted-foreground transition-opacity duration-200 ${isDragging ? 'border-dashed opacity-50' : 'opacity-0'} `}
+        className={`flex w-full items-center gap-2.5 rounded-lg border p-2 transition-opacity ${
+          isDragging ? 'border-dashed opacity-40' : 'opacity-0'
+        }`}
       >
-        <span className="text-sm font-semibold">{label}</span>
-        <span className="mt-0.5 line-clamp-2 text-xs font-normal">
-          {description}
-        </span>
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted">
+          <IconComp className="h-3.5 w-3.5 text-muted-foreground" />
+        </div>
+        <span className="truncate text-xs font-medium">{label}</span>
       </div>
 
-      {/* The draggable */}
+      {/* Draggable */}
       <div
         ref={ref}
-        className={`absolute top-0 left-0 flex h-full w-full cursor-grab touch-none flex-col items-start rounded-md border border-1 bg-card p-3 text-card-foreground hover:border-primary ${isDragging ? 'z-50 opacity-95' : 'z-10'} `}
+        className={`absolute top-0 left-0 flex h-full w-full cursor-grab touch-none items-center gap-2.5 rounded-lg border bg-card p-2 text-card-foreground transition-colors hover:border-primary/50 hover:bg-muted/40 active:cursor-grabbing ${
+          isDragging ? 'z-50 opacity-95' : 'z-10'
+        }`}
+        title={description}
       >
-        <span className="text-sm font-semibold">{label}</span>
-        <span className="mt-0.5 line-clamp-2 text-xs font-normal text-muted-foreground">
-          {description}
-        </span>
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted">
+          <IconComp className="h-3.5 w-3.5 text-foreground/60" />
+        </div>
+        <span className="truncate text-xs font-medium">{label}</span>
       </div>
     </div>
   );
@@ -62,92 +163,80 @@ function DraggableCatalogItem({
 
 export function ComponentCatalogPanel() {
   const catalogRefreshKey = useFormStore((s) => s.catalogRefreshKey);
-
   const [searchQuery, setSearchQuery] = useState('');
-
-  const filteredStructure = useMemo(() => {
-    if (!searchQuery) return STRUCTURE_ITEMS;
-    const lowerQuery = searchQuery.toLowerCase();
-    return STRUCTURE_ITEMS.filter(
-      (item) =>
-        item.label.toLowerCase().includes(lowerQuery) ||
-        item.description.toLowerCase().includes(lowerQuery)
-    );
-  }, [searchQuery]);
 
   const filteredComponents = useMemo(() => {
     if (!searchQuery) return catalogRegistry;
-    const lowerQuery = searchQuery.toLowerCase();
+    const q = searchQuery.toLowerCase();
     return catalogRegistry.filter(
       (entry) =>
-        entry.label.toLowerCase().includes(lowerQuery) ||
-        entry.description.toLowerCase().includes(lowerQuery)
+        entry.label.toLowerCase().includes(q) ||
+        entry.description.toLowerCase().includes(q) ||
+        entry.category.toLowerCase().includes(q)
     );
   }, [searchQuery]);
 
+  // Group by category
+  const grouped = useMemo(() => {
+    const map = new Map<string, typeof filteredComponents>();
+    for (const entry of filteredComponents) {
+      const cat = entry.category;
+      if (!map.has(cat)) map.set(cat, []);
+      map.get(cat)!.push(entry);
+    }
+    // Sort by CATEGORY_ORDER
+    const sorted: [string, typeof filteredComponents][] = [];
+    for (const cat of CATEGORY_ORDER) {
+      if (map.has(cat)) sorted.push([cat, map.get(cat)!]);
+    }
+    // Any remaining categories not in CATEGORY_ORDER
+    for (const [cat, entries] of map) {
+      if (!CATEGORY_ORDER.includes(cat)) sorted.push([cat, entries]);
+    }
+    return sorted;
+  }, [filteredComponents]);
+
   return (
-    <div key={catalogRefreshKey} className="flex flex-col gap-6">
-      {/* Search bar */}
+    <div key={catalogRefreshKey} className="flex flex-col gap-4">
+      {/* Search */}
       <div className="relative">
-        <Search className="absolute top-2 left-2.5 h-4 w-4 text-muted-foreground" />
+        <Search className="absolute top-2.5 left-2.5 h-3.5 w-3.5 text-muted-foreground" />
         <Input
           type="search"
           placeholder="Search components..."
-          className="pl-9"
+          className="h-9 pl-8 text-sm"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
       </div>
 
-      {/* Handle case where nothing matches */}
-      {filteredStructure.length === 0 && filteredComponents.length === 0 && (
-        <div className="py-8 text-center text-sm text-muted-foreground">
+      {/* Empty state */}
+      {grouped.length === 0 && (
+        <p className="py-6 text-center text-xs text-muted-foreground">
           No components found for "{searchQuery}"
-        </div>
+        </p>
       )}
 
-      {/* Structure section */}
-      {filteredStructure.length > 0 && (
-        <div>
-          <h3 className="mb-3 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-            Structure
-          </h3>
-          <div className="grid grid-cols-1 gap-3">
-            {filteredStructure.map((item) => (
-              <DraggableCatalogItem
-                key={item.id}
-                id={item.id}
-                data={{ type: item.type }}
-                label={item.label}
-                description={item.description}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* components section */}
-      {filteredComponents.length > 0 && (
-        <div>
-          <h3 className="mb-3 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-            Form Fields
-          </h3>
-          <div className="grid grid-cols-1 gap-3">
-            {filteredComponents.map((entry) => (
+      {/* Category groups */}
+      {grouped.map(([category, entries]) => (
+        <div key={category} className="flex flex-col gap-1.5">
+          <p className="mb-0.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+            {category}
+          </p>
+          <div className="flex flex-col gap-1">
+            {entries.map((entry) => (
               <DraggableCatalogItem
                 key={entry.id}
                 id={`catalog-${entry.id}`}
-                data={{
-                  type: DRAG_CATALOG_COMPONENT_ID,
-                  entry: entry,
-                }}
+                data={{ type: DRAG_CATALOG_COMPONENT_ID, entry }}
                 label={entry.label}
                 description={entry.description}
+                icon={COMPONENT_ICONS[entry.id]}
               />
             ))}
           </div>
         </div>
-      )}
+      ))}
     </div>
   );
 }

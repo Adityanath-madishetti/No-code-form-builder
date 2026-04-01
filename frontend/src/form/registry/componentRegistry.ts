@@ -1,37 +1,9 @@
 // src/form/registry/componentRegistry.ts
 /**
- * Component Registry
- * ------------------------------------------------------------------------------------------------
- * Central registry that maps component types (`ComponentID`) to their
- * corresponding:
- * - Renderers (main UI + settings panel)
- * - Factory functions (creation + deserialization)
- * - Catalog metadata (for UI listing)
+ * Component Registry — unified mapping of ComponentID → renderers, factories, catalog.
  *
- * Purpose:
- * - Acts as the **single source of truth** for all available form components
- * - Decouples component definitions from rendering and creation logic
- * - Enables dynamic rendering, drag-and-drop, and persistence
- *
- * Architecture:
- * - Each component registers a `ComponentRegistryEntry`
- * - Consumers query the registry instead of hardcoding component logic
- * - Supports extensibility: new components can be added with minimal changes
- *
- * Typical Flow:
- * - Builder UI uses `catalogRegistry` to list available components
- * - On drop -> calls `create(instanceId)`
- * - Renderer resolves via `getComponentRenderer(id)`
- * - Settings panel resolves via `getComponentPropsRenderer(id)`
- * - Saved JSON is restored via `deserializeComponent`
- *
- * ------------------------------------------------------------------------------------------------
- * Notes:
- * - This is a core abstraction layer — keep it simple and declarative
- * - Avoid business logic here; only mapping and wiring
- * - All components MUST be registered here to be usable
- *
- * ------------------------------------------------------------------------------------------------
+ * Existing 5 components keep their custom renderers.
+ * New components use PlaceholderRenderer until custom renderers are built.
  */
 
 import type { ComponentType } from 'react';
@@ -39,42 +11,102 @@ import { ComponentIDs } from '../components/base';
 import type { ComponentID, RendererProps } from '../components/base';
 import type { FormComponent, SerializedComponent } from '../components/base';
 
-// ------------------------------------------------------------------------------------------------
+// ── Existing renderers (the 5 original components) ──
 import { createTextBoxComponent } from '../components/textBox';
 import type { TextBoxProps, TextBoxValidation } from '../components/textBox';
-import {
-  TextBoxComponentPropsRenderer,
-  TextBoxComponentRenderer,
-} from '../components/TextBoxRenderer';
+import { TextBoxComponentPropsRenderer, TextBoxComponentRenderer } from '../components/TextBoxRenderer';
 
 import { createInputComponent } from '../components/input';
 import type { InputProps, InputValidation } from '../components/input';
-import {
-  InputComponentPropsRenderer,
-  InputComponentRenderer,
-} from '../components/InputRenderer';
+import { InputComponentPropsRenderer, InputComponentRenderer } from '../components/InputRenderer';
 
 import { createRadioComponent } from '../components/radio';
 import type { RadioProps, RadioValidation } from '../components/radio';
-import {
-  RadioComponentPropsRenderer,
-  RadioComponentRenderer,
-} from '../components/RadioRenderer';
+import { RadioComponentPropsRenderer, RadioComponentRenderer } from '../components/RadioRenderer';
 
 import { createCheckboxComponent } from '../components/checkbox';
 import type { CheckboxProps, CheckboxValidation } from '../components/checkbox';
-import {
-  CheckboxComponentPropsRenderer,
-  CheckboxComponentRenderer,
-} from '../components/CheckboxRenderer';
+import { CheckboxComponentPropsRenderer, CheckboxComponentRenderer } from '../components/CheckboxRenderer';
 
 import { createDropdownComponent } from '../components/dropdown';
 import type { DropdownProps, DropdownValidation } from '../components/dropdown';
+import { DropdownComponentPropsRenderer, DropdownComponentRenderer } from '../components/DropdownRenderer';
+
+// ── Generic renderer for all new components ──
+import { PlaceholderRenderer, PlaceholderSettingsRenderer } from '../components/PlaceholderRenderer';
+
+// ── New component factories ──
 import {
-  DropdownComponentPropsRenderer,
-  DropdownComponentRenderer,
-} from '../components/DropdownRenderer';
-// ------------------------------------------------------------------------------------------------
+  createHeaderComponent,
+  createSectionDividerComponent,
+  createLineDividerComponent,
+  createColumnLayoutComponent,
+  createMultiLineTextComponent,
+  createEmailComponent,
+  createPhoneComponent,
+  createNumberComponent,
+  createDecimalComponent,
+  createURLComponent,
+  createDateComponent,
+  createTimeComponent,
+  createFileUploadComponent,
+  createImageUploadComponent,
+  createSingleChoiceGridComponent,
+  createMultiChoiceGridComponent,
+  createMatrixTableComponent,
+  createRatingScaleComponent,
+  createLinearScaleComponent,
+  createSliderComponent,
+  createAddressBlockComponent,
+  createNameBlockComponent,
+  createColorPickerComponent,
+  createSignatureComponent,
+  createLocationComponent,
+  createPasswordInputComponent,
+  createToggleComponent,
+  createRichTextInputComponent,
+  createPaymentComponent,
+  createCaptchaComponent,
+} from '../components/allComponents';
+
+import type {
+  BasicValidation,
+  TextValidation,
+  NumericValidation,
+  NoValidation,
+  HeaderProps,
+  SectionDividerProps,
+  LineDividerProps,
+  ColumnLayoutProps,
+  MultiLineTextProps,
+  EmailProps,
+  PhoneProps,
+  NumberProps,
+  DecimalProps,
+  URLProps,
+  DateProps,
+  TimeProps,
+  FileUploadProps,
+  ImageUploadProps,
+  SingleChoiceGridProps,
+  MultiChoiceGridProps,
+  MatrixTableProps,
+  RatingScaleProps,
+  LinearScaleProps,
+  SliderProps,
+  AddressBlockProps,
+  NameBlockProps,
+  ColorPickerProps,
+  SignatureProps,
+  LocationProps,
+  PasswordInputProps,
+  ToggleProps,
+  RichTextInputProps,
+  PaymentProps,
+  CaptchaProps,
+} from '../components/allComponents';
+
+// ── Type maps ──
 
 export type ComponentPropsMap = {
   [ComponentIDs.TextBox]: TextBoxProps;
@@ -82,6 +114,36 @@ export type ComponentPropsMap = {
   [ComponentIDs.Radio]: RadioProps;
   [ComponentIDs.Checkbox]: CheckboxProps;
   [ComponentIDs.Dropdown]: DropdownProps;
+  [ComponentIDs.Header]: HeaderProps;
+  [ComponentIDs.SectionDivider]: SectionDividerProps;
+  [ComponentIDs.LineDivider]: LineDividerProps;
+  [ComponentIDs.ColumnLayout]: ColumnLayoutProps;
+  [ComponentIDs.MultiLineText]: MultiLineTextProps;
+  [ComponentIDs.Email]: EmailProps;
+  [ComponentIDs.Phone]: PhoneProps;
+  [ComponentIDs.Number]: NumberProps;
+  [ComponentIDs.Decimal]: DecimalProps;
+  [ComponentIDs.URL]: URLProps;
+  [ComponentIDs.Date]: DateProps;
+  [ComponentIDs.Time]: TimeProps;
+  [ComponentIDs.FileUpload]: FileUploadProps;
+  [ComponentIDs.ImageUpload]: ImageUploadProps;
+  [ComponentIDs.SingleChoiceGrid]: SingleChoiceGridProps;
+  [ComponentIDs.MultiChoiceGrid]: MultiChoiceGridProps;
+  [ComponentIDs.MatrixTable]: MatrixTableProps;
+  [ComponentIDs.RatingScale]: RatingScaleProps;
+  [ComponentIDs.LinearScale]: LinearScaleProps;
+  [ComponentIDs.Slider]: SliderProps;
+  [ComponentIDs.AddressBlock]: AddressBlockProps;
+  [ComponentIDs.NameBlock]: NameBlockProps;
+  [ComponentIDs.ColorPicker]: ColorPickerProps;
+  [ComponentIDs.Signature]: SignatureProps;
+  [ComponentIDs.Location]: LocationProps;
+  [ComponentIDs.PasswordInput]: PasswordInputProps;
+  [ComponentIDs.Toggle]: ToggleProps;
+  [ComponentIDs.RichTextInput]: RichTextInputProps;
+  [ComponentIDs.Payment]: PaymentProps;
+  [ComponentIDs.Captcha]: CaptchaProps;
 };
 
 export type ComponentValidationMap = {
@@ -90,266 +152,316 @@ export type ComponentValidationMap = {
   [ComponentIDs.Radio]: RadioValidation;
   [ComponentIDs.Checkbox]: CheckboxValidation;
   [ComponentIDs.Dropdown]: DropdownValidation;
+  [ComponentIDs.Header]: NoValidation;
+  [ComponentIDs.SectionDivider]: NoValidation;
+  [ComponentIDs.LineDivider]: NoValidation;
+  [ComponentIDs.ColumnLayout]: NoValidation;
+  [ComponentIDs.MultiLineText]: TextValidation;
+  [ComponentIDs.Email]: TextValidation;
+  [ComponentIDs.Phone]: TextValidation;
+  [ComponentIDs.Number]: NumericValidation;
+  [ComponentIDs.Decimal]: NumericValidation;
+  [ComponentIDs.URL]: TextValidation;
+  [ComponentIDs.Date]: BasicValidation;
+  [ComponentIDs.Time]: BasicValidation;
+  [ComponentIDs.FileUpload]: BasicValidation;
+  [ComponentIDs.ImageUpload]: BasicValidation;
+  [ComponentIDs.SingleChoiceGrid]: BasicValidation;
+  [ComponentIDs.MultiChoiceGrid]: BasicValidation;
+  [ComponentIDs.MatrixTable]: BasicValidation;
+  [ComponentIDs.RatingScale]: BasicValidation;
+  [ComponentIDs.LinearScale]: BasicValidation;
+  [ComponentIDs.Slider]: BasicValidation;
+  [ComponentIDs.AddressBlock]: BasicValidation;
+  [ComponentIDs.NameBlock]: BasicValidation;
+  [ComponentIDs.ColorPicker]: BasicValidation;
+  [ComponentIDs.Signature]: BasicValidation;
+  [ComponentIDs.Location]: BasicValidation;
+  [ComponentIDs.PasswordInput]: TextValidation;
+  [ComponentIDs.Toggle]: BasicValidation;
+  [ComponentIDs.RichTextInput]: BasicValidation;
+  [ComponentIDs.Payment]: BasicValidation;
+  [ComponentIDs.Captcha]: NoValidation;
 };
 
+// ── Union types ──
+
 export type AnyFormComponent = {
-  [K in ComponentID]: FormComponent<
-    K,
-    ComponentPropsMap[K],
-    ComponentValidationMap[K]
-  >;
+  [K in ComponentID]: FormComponent<K, ComponentPropsMap[K], ComponentValidationMap[K]>;
 }[ComponentID];
 
 export type AnySerializedComponent = {
-  [K in ComponentID]: SerializedComponent<
-    K,
-    ComponentPropsMap[K],
-    ComponentValidationMap[K]
-  >;
+  [K in ComponentID]: SerializedComponent<K, ComponentPropsMap[K], ComponentValidationMap[K]>;
 }[ComponentID];
 
-/**
- * Generic React renderer for a component.
- *
- * Accepts `RendererProps<TProps>` and returns JSX.
- */
-export type ComponentRenderer<TProps = unknown, TValidation = unknown> = ComponentType<
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ComponentRenderer<TProps = any, TValidation = any> = ComponentType<
   RendererProps<TProps, TValidation>
 >;
 
-/**
- * Defines everything required to integrate a component into the system.
- *
- * Responsibilities:
- * - Provide renderers (main + settings)
- * - Define how a component is created
- * - Define how it is deserialized from JSON
- * - Provide catalog metadata for UI
- */
+// ── Registry entry type ──
+
 export interface ComponentRegistryEntry<T extends ComponentID> {
   id: T;
-
-  /**
-   * Metadata used in the component catalog (drag/drop panel).
-   */
-  catalog: {
-    label: string;
-    description: string;
-  };
-
-  /**
-   * Rendering layer:
-   * - `main`: renders inside the form
-   * - `settings`: renders inside the editor panel
-   */
+  catalog: { label: string; description: string; category: string };
   renderers: {
     main: ComponentRenderer<ComponentPropsMap[T], ComponentValidationMap[T]> | null;
     settings: ComponentRenderer<ComponentPropsMap[T], ComponentValidationMap[T]> | null;
   };
-
-  /**
-   * Factory for creating a fresh component instance.
-   */
   create: (instanceId: string) => FormComponent<T, ComponentPropsMap[T]>;
-
-  /**
-   * Reconstructs a component from serialized JSON.
-   */
-  deserialize: (
-    json: SerializedComponent<
-      T,
-      ComponentPropsMap[T],
-      ComponentValidationMap[T]
-    >
-  ) => FormComponent<T, ComponentPropsMap[T], ComponentValidationMap[T]>;
+  deserialize: (json: SerializedComponent<T, ComponentPropsMap[T], ComponentValidationMap[T]>) =>
+    FormComponent<T, ComponentPropsMap[T], ComponentValidationMap[T]>;
 }
 
-// ------------------------------------------------------------------------------------------------
-//
-// Registry Implementation
-//
-// ------------------------------------------------------------------------------------------------
+// ── Internal registry ──
 
-type Registry = {
-  [K in ComponentID]: ComponentRegistryEntry<K>;
-};
+type Registry = { [K in ComponentID]: ComponentRegistryEntry<K> };
 
-/**
- * Internal registry mapping ComponentID -> ComponentRegistryEntry.
- *
- * This is the core lookup table used throughout the system.
- */
+// Helper to make a quick entry for new components with placeholder renderers
+function makeEntry<T extends ComponentID>(
+  id: T,
+  label: string,
+  description: string,
+  category: string,
+  createFn: (instanceId: string, metadata: { label: string }) => FormComponent<T, ComponentPropsMap[T]>,
+): ComponentRegistryEntry<T> {
+  return {
+    id,
+    catalog: { label, description, category },
+    renderers: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      main: PlaceholderRenderer as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      settings: PlaceholderSettingsRenderer as any,
+    },
+    create: (instanceId) => createFn(instanceId, { label }),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    deserialize: (json: any) => ({
+      id: json.id,
+      instanceId: json.instanceId,
+      metadata: json.metadata,
+      children: [],
+      props: json.props,
+      validation: json.validation,
+    }),
+  };
+}
+
 const registry: Registry = {
+  // ════════════════════════════════════════════════════════
+  //  EXISTING (custom renderers)
+  // ════════════════════════════════════════════════════════
   [ComponentIDs.TextBox]: {
     id: ComponentIDs.TextBox,
-    catalog: {
-      label: 'Text Box',
-      description: 'A single line text input.',
-    },
-    renderers: {
-      main: TextBoxComponentRenderer,
-      settings: TextBoxComponentPropsRenderer,
-    },
+    catalog: { label: 'Text Box', description: 'A static rich text block.', category: 'Layout' },
+    renderers: { main: TextBoxComponentRenderer, settings: TextBoxComponentPropsRenderer },
     create: (instanceId) =>
-      createTextBoxComponent(
-        instanceId,
-        { label: 'Text Box' },
-        { text: '' },
-        { proxy: 0 }
-      ),
+      createTextBoxComponent(instanceId, { label: 'Text Box' }, { text: '' }, { proxy: 0 }),
     deserialize: (json) =>
-      createTextBoxComponent(
-        json.instanceId,
-        json.metadata,
-        json.props,
-        json.validation
-      ),
+      createTextBoxComponent(json.instanceId, json.metadata, json.props, json.validation),
   },
-
   [ComponentIDs.Input]: {
     id: ComponentIDs.Input,
-    catalog: {
-      label: 'Input',
-      description: 'A simple text input field for user input.',
-    },
-    renderers: {
-      main: InputComponentRenderer,
-      settings: InputComponentPropsRenderer,
-    },
+    catalog: { label: 'Single-line Text', description: 'A single-line text input.', category: 'Text Inputs' },
+    renderers: { main: InputComponentRenderer, settings: InputComponentPropsRenderer },
     create: (instanceId) =>
-      createInputComponent(
-        instanceId,
-        { label: 'Input Field' },
-        {
-          questionText: '<p>Write the answer...</p>',
-          placeholder: '',
-          defaultValue: '',
-        },
-        {
-          required: false,
-          minLength: 0,
-        }
-      ),
+      createInputComponent(instanceId, { label: 'Input Field' },
+        { questionText: '<p>Write the answer...</p>', placeholder: '', defaultValue: '' },
+        { required: false, minLength: 0 }),
     deserialize: (json) =>
-      createInputComponent(
-        json.instanceId,
-        json.metadata,
-        json.props,
-        json.validation
-      ),
+      createInputComponent(json.instanceId, json.metadata, json.props, json.validation),
   },
-
   [ComponentIDs.Radio]: {
     id: ComponentIDs.Radio,
-    catalog: {
-      label: 'Radio',
-      description: 'A single choice selection using radio buttons.',
-    },
-    renderers: {
-      main: RadioComponentRenderer,
-      settings: RadioComponentPropsRenderer,
-    },
+    catalog: { label: 'Radio Buttons', description: 'Single choice selection.', category: 'Selection' },
+    renderers: { main: RadioComponentRenderer, settings: RadioComponentPropsRenderer },
     create: (instanceId) =>
-      createRadioComponent(
-        instanceId,
-        { label: 'Single Choice Question' },
-        {
-          questionText: '<p>Select an option</p>',
-          layout: 'vertical',
-          options: [
-            { id: crypto.randomUUID(), label: 'Option 1', value: 'option-1' },
-          ],
-        },
-        {
-          required: false,
-        }
-      ),
+      createRadioComponent(instanceId, { label: 'Single Choice Question' },
+        { questionText: '<p>Select an option</p>', layout: 'vertical',
+          options: [{ id: crypto.randomUUID(), label: 'Option 1', value: 'option-1' }] },
+        { required: false }),
     deserialize: (json) =>
-      createRadioComponent(
-        json.instanceId,
-        json.metadata,
-        json.props,
-        json.validation
-      ),
+      createRadioComponent(json.instanceId, json.metadata, json.props, json.validation),
   },
-
   [ComponentIDs.Checkbox]: {
     id: ComponentIDs.Checkbox,
-    catalog: {
-      label: 'Checkboxes',
-      description: 'Multiple choice selection using checkboxes.',
-    },
-    renderers: {
-      main: CheckboxComponentRenderer,
-      settings: CheckboxComponentPropsRenderer,
-    },
+    catalog: { label: 'Checkboxes', description: 'Multiple choice selection.', category: 'Selection' },
+    renderers: { main: CheckboxComponentRenderer, settings: CheckboxComponentPropsRenderer },
     create: (instanceId) =>
-      createCheckboxComponent(
-        instanceId,
-        { label: 'Multiple Choice Question' },
-        {
-          questionText: '<p>Select all that apply</p>',
-          layout: 'vertical',
-          defaultValues: [],
+      createCheckboxComponent(instanceId, { label: 'Multiple Choice Question' },
+        { questionText: '<p>Select all that apply</p>', layout: 'vertical', defaultValues: [],
           options: [
             { id: crypto.randomUUID(), label: 'Option 1', value: 'option-1' },
             { id: crypto.randomUUID(), label: 'Option 2', value: 'option-2' },
-          ],
-        },
-        {
-          required: false,
-        }
-      ),
+          ] },
+        { required: false }),
     deserialize: (json) =>
-      createCheckboxComponent(
-        json.instanceId,
-        json.metadata,
-        json.props,
-        json.validation
-      ),
+      createCheckboxComponent(json.instanceId, json.metadata, json.props, json.validation),
   },
-
   [ComponentIDs.Dropdown]: {
     id: ComponentIDs.Dropdown,
-    catalog: {
-      label: 'Dropdown',
-      description: 'A select menu for choosing a single option.',
-    },
-    renderers: {
-      main: DropdownComponentRenderer,
-      settings: DropdownComponentPropsRenderer,
-    },
+    catalog: { label: 'Dropdown', description: 'Select from a dropdown list.', category: 'Selection' },
+    renderers: { main: DropdownComponentRenderer, settings: DropdownComponentPropsRenderer },
     create: (instanceId) =>
-      createDropdownComponent(
-        instanceId,
-        { label: 'Dropdown Selection' },
-        {
-          questionText: '<p>Please select an option from the list</p>',
-          placeholder: 'Select an option',
+      createDropdownComponent(instanceId, { label: 'Dropdown Selection' },
+        { questionText: '<p>Please select an option from the list</p>', placeholder: 'Select an option',
           options: [
             { id: crypto.randomUUID(), label: 'Option 1', value: 'option-1' },
             { id: crypto.randomUUID(), label: 'Option 2', value: 'option-2' },
-          ],
-        },
-        {
-          requred: false,
-        }
-      ),
+          ] },
+        { requred: false }),
     deserialize: (json) =>
-      createDropdownComponent(
-        json.instanceId,
-        json.metadata,
-        json.props,
-        json.validation
-      ),
+      createDropdownComponent(json.instanceId, json.metadata, json.props, json.validation),
   },
+
+  // ════════════════════════════════════════════════════════
+  //  LAYOUT
+  // ════════════════════════════════════════════════════════
+  [ComponentIDs.Header]: makeEntry(ComponentIDs.Header,
+    'Header', 'A heading / title element.', 'Layout',
+    (id, m) => createHeaderComponent(id, m)),
+
+  [ComponentIDs.SectionDivider]: makeEntry(ComponentIDs.SectionDivider,
+    'Section Divider', 'A titled section separator.', 'Layout',
+    (id, m) => createSectionDividerComponent(id, m)),
+
+  [ComponentIDs.LineDivider]: makeEntry(ComponentIDs.LineDivider,
+    'Line Divider', 'A horizontal line separator.', 'Layout',
+    (id, m) => createLineDividerComponent(id, m)),
+
+  [ComponentIDs.ColumnLayout]: makeEntry(ComponentIDs.ColumnLayout,
+    'Columns', 'Place components side by side.', 'Layout',
+    (id, m) => createColumnLayoutComponent(id, m)),
+
+  // ════════════════════════════════════════════════════════
+  //  TEXT INPUTS
+  // ════════════════════════════════════════════════════════
+  [ComponentIDs.MultiLineText]: makeEntry(ComponentIDs.MultiLineText,
+    'Multi-line Text', 'A multi-line text area.', 'Text Inputs',
+    (id, m) => createMultiLineTextComponent(id, m)),
+
+  [ComponentIDs.Email]: makeEntry(ComponentIDs.Email,
+    'Email', 'An email address input.', 'Text Inputs',
+    (id, m) => createEmailComponent(id, m)),
+
+  [ComponentIDs.Phone]: makeEntry(ComponentIDs.Phone,
+    'Phone', 'A phone number input with country code.', 'Text Inputs',
+    (id, m) => createPhoneComponent(id, m)),
+
+  [ComponentIDs.Number]: makeEntry(ComponentIDs.Number,
+    'Number', 'An integer number input.', 'Text Inputs',
+    (id, m) => createNumberComponent(id, m)),
+
+  [ComponentIDs.Decimal]: makeEntry(ComponentIDs.Decimal,
+    'Decimal', 'A decimal / floating-point input.', 'Text Inputs',
+    (id, m) => createDecimalComponent(id, m)),
+
+  [ComponentIDs.URL]: makeEntry(ComponentIDs.URL,
+    'URL', 'A URL / web address input.', 'Text Inputs',
+    (id, m) => createURLComponent(id, m)),
+
+  // ════════════════════════════════════════════════════════
+  //  DATE & TIME
+  // ════════════════════════════════════════════════════════
+  [ComponentIDs.Date]: makeEntry(ComponentIDs.Date,
+    'Date', 'A date picker.', 'Date & Time',
+    (id, m) => createDateComponent(id, m)),
+
+  [ComponentIDs.Time]: makeEntry(ComponentIDs.Time,
+    'Time', 'A time picker.', 'Date & Time',
+    (id, m) => createTimeComponent(id, m)),
+
+  // ════════════════════════════════════════════════════════
+  //  FILE / MEDIA
+  // ════════════════════════════════════════════════════════
+  [ComponentIDs.FileUpload]: makeEntry(ComponentIDs.FileUpload,
+    'File Upload', 'Accept file uploads.', 'File / Media',
+    (id, m) => createFileUploadComponent(id, m)),
+
+  [ComponentIDs.ImageUpload]: makeEntry(ComponentIDs.ImageUpload,
+    'Image Upload', 'Accept image uploads with preview.', 'File / Media',
+    (id, m) => createImageUploadComponent(id, m)),
+
+  // ════════════════════════════════════════════════════════
+  //  SELECTION / GRIDS
+  // ════════════════════════════════════════════════════════
+  [ComponentIDs.SingleChoiceGrid]: makeEntry(ComponentIDs.SingleChoiceGrid,
+    'Single-choice Grid', 'Select one answer per row.', 'Grids & Tables',
+    (id, m) => createSingleChoiceGridComponent(id, m)),
+
+  [ComponentIDs.MultiChoiceGrid]: makeEntry(ComponentIDs.MultiChoiceGrid,
+    'Multi-choice Grid', 'Select multiple answers per row.', 'Grids & Tables',
+    (id, m) => createMultiChoiceGridComponent(id, m)),
+
+  [ComponentIDs.MatrixTable]: makeEntry(ComponentIDs.MatrixTable,
+    'Matrix / Table', 'A table with text/number inputs.', 'Grids & Tables',
+    (id, m) => createMatrixTableComponent(id, m)),
+
+  // ════════════════════════════════════════════════════════
+  //  SCALES
+  // ════════════════════════════════════════════════════════
+  [ComponentIDs.RatingScale]: makeEntry(ComponentIDs.RatingScale,
+    'Rating Scale', 'Star / heart / dot rating.', 'Scales & Sliders',
+    (id, m) => createRatingScaleComponent(id, m)),
+
+  [ComponentIDs.LinearScale]: makeEntry(ComponentIDs.LinearScale,
+    'Linear Scale', 'A numbered scale (e.g. 1–10).', 'Scales & Sliders',
+    (id, m) => createLinearScaleComponent(id, m)),
+
+  [ComponentIDs.Slider]: makeEntry(ComponentIDs.Slider,
+    'Slider', 'A draggable range slider.', 'Scales & Sliders',
+    (id, m) => createSliderComponent(id, m)),
+
+  // ════════════════════════════════════════════════════════
+  //  COMPOSITE / BLOCKS
+  // ════════════════════════════════════════════════════════
+  [ComponentIDs.AddressBlock]: makeEntry(ComponentIDs.AddressBlock,
+    'Address Block', 'A multi-field address input.', 'Blocks',
+    (id, m) => createAddressBlockComponent(id, m)),
+
+  [ComponentIDs.NameBlock]: makeEntry(ComponentIDs.NameBlock,
+    'Name Block', 'First / middle / last name fields.', 'Blocks',
+    (id, m) => createNameBlockComponent(id, m)),
+
+  // ════════════════════════════════════════════════════════
+  //  SPECIALTY
+  // ════════════════════════════════════════════════════════
+  [ComponentIDs.ColorPicker]: makeEntry(ComponentIDs.ColorPicker,
+    'Color Picker', 'A color selection input.', 'Specialty',
+    (id, m) => createColorPickerComponent(id, m)),
+
+  [ComponentIDs.Signature]: makeEntry(ComponentIDs.Signature,
+    'Signature', 'A signature capture pad.', 'Specialty',
+    (id, m) => createSignatureComponent(id, m)),
+
+  [ComponentIDs.Location]: makeEntry(ComponentIDs.Location,
+    'Location', 'A map / location picker.', 'Specialty',
+    (id, m) => createLocationComponent(id, m)),
+
+  [ComponentIDs.PasswordInput]: makeEntry(ComponentIDs.PasswordInput,
+    'Password', 'A masked password input.', 'Specialty',
+    (id, m) => createPasswordInputComponent(id, m)),
+
+  [ComponentIDs.Toggle]: makeEntry(ComponentIDs.Toggle,
+    'Toggle', 'An on/off switch.', 'Specialty',
+    (id, m) => createToggleComponent(id, m)),
+
+  [ComponentIDs.RichTextInput]: makeEntry(ComponentIDs.RichTextInput,
+    'Rich Text Input', 'A rich text editor field.', 'Specialty',
+    (id, m) => createRichTextInputComponent(id, m)),
+
+  [ComponentIDs.Payment]: makeEntry(ComponentIDs.Payment,
+    'Payment', 'A payment amount field.', 'Specialty',
+    (id, m) => createPaymentComponent(id, m)),
+
+  [ComponentIDs.Captcha]: makeEntry(ComponentIDs.Captcha,
+    'Captcha', 'Bot verification challenge.', 'Specialty',
+    (id, m) => createCaptchaComponent(id, m)),
 };
 
-// ------------------------------------------------------------------------------------------------
-//
-// Registry Helpers
-//
-// ------------------------------------------------------------------------------------------------
+// ════════════════════════════════════════════════════════
+//  PUBLIC HELPERS
+// ════════════════════════════════════════════════════════
 
 export function getComponentRenderer<T extends ComponentID>(
   id: T
@@ -381,28 +493,20 @@ export function deserializeComponent<T extends ComponentID>(
   return registry[json.id].deserialize(json);
 }
 
-/**
- * Flat map of componentID -> main renderer.
- */
-export const componentRenderers = {
-  [ComponentIDs.TextBox]: registry[ComponentIDs.TextBox].renderers.main,
-  [ComponentIDs.Input]: registry[ComponentIDs.Input].renderers.main,
-  [ComponentIDs.Radio]: registry[ComponentIDs.Radio].renderers.main,
-  [ComponentIDs.Checkbox]: registry[ComponentIDs.Checkbox].renderers.main,
-  [ComponentIDs.Dropdown]: registry[ComponentIDs.Dropdown].renderers.main,
-};
+// Flat renderer map (used by DragOverlay etc.)
+export const componentRenderers = Object.fromEntries(
+  Object.entries(registry).map(([key, entry]) => [key, entry.renderers.main])
+) as { [K in ComponentID]: ComponentRenderer<ComponentPropsMap[K], ComponentValidationMap[K]> | null };
 
-// ------------------------------------------------------------------------------------------------
-// Catalog (Builder UI)
-// ------------------------------------------------------------------------------------------------
+// ════════════════════════════════════════════════════════
+//  CATALOG
+// ════════════════════════════════════════════════════════
 
 export interface CatalogEntry {
   id: ComponentID;
   label: string;
   description: string;
-  /**
-   * Factory used when a component is added (e.g., drag-and-drop).
-   */
+  category: string;
   create: (instanceId: string) => FormComponent;
 }
 
@@ -411,6 +515,7 @@ export const catalogRegistry: CatalogEntry[] = Object.values(registry).map(
     id: def.id,
     label: def.catalog.label,
     description: def.catalog.description,
+    category: def.catalog.category,
     create: def.create,
   })
 );
