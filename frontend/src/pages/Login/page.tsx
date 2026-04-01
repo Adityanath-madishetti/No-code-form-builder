@@ -20,13 +20,13 @@ export default function Login() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user, login } = useAuth();
 
-  if (user) {
-    return <Navigate to="/" replace />;
-  }
-
   useEffect(() => {
     document.title = 'Login — Form Builder';
   }, []);
+
+  if (user) {
+    return <Navigate to="/" replace />;
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
