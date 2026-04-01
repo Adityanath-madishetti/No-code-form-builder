@@ -60,6 +60,22 @@ export const submitForm = async (req, res, next) => {
             }
         }
 
+        // Initialize workflow state if the form has an active workflow
+        let currentState = null;
+        const workflowHistory = [];
+
+        if (form.workflow && form.workflow.enabled && form.workflow.initialState) {
+            currentState = form.workflow.initialState;
+            workflowHistory.push({
+                from: null,
+                to: currentState,
+                transitionId: "__init__",
+                timestamp: new Date(),
+                user: req.user?.uid || req.body.email || "anonymous",
+                note: "Submission created",
+            });
+        }
+
         const submission = await Submission.create({
             submissionId: crypto.randomUUID(),
             formId,
@@ -71,6 +87,8 @@ export const submitForm = async (req, res, next) => {
                 isQuiz: formVersion.meta.isQuiz || false,
             },
             pages: req.body.pages || [],
+            currentState,
+            workflowHistory,
         });
 
         res.status(201).json({

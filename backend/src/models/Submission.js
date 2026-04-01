@@ -82,6 +82,23 @@ const SubmissionSchema = new Schema(
         },
 
         pages: [SubmissionPageSchema],
+
+        // ── Workflow State ──
+        currentState: {
+            type: String,
+            default: null,
+        },
+
+        workflowHistory: [
+            {
+                from: String,
+                to: String,
+                transitionId: String,
+                timestamp: { type: Date, default: Date.now },
+                user: String,
+                note: String,
+            },
+        ],
     },
     { timestamps: true }
 );

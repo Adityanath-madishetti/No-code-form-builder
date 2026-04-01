@@ -8,6 +8,8 @@ import type { Form, FormPage } from '@/form/components/base';
 import type { AnyFormComponent } from '@/form/registry/componentRegistry';
 import { deserializeComponent } from '@/form/registry/componentRegistry';
 import type { ComponentID } from '@/form/components/base';
+import type { LogicRule, FormulaRule } from '@/form/logic/logicTypes';
+import type { Workflow } from '@/form/workflow/workflowTypes';
 // ── Frontend ComponentID ↔ Backend componentType mapping ──
 
 const frontendToBackend: Record<string, string> = {
@@ -85,6 +87,10 @@ interface BackendFormVersion {
   };
   settings: Record<string, unknown>;
   pages: BackendPage[];
+  logic?: {
+    rules?: LogicRule[];
+    formulas?: FormulaRule[];
+  };
 }
 
 // ── Load: API → Store ──
@@ -94,6 +100,8 @@ export async function loadFormVersion(formId: string): Promise<{
   pages: FormPage[];
   components: AnyFormComponent[];
   version: number;
+  logicRules: LogicRule[];
+  logicFormulas: FormulaRule[];
 }> {
   const res = await api.get<{ version: BackendFormVersion }>(
     `/api/forms/${formId}/versions/latest`
@@ -142,7 +150,14 @@ export async function loadFormVersion(formId: string): Promise<{
     });
   }
 
-  return { form, pages, components, version: v.version };
+  return {
+    form,
+    pages,
+    components,
+    version: v.version,
+    logicRules: v.logic?.rules ?? [],
+    logicFormulas: v.logic?.formulas ?? [],
+  };
 }
 
 // ── Save: Store → API ──
@@ -153,7 +168,9 @@ export async function saveFormVersion(
   storeForm: Form,
   storePages: Record<string, FormPage>,
   storeComponents: Record<string, AnyFormComponent>,
-  createdBy: string = 'unknown'
+  createdBy: string = 'unknown',
+  logicRules: LogicRule[] = [],
+  logicFormulas: FormulaRule[] = []
 ): Promise<void> {
   // Build pages array in order
   const orderedPageIds = storeForm.pages;
@@ -204,6 +221,10 @@ export async function saveFormVersion(
       isDraft: true,
     },
     pages,
+    logic: {
+      rules: logicRules,
+      formulas: logicFormulas,
+    },
   });
 
   // Also sync the form header title so the dashboard stays in sync
@@ -217,4 +238,17 @@ export async function createNewVersion(formId: string): Promise<number> {
     `/api/forms/${formId}/versions`
   );
   return res.version.version;
+}
+
+// ── Workflow ──
+
+export async function loadWorkflow(formId: string): Promise<Workflow> {
+  const res = await api.get<{ workflow: Workflow }>(
+    `/api/forms/${formId}/workflow`
+  );
+  return res.workflow;
+}
+
+export async function saveWorkflow(formId: string, workflow: Workflow): Promise<void> {
+  await api.put(`/api/forms/${formId}/workflow`, workflow);
 }

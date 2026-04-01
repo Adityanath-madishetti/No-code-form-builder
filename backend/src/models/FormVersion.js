@@ -166,6 +166,20 @@ const PageSchema = new Schema(
 
 /* ──────────────── LOGIC RULES ──────────────── */
 
+const RuleActionSchema = new Schema(
+    {
+        id: { type: String, required: true },
+        type: {
+            type: String,
+            enum: ["SHOW", "HIDE", "ENABLE", "DISABLE", "SET_VALUE", "SKIP_PAGE"],
+            required: true,
+        },
+        targetId: { type: String, required: true },
+        value: { type: Schema.Types.Mixed },
+    },
+    { _id: false }
+);
+
 const LogicRuleSchema = new Schema(
     {
         ruleId: {
@@ -173,39 +187,57 @@ const LogicRuleSchema = new Schema(
             required: true,
         },
 
-        type: {
+        name: {
             type: String,
-            enum: ["visibility", "skip", "calculation", "require"],
+            default: "New Rule",
         },
 
-        // Which component or page is affected
-        target: {
+        enabled: {
+            type: Boolean,
+            default: true,
+        },
+
+        // Nested condition tree (uses Mixed for recursive AND/OR groups)
+        condition: {
+            type: Schema.Types.Mixed,
+            required: true,
+        },
+
+        thenActions: [RuleActionSchema],
+
+        elseActions: [RuleActionSchema],
+    },
+    { _id: false }
+);
+
+const FormulaRuleSchema = new Schema(
+    {
+        ruleId: {
             type: String,
             required: true,
         },
 
-        condition: {
-            field: String,
-            operator: {
-                type: String,
-                enum: [
-                    "equals",
-                    "not_equals",
-                    "contains",
-                    "not_contains",
-                    "greater_than",
-                    "less_than",
-                    "is_empty",
-                    "is_not_empty",
-                ],
-            },
-            value: Schema.Types.Mixed,
+        name: {
+            type: String,
+            default: "New Formula",
         },
 
-        // For "calculation" type
-        action: {
-            type: Schema.Types.Mixed,
+        enabled: {
+            type: Boolean,
+            default: true,
         },
+
+        targetId: {
+            type: String,
+            default: "",
+        },
+
+        expression: {
+            type: String,
+            default: "",
+        },
+
+        referencedFields: [String],
     },
     { _id: false }
 );
@@ -421,6 +453,7 @@ const FormVersionSchema = new Schema(
 
         logic: {
             rules: [LogicRuleSchema],
+            formulas: [FormulaRuleSchema],
         },
 
         workflow: {

@@ -28,7 +28,9 @@ import { PageNavigator } from './components/PageNavigator';
 import { DebugPanel } from './components/DebugPanel';
 import { ComponentPropertiesPanel } from './components/ComponentPropertiesPanel';
 import { RightFloatingPanel } from './components/RightFloatingPanel';
-import { Bug, PanelLeftClose, PanelRightClose, Save, ArrowLeft, Loader2, Eye, Globe } from 'lucide-react';
+import { LogicPlayground } from './components/LogicPlayground';
+import { useLogicStore } from '@/form/logic/logicStore';
+import { Bug, PanelLeftClose, PanelRightClose, Save, ArrowLeft, Loader2, Eye, Globe, Zap, LayoutGrid } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 import { loadFormVersion, saveFormVersion, createNewVersion } from '@/lib/formApi';
 
@@ -74,6 +76,7 @@ export default function FormEditor() {
   const [activePanel, setActivePanel] = useState<SidebarPanelId | null>('components');
   const [showDebug, setShowDebug] = useState(false);
   const [showProperties, setShowProperties] = useState(true);
+  const [editorView, setEditorView] = useState<'form' | 'logic'>('form');
 
   const [leftWidth, setLeftWidth] = useState<number | string>('20%');
   const [rightWidth, setRightWidth] = useState(340);
@@ -81,6 +84,9 @@ export default function FormEditor() {
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [formLoaded, setFormLoaded] = useState(false);
+
+  const logicActiveRuleId = useLogicStore((s) => s.activeRuleId);
+  const logicActiveFormulaId = useLogicStore((s) => s.activeFormulaId);
 
   const { formId } = useParams<{ formId: string }>();
   const navigate = useNavigate();
@@ -100,9 +106,11 @@ export default function FormEditor() {
     );
 
     loadFormVersion(formId)
-      .then(({ form, pages, components, version }) => {
+      .then(({ form, pages, components, version, logicRules, logicFormulas }) => {
         if (cancelled) return;
         store.loadForm(form, pages, components, version);
+        // Hydrate logic store
+        useLogicStore.getState().loadRules(logicRules, logicFormulas);
         setFormLoaded(true);
       })
       .catch(() => {
@@ -146,6 +154,13 @@ export default function FormEditor() {
     }
   }, [activeComponentId, activePageId]);
 
+  // Auto-switch to logic view when a rule/formula is activated
+  useEffect(() => {
+    if (logicActiveRuleId || logicActiveFormulaId) {
+      setEditorView('logic');
+    }
+  }, [logicActiveRuleId, logicActiveFormulaId]);
+
   const handleAddPage = useCallback(() => {
     addPage();
     setCurrentPageIndex(totalPages);
@@ -172,13 +187,16 @@ export default function FormEditor() {
       store.setCurrentVersion(newVersionNum);
 
       // Save current editor state to the new version
+      const logicState = useLogicStore.getState();
       await saveFormVersion(
         formId,
         newVersionNum,
         store.form,
         store.pages,
         store.components,
-        user?.email || 'unknown'
+        user?.email || 'unknown',
+        logicState.rules,
+        logicState.formulas
       );
     } catch (err) {
       console.error('Save failed:', err);
@@ -232,33 +250,74 @@ export default function FormEditor() {
             </Rnd>
           )}
 
-          {/* ── Canvas (centre, fills remaining flex space) ── */}
-          <div
-            className="flex-1 min-w-[400px] relative flex h-full flex-col overflow-y-auto bg-neutral-100 dark:bg-neutral-900"
-            onClick={handleCanvasClick}
-          >
-            <FormCanvas currentPageIndex={currentPageIndex} />
+          {/* ── Centre area: Form canvas OR Logic playground ── */}
+          <div className="flex-1 min-w-[400px] relative flex h-full flex-col overflow-hidden bg-neutral-100 dark:bg-neutral-900">
+            {/* View toggle tabs */}
+            <div className="flex shrink-0 items-center gap-1 border-b border-border bg-background px-3 py-1">
+              <button
+                onClick={() => setEditorView('form')}
+                className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors ${
+                  editorView === 'form'
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                }`}
+              >
+                <LayoutGrid className="h-3 w-3" />
+                Form
+              </button>
+              <button
+                onClick={() => setEditorView('logic')}
+                className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors ${
+                  editorView === 'logic'
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                }`}
+              >
+                <Zap className="h-3 w-3" />
+                Logic
+                {(logicActiveRuleId || logicActiveFormulaId) && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                )}
+              </button>
+            </div>
 
-            {totalPages > 0 && (
-              <PageNavigator
-                currentPage={currentPageIndex + 1}
-                totalPages={totalPages}
-                onNavigate={handleNavigate}
-                onAddPage={handleAddPage}
-              />
+            {/* Form canvas view */}
+            {editorView === 'form' && (
+              <div
+                className="flex-1 overflow-y-auto"
+                onClick={handleCanvasClick}
+              >
+                <FormCanvas currentPageIndex={currentPageIndex} />
+
+                {totalPages > 0 && (
+                  <PageNavigator
+                    currentPage={currentPageIndex + 1}
+                    totalPages={totalPages}
+                    onNavigate={handleNavigate}
+                    onAddPage={handleAddPage}
+                  />
+                )}
+
+                {totalPages === 0 && (
+                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                    <button
+                      className="pointer-events-auto border border-dashed border-border bg-background px-5 py-2.5 text-sm text-muted-foreground shadow-sm transition-colors hover:border-primary/50 hover:text-primary"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddPage();
+                      }}
+                    >
+                      + Add your first page
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
 
-            {totalPages === 0 && (
-              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                <button
-                  className="pointer-events-auto border border-dashed border-border bg-background px-5 py-2.5 text-sm text-muted-foreground shadow-sm transition-colors hover:border-primary/50 hover:text-primary"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleAddPage();
-                  }}
-                >
-                  + Add your first page
-                </button>
+            {/* Logic playground view */}
+            {editorView === 'logic' && (
+              <div className="flex-1 overflow-hidden">
+                <LogicPlayground onClose={() => setEditorView('form')} />
               </div>
             )}
           </div>
