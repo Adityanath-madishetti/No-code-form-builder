@@ -32,7 +32,8 @@ import { LogicPlayground } from './components/LogicPlayground';
 import { useLogicStore } from '@/form/logic/logicStore';
 import { Bug, PanelLeftClose, PanelRightClose, Save, ArrowLeft, Loader2, Eye, Globe, Zap, LayoutGrid } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
-import { loadFormVersion, saveFormVersion, createNewVersion } from '@/lib/formApi';
+import { loadFormVersion, saveFormVersion, createNewVersion, loadWorkflow, saveWorkflow } from '@/lib/formApi';
+import { useWorkflowStore } from '@/form/workflow/workflowStore';
 
 const PANEL_TITLES: Record<SidebarPanelId, string> = {
   form: 'Form Properties',
@@ -121,6 +122,16 @@ export default function FormEditor() {
         setFormLoaded(true);
       });
 
+    // Load workflow separately (it's on the Form model, not FormVersion)
+    loadWorkflow(formId)
+      .then((wf) => {
+        if (cancelled) return;
+        useWorkflowStore.getState().loadWorkflow(wf);
+      })
+      .catch(() => {
+        // No workflow yet — store stays at defaults
+      });
+
     return () => { cancelled = true; };
   }, [formId]);
 
@@ -198,6 +209,13 @@ export default function FormEditor() {
         logicState.rules,
         logicState.formulas
       );
+
+      // Save workflow (stored on Form, not FormVersion)
+      const workflowState = useWorkflowStore.getState();
+      if (workflowState.dirty) {
+        await saveWorkflow(formId, workflowState.workflow);
+        workflowState.markClean();
+      }
     } catch (err) {
       console.error('Save failed:', err);
     } finally {
