@@ -1,7 +1,11 @@
 // src/form/components/CheckboxRenderer.tsx
 import { useFormStore } from '../store/formStore';
 import type { RendererProps } from './base';
-import type { CheckboxProps, CheckboxOption, CheckboxValidation } from './checkbox';
+import type {
+  CheckboxProps,
+  CheckboxOption,
+  CheckboxValidation,
+} from './checkbox';
 import { ComponentPropTitle } from './ComponentRender.Helper';
 import {
   RichTextEditor,
@@ -10,7 +14,7 @@ import {
 
 import { Card as HeroCard } from '@heroui/react';
 import { Checkbox as ShadCheckbox } from '@/components/ui/checkbox';
-// import { Checkbox as HeroCheckbox } from '@heroui/react';
+import { Checkbox as HeroCheckbox } from '@heroui/react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -23,6 +27,8 @@ import {
 } from '@/components/ui/select';
 import { Plus, Trash2 } from 'lucide-react';
 
+import { FormThemeProvider } from '@/form/theme/FormThemeProvider';
+
 export const CheckboxComponentRenderer = ({
   // metadata,
   props,
@@ -31,65 +37,68 @@ export const CheckboxComponentRenderer = ({
   const isHorizontal = props.layout === 'horizontal';
 
   return (
-    <HeroCard className="w-full">
-      {/* <CardHeader>
+    <FormThemeProvider>
+      <HeroCard className="w-full">
+        {/* <CardHeader>
         <CardTitle>{metadata.label}</CardTitle>
         {metadata.description && (
           <CardDescription>{metadata.description}</CardDescription>
         )}
       </CardHeader> */}
 
-      <HeroCard.Content className="space-y-6">
-        {props.questionText && (
+        <HeroCard.Content className="text-foreground">
+          {props.questionText && (
+            <div
+              className={sharedProseClasses}
+              dangerouslySetInnerHTML={{ __html: props.questionText }}
+            />
+          )}
+
           <div
-            className={sharedProseClasses}
-            dangerouslySetInnerHTML={{ __html: props.questionText }}
-          />
-        )}
+            className={`flex ${
+              isHorizontal ? 'flex-row flex-wrap gap-6' : 'flex-col space-y-3'
+            }`}
+          >
+            {/* {(props.options || []).map((option) => (
+              <div key={option.id} className="flex items-center space-x-2">
+                <ShadCheckbox
+                  id={`cb-${option.id}`}
+                  name={instanceId}
+                  value={option.value}
+                  defaultChecked={(props.defaultValues || []).includes(
+                    option.value
+                  )}
+                />
+                <Label
+                  htmlFor={`cb-${option.id}`}
+                  className="cursor-pointer font-normal"
+                >
+                  {option.label}
+                </Label>
+              </div>
+            ))} */}
 
-        <div
-          className={`flex ${
-            isHorizontal ? 'flex-row flex-wrap gap-6' : 'flex-col space-y-3'
-          }`}
-        >
-          {(props.options || []).map((option) => (
-            <div key={option.id} className="flex items-center space-x-2">
-              <ShadCheckbox
-                id={`cb-${option.id}`}
-                name={instanceId}
+            {(props.options || []).map((option) => (
+              <HeroCheckbox
+                key={option.id}
                 value={option.value}
-                defaultChecked={(props.defaultValues || []).includes(
-                  option.value
-                )}
-              />
-              <Label
-                htmlFor={`cb-${option.id}`}
-                className="cursor-pointer font-normal"
+                name={instanceId}
+                // classNames={{
+                //   label: "text-foreground font-normal",
+                // }}
               >
-                {option.label}
-              </Label>
-            </div>
-          ))}
-
-          {/* {(props.options || []).map((option) => (
-            <HeroCheckbox
-              key={option.id}
-              value={option.value}
-              // classNames={{
-              //   label: "text-foreground font-normal",
-              // }}
-            >
-              <HeroCheckbox.Control>
-                <HeroCheckbox.Indicator />
-              </HeroCheckbox.Control>
-              <HeroCheckbox.Content>
-                <Label>{option.label}</Label>
-              </HeroCheckbox.Content>
-            </HeroCheckbox>
-          ))} */}
-        </div>
-      </HeroCard.Content>
-    </HeroCard>
+                <HeroCheckbox.Control className="border-2 border-border">
+                  <HeroCheckbox.Indicator />
+                </HeroCheckbox.Control>
+                <HeroCheckbox.Content>
+                  <Label>{option.label}</Label>
+                </HeroCheckbox.Content>
+              </HeroCheckbox>
+            ))}
+          </div>
+        </HeroCard.Content>
+      </HeroCard>
+    </FormThemeProvider>
   );
 };
 

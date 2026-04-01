@@ -40,7 +40,7 @@ export const RenderForm = () => {
   }
 
   return (
-    <div className="mx-auto flex h-auto min-h-screen w-full max-w-3xl flex-col gap-6">
+    <form className="mx-auto flex h-auto min-h-screen w-full flex-col gap-6 bg-background p-6 text-foreground">
       {/* 1. The Isolated White Header Region */}
       <HeroCard className="bg-content1 mx-auto w-full max-w-3xl border-none shadow-sm">
         <HeroCard.Header className="flex flex-col items-start gap-3">
@@ -59,12 +59,12 @@ export const RenderForm = () => {
       </HeroCard>
 
       {/* 2. The Rendered Pages */}
-      <div className="flex flex-col gap-6">
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
         {form.pages.map((page, index) => (
           <RenderPage key={page} pageId={page} index={index} />
         ))}
       </div>
-    </div>
+    </form>
   );
 };
 

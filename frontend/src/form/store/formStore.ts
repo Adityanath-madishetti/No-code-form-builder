@@ -186,6 +186,8 @@ interface FormSchemaActions {
     instanceId: InstanceID,
     validation: unknown
   ) => void;
+
+  duplicateComponent: (instanceId: InstanceID) => InstanceID | undefined;
 }
 
 interface FormUIActions {
@@ -443,6 +445,54 @@ export const useFormStore = create<FormStore>()(
           validation as Record<string, unknown>
         );
       }),
+
+    duplicateComponent: (instanceId) => {
+      // 1. Declare the variable outside the set function's scope
+      let newInstanceId: InstanceID | undefined;
+
+      set((state) => {
+        const originalComponent = state.components[instanceId];
+        if (!originalComponent) return;
+
+        // Find the page that contains this component and its exact index
+        let targetPageId: PageID | null = null;
+        let targetIndex = -1;
+
+        for (const page of Object.values(state.pages)) {
+          const index = page.children.indexOf(instanceId);
+          if (index !== -1) {
+            targetPageId = page.id;
+            targetIndex = index;
+            break;
+          }
+        }
+
+        if (!targetPageId || targetIndex === -1) return;
+
+        // Deep clone the component to ensure no nested object references are shared.
+        const clonedComponent = JSON.parse(JSON.stringify(originalComponent));
+
+        // 2. Assign the value to the outer variable
+        newInstanceId = `${clonedComponent.type}-${crypto.randomUUID()}`;
+        clonedComponent.instanceId = newInstanceId;
+
+        // Register the new component in the state map
+        state.components[newInstanceId] = clonedComponent;
+
+        // Insert the new component's ID just below the duplicated one
+        state.pages[targetPageId].children.splice(
+          targetIndex + 1,
+          0,
+          newInstanceId
+        );
+
+        // Automatically select the newly duplicated component
+        state.activeComponentId = newInstanceId;
+      });
+
+      // 3. Return the variable after the state mutation is complete
+      return newInstanceId;
+    },
 
     //==================
     setActiveComponent: (instanceId) =>

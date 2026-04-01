@@ -27,6 +27,8 @@ import {
   Label as HeroLabel,
 } from '@heroui/react';
 
+import { FormThemeProvider } from '@/form/theme/FormThemeProvider';
+
 export const RadioComponentRenderer = ({
   // metadata,
   props,
@@ -34,41 +36,45 @@ export const RadioComponentRenderer = ({
   const isHorizontal = props.layout === 'horizontal';
 
   return (
-    <HeroCard className="w-full">
-      {/* <HeroCard.Header>
+    <FormThemeProvider>
+      <HeroCard className="w-full">
+        {/* <HeroCard.Header>
         <HeroCard.Title>{metadata.label}</HeroCard.Title>
         {metadata.description && (
           <HeroCard.Description>{metadata.description}</HeroCard.Description>
         )}
       </HeroCard.Header> */}
 
-      <HeroCard.Content>
-        {props.questionText && (
-          <div
-            className={sharedProseClasses}
-            dangerouslySetInnerHTML={{ __html: props.questionText }}
-          />
-        )}
+        <HeroCard.Content className="text-foreground">
+          {props.questionText && (
+            <div
+              className={sharedProseClasses}
+              dangerouslySetInnerHTML={{ __html: props.questionText }}
+            />
+          )}
 
-        <HeroRadioGroup
-          defaultValue={props.defaultValue}
-          className={`flex ${
-            isHorizontal ? 'flex-row flex-wrap gap-6' : 'flex-col'
-          }`}
-        >
-          {(props.options || []).map((option) => (
-            <HeroRadio key={option.id} value={option.value}>
-              <HeroRadio.Control>
-                <HeroRadio.Indicator className="border-2 border-border rounded-xl" />
-              </HeroRadio.Control>
-              <HeroRadio.Content>
-                <HeroLabel className="cursor-pointer">{option.label}</HeroLabel>
-              </HeroRadio.Content>
-            </HeroRadio>
-          ))}
-        </HeroRadioGroup>
-      </HeroCard.Content>
-    </HeroCard>
+          <HeroRadioGroup
+            defaultValue={props.defaultValue}
+            className={`flex ${
+              isHorizontal ? 'flex-row flex-wrap gap-6' : 'flex-col'
+            }`}
+          >
+            {(props.options || []).map((option) => (
+              <HeroRadio key={option.id} value={option.value}>
+                <HeroRadio.Control>
+                  <HeroRadio.Indicator className="rounded-xl border-2 border-border" />
+                </HeroRadio.Control>
+                <HeroRadio.Content>
+                  <HeroLabel className="cursor-pointer">
+                    {option.label}
+                  </HeroLabel>
+                </HeroRadio.Content>
+              </HeroRadio>
+            ))}
+          </HeroRadioGroup>
+        </HeroCard.Content>
+      </HeroCard>
+    </FormThemeProvider>
   );
 };
 

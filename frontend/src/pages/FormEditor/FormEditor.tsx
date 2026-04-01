@@ -6,7 +6,7 @@ loadFromJSON({
     name: 'My Form',
     theme: {
       color: 'default',
-      mode: 'light',
+      mode: 'dark',
       headingFont: {
         family: 'Inter',
       },
@@ -42,7 +42,7 @@ loadFromJSON({
     },
     {
       id: 'page-3',
-      children: [],
+      children: ['instance-33f094df-b72f-4de5-9799-bb698658a042'],
       isTerminal: true,
     },
   ],
@@ -130,6 +130,32 @@ loadFromJSON({
       },
       validation: {
         required: false,
+      },
+    },
+    {
+      id: 'Dropdown',
+      instanceId: 'instance-33f094df-b72f-4de5-9799-bb698658a042',
+      metadata: {
+        label: 'Dropdown Selection',
+      },
+      props: {
+        questionText: '<p>Please select an option from the list</p>',
+        placeholder: 'Select an option',
+        options: [
+          {
+            id: '0f543e95-091e-4d1a-9d79-701404c8e1e2',
+            label: 'Option 1',
+            value: 'option-1',
+          },
+          {
+            id: 'e442a71d-a8f0-44df-a0ef-a37efb9128dd',
+            label: 'Option 2',
+            value: 'option-2',
+          },
+        ],
+      },
+      validation: {
+        requred: false,
       },
     },
   ],

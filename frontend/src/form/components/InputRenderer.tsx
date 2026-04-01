@@ -12,32 +12,36 @@ import {
   sharedProseClasses,
 } from '@/components/RichTextEditor';
 
+import { FormThemeProvider } from '@/form/theme/FormThemeProvider';
+
 export const InputComponentRenderer = ({
   instanceId,
   props,
   validation,
 }: RendererProps<InputProps, InputValidation>) => {
   return (
-    <HeroCard className="w-full">
-      <HeroCard.Content className="space-y-2">
-        {props.questionText && (
-          <div
-            className={sharedProseClasses}
-            dangerouslySetInnerHTML={{ __html: props.questionText }}
+    <FormThemeProvider>
+      <HeroCard className="w-full">
+        <HeroCard.Content className="space-y-2 text-foreground">
+          {props.questionText && (
+            <div
+              className={sharedProseClasses}
+              dangerouslySetInnerHTML={{ __html: props.questionText }}
+            />
+          )}
+          <HeroInput
+            type="text"
+            name={instanceId}
+            placeholder={props.placeholder}
+            defaultValue={props.defaultValue}
+            className="w-full px-4 border-3 border-border"
+            required={validation.required}
+            minLength={validation.minLength}
+            maxLength={validation.maxLength}
           />
-        )}
-        <HeroInput
-          type="text"
-          name={instanceId}
-          placeholder={props.placeholder}
-          defaultValue={props.defaultValue}
-          className="w-full px-4"
-          required={validation.required}
-          minLength={validation.minLength}
-          maxLength={validation.maxLength}
-        />
-      </HeroCard.Content>
-    </HeroCard>
+        </HeroCard.Content>
+      </HeroCard>
+    </FormThemeProvider>
   );
 };
 

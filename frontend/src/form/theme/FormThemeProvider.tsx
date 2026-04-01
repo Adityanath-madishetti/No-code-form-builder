@@ -1,6 +1,6 @@
 // src/form/theme/FormThemeProvider.tsx
 import type { ReactNode } from 'react';
-import { formSelectors, useFormStore } from "@/form/store/formStore";
+import { formSelectors, useFormStore } from '@/form/store/formStore';
 import { formThemeColors, formThemeModes } from './formTheme';
 
 export function FormThemeProvider({ children }: { children: ReactNode }) {
@@ -10,7 +10,7 @@ export function FormThemeProvider({ children }: { children: ReactNode }) {
 
   return (
     <div
-      className={`form-theme-${color} ${mode === 'dark' ? 'dark' : 'light'} bg-background text-foreground min-h-full h-auto w-full`}
+      className={`form-theme-${color} ${mode === 'dark' ? 'dark' : 'light'}`}
     >
       {children}
     </div>

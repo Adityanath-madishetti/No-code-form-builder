@@ -3,7 +3,7 @@ import { useFormStore } from '@/form/store/formStore';
 import type { PageID } from '@/form/components/base';
 import { TEMP_PAGE_PLACEHOLDER_ID } from '@/form/utils/DndUtils';
 
-import { GripHorizontal, Trash2 } from 'lucide-react';
+import { GripHorizontal, Trash2, Ellipsis } from 'lucide-react';
 import { useSortable } from '@dnd-kit/react/sortable';
 import type { AnyFormComponent } from '../registry/componentRegistry';
 
@@ -14,6 +14,13 @@ import {
   DRAG_PAGE_ID,
   DRAG_PAGE_GROUP_ID,
 } from '@/form/utils/DndUtils';
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface Props {
   component: AnyFormComponent;
@@ -35,6 +42,8 @@ export const SelectableComponent = ({
   const setActivePage = useFormStore((s) => s.setActivePage);
 
   const isSelected = selectedId === component.instanceId;
+
+  const duplicateComponent = useFormStore((s) => s.duplicateComponent);
 
   const { ref, isDragging } = useSortable({
     id: component.instanceId,
@@ -117,6 +126,45 @@ export const SelectableComponent = ({
         >
           <Trash2 className="h-5 w-5" />
         </button>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              onClick={(e) => e.stopPropagation()}
+              className="mt-3 flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-muted-foreground/60 transition-all hover:text-foreground"
+              aria-label="More options"
+            >
+              <Ellipsis className="h-5 w-5" />
+            </button>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent align="end" className="w-36">
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                const newId = duplicateComponent(component.instanceId);
+                if (newId) {
+                  setActiveComponent(newId);
+                }
+                console.log('Component duplicated:', {
+                  originalId: component.instanceId,
+                  newId: newId,
+                  pageId,
+                });
+              }}
+            >
+              Duplicate
+            </DropdownMenuItem>
+            {/* <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                console.log('Hide clicked');
+              }}
+            >
+              Hide
+            </DropdownMenuItem> */}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );

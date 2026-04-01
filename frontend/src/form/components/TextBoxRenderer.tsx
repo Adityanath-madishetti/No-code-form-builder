@@ -12,18 +12,22 @@ import {
   sharedProseClasses,
 } from '@/components/RichTextEditor';
 
+import { FormThemeProvider } from '@/form/theme/FormThemeProvider';
+
 export const TextBoxComponentRenderer = ({
   props,
 }: RendererProps<TextBoxProps, TextBoxValidation>) => {
   return (
-    <HeroCard className="w-full">
-      <HeroCard.Content className="">
-        <div
-          className={sharedProseClasses}
-          dangerouslySetInnerHTML={{ __html: props.text }}
-        />
-      </HeroCard.Content>
-    </HeroCard>
+    <FormThemeProvider>
+      <HeroCard className="w-full">
+        <HeroCard.Content className="text-foreground">
+          <div
+            className={sharedProseClasses}
+            dangerouslySetInnerHTML={{ __html: props.text }}
+          />
+        </HeroCard.Content>
+      </HeroCard>
+    </FormThemeProvider>
   );
 };
 

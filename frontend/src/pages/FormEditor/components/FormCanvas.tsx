@@ -7,7 +7,7 @@ export function FormCanvas() {
   return (
     <FormThemeProvider>
       <FormModeProvider value="edit">
-        <div className="min-h-full w-full bg-accent/5 p-6 md:p-12">
+        <div className="min-h-full w-full">
           <RenderForm />
         </div>
       </FormModeProvider>

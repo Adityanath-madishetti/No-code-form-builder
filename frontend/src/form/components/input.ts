@@ -24,6 +24,7 @@ import { ComponentIDs } from './base';
 import type { FormComponent } from '@/form/components/base';
 
 export interface InputProps {
+  type?: string;
   questionText?: string;
   placeholder?: string;
   defaultValue?: string;

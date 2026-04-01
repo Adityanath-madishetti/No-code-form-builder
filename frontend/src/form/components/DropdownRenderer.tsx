@@ -22,48 +22,52 @@ import {
 import { Select as HeroSelect, ListBox as HeroListBox } from '@heroui/react';
 import { Plus, Trash2 } from 'lucide-react';
 
+import { FormThemeProvider } from '@/form/theme/FormThemeProvider';
+
 export const DropdownComponentRenderer = ({
   // metadata,
   props,
 }: RendererProps<DropdownProps, DropdownValidation>) => {
   return (
-    <HeroCard className="w-full">
-      {/* <HeroCard.Header>
+    <FormThemeProvider>
+      <HeroCard className="w-full">
+        {/* <HeroCard.Header>
         <HeroCard.Title>{metadata.label}</HeroCard.Title>
         {metadata.description && (
           <HeroCard.Description>{metadata.description}</HeroCard.Description>
         )}
       </HeroCard.Header> */}
 
-      <HeroCard.Content>
-        {props.questionText && (
-          <div
-            className="prose prose-sm dark:prose-invert max-w-none break-words"
-            dangerouslySetInnerHTML={{ __html: props.questionText }}
-          />
-        )}
+        <HeroCard.Content className="text-foreground">
+          {props.questionText && (
+            <div
+              className="prose prose-sm dark:prose-invert max-w-none break-words"
+              dangerouslySetInnerHTML={{ __html: props.questionText }}
+            />
+          )}
 
-        <HeroSelect
-          defaultValue={props.defaultValue}
-          placeholder={props.placeholder || 'Select an option...'}
-          fullWidth
-        >
-          <HeroSelect.Trigger className="w-full">
-            <HeroSelect.Value />
-          </HeroSelect.Trigger>
-          <HeroSelect.Popover>
-            <HeroListBox>
-              {(props.options || []).map((option) => (
-                <HeroListBox.Item key={option.id} textValue={option.value}>
-                  {option.label}
-                  <HeroListBox.ItemIndicator />
-                </HeroListBox.Item>
-              ))}
-            </HeroListBox>
-          </HeroSelect.Popover>
-        </HeroSelect>
-      </HeroCard.Content>
-    </HeroCard>
+          <HeroSelect
+            defaultValue={props.defaultValue}
+            placeholder={props.placeholder || 'Select an option...'}
+            fullWidth
+          >
+            <HeroSelect.Trigger className="w-full">
+              <HeroSelect.Value />
+            </HeroSelect.Trigger>
+            <HeroSelect.Popover>
+              <HeroListBox>
+                {(props.options || []).map((option) => (
+                  <HeroListBox.Item key={option.id} textValue={option.value}>
+                    {option.label}
+                    <HeroListBox.ItemIndicator />
+                  </HeroListBox.Item>
+                ))}
+              </HeroListBox>
+            </HeroSelect.Popover>
+          </HeroSelect>
+        </HeroCard.Content>
+      </HeroCard>
+    </FormThemeProvider>
   );
 };
 
