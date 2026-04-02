@@ -226,7 +226,20 @@ interface FormSchemaActions {
 
   duplicateComponent: (instanceId: InstanceID) => InstanceID | undefined;
   toggleComponentCollapsed: (instanceId: InstanceID) => void;
+  setComponentCollapsed: (instanceId: InstanceID, collapsed: boolean) => void;
   togglePropertiesPanel: () => void;
+  openPropertiesPanel: () => void;
+  closePropertiesPanel: () => void;
+
+  undo: () => void;
+  redo: () => void;
+
+  serializeComponentForClipboard: (instanceId: InstanceID) => string | null;
+  /** Pastes a component copied via {@link serializeComponentForClipboard} onto a page. */
+  pasteComponentData: (
+    pageId: PageID,
+    clipboardText: string
+  ) => InstanceID | undefined;
 }
 
 interface FormUIActions {
@@ -295,12 +308,45 @@ export const formSelectors = {
 
 // ------------------------------------------------------------------------------------------------
 //
+// Undo / redo (schema snapshots)
+//
+// ------------------------------------------------------------------------------------------------
+
+const MAX_UNDO = 50;
+
+interface SchemaSnapshot {
+  form: Form | null;
+  pages: Record<PageID, FormPage>;
+  components: Record<InstanceID, AnyFormComponent>;
+  currentVersion: number;
+}
+
+const undoStack: SchemaSnapshot[] = [];
+const redoStack: SchemaSnapshot[] = [];
+let isUndoRedo = false;
+
+function snapshotSchema(s: FormStore): SchemaSnapshot {
+  return {
+    form: s.form ? JSON.parse(JSON.stringify(s.form)) : null,
+    pages: JSON.parse(JSON.stringify(s.pages)),
+    components: JSON.parse(JSON.stringify(s.components)),
+    currentVersion: s.currentVersion,
+  };
+}
+
+export function clearFormUndoHistory() {
+  undoStack.length = 0;
+  redoStack.length = 0;
+}
+
+// ------------------------------------------------------------------------------------------------
+//
 // Store
 //
 // ------------------------------------------------------------------------------------------------
 
 export const useFormStore = create<FormStore>()(
-  immer((set) => ({
+  immer((set, get) => ({
     form: null,
     currentVersion: 1,
     pages: {},
@@ -315,7 +361,8 @@ export const useFormStore = create<FormStore>()(
     catalogRefreshKey: 0,
     collapsedComponents: {},
 
-    initForm: (id, name, metadata) =>
+    initForm: (id, name, metadata) => {
+      clearFormUndoHistory();
       set((state) => {
         const form = createForm(id, name, metadata);
         const firstPage = createFormPage(`${id}-page-1`);
@@ -326,9 +373,11 @@ export const useFormStore = create<FormStore>()(
         // state.activePageId = firstPage.id;
         state.activePageId = null;
         state.activeComponentId = null;
-      }),
+      });
+    },
 
-    loadForm: (form, pages, components, version) =>
+    loadForm: (form, pages, components, version) => {
+      clearFormUndoHistory();
       set((state) => {
         state.form = form;
         state.currentVersion = version ?? 1;
@@ -339,7 +388,8 @@ export const useFormStore = create<FormStore>()(
         // state.activePageId = pages[0]?.id ?? null;
         state.activePageId = null;
         state.activeComponentId = null;
-      }),
+      });
+    },
 
     setCurrentVersion: (version) =>
       set((state) => {
@@ -624,9 +674,106 @@ export const useFormStore = create<FormStore>()(
           !state.collapsedComponents[instanceId];
       }),
 
+    setComponentCollapsed: (instanceId, collapsed) =>
+      set((state) => {
+        state.collapsedComponents[instanceId] = collapsed;
+      }),
+
     togglePropertiesPanel: () =>
       set((state) => {
         state.showPropertiesPanel = !state.showPropertiesPanel;
       }),
+
+    openPropertiesPanel: () =>
+      set((state) => {
+        state.showPropertiesPanel = true;
+      }),
+
+    closePropertiesPanel: () =>
+      set((state) => {
+        state.showPropertiesPanel = false;
+      }),
+
+    undo: () => {
+      const snap = undoStack.pop();
+      if (!snap) return;
+      isUndoRedo = true;
+      redoStack.push(snapshotSchema(get()));
+      set((state) => {
+        state.form = snap.form ? JSON.parse(JSON.stringify(snap.form)) : null;
+        state.pages = JSON.parse(JSON.stringify(snap.pages));
+        state.components = JSON.parse(JSON.stringify(snap.components));
+        state.currentVersion = snap.currentVersion;
+        state.activeComponentId = null;
+        state.activePageId = null;
+      });
+      isUndoRedo = false;
+    },
+
+    redo: () => {
+      const snap = redoStack.pop();
+      if (!snap) return;
+      isUndoRedo = true;
+      undoStack.push(snapshotSchema(get()));
+      set((state) => {
+        state.form = snap.form ? JSON.parse(JSON.stringify(snap.form)) : null;
+        state.pages = JSON.parse(JSON.stringify(snap.pages));
+        state.components = JSON.parse(JSON.stringify(snap.components));
+        state.currentVersion = snap.currentVersion;
+        state.activeComponentId = null;
+        state.activePageId = null;
+      });
+      isUndoRedo = false;
+    },
+
+    serializeComponentForClipboard: (instanceId) => {
+      const c = get().components[instanceId];
+      if (!c) return null;
+      return JSON.stringify({ t: 'ncfb', v: 1, c });
+    },
+
+    pasteComponentData: (pageId, clipboardText) => {
+      let parsed: { t?: string; v?: number; c?: AnyFormComponent };
+      try {
+        parsed = JSON.parse(clipboardText);
+      } catch {
+        return undefined;
+      }
+      if (parsed?.t !== 'ncfb' || !parsed.c) return undefined;
+
+      let newInstanceId: InstanceID | undefined;
+      set((state) => {
+        const cloned = JSON.parse(JSON.stringify(parsed.c)) as AnyFormComponent;
+        newInstanceId = `${cloned.type}-${crypto.randomUUID()}`;
+        cloned.instanceId = newInstanceId;
+        state.components[newInstanceId] = cloned;
+        const children = state.pages[pageId]?.children;
+        if (!children) return;
+        const active = state.activeComponentId;
+        let insertIdx = children.length;
+        if (active) {
+          const ai = children.indexOf(active);
+          if (ai !== -1) insertIdx = ai + 1;
+        }
+        children.splice(insertIdx, 0, newInstanceId);
+        state.activeComponentId = newInstanceId;
+      });
+      return newInstanceId;
+    },
   }))
 );
+
+// Record schema history for undo (UI-only changes do not push)
+useFormStore.subscribe((state, previousState) => {
+  if (isUndoRedo) return;
+  const schemaChanged =
+    state.form !== previousState.form ||
+    state.pages !== previousState.pages ||
+    state.components !== previousState.components ||
+    state.currentVersion !== previousState.currentVersion;
+  if (schemaChanged && previousState.form) {
+    undoStack.push(snapshotSchema(previousState));
+    if (undoStack.length > MAX_UNDO) undoStack.shift();
+    redoStack.length = 0;
+  }
+});

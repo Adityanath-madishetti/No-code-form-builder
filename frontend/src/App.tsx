@@ -8,6 +8,7 @@ import FormFill from "./pages/FormFill/FormFill";
 import FormPreview from "./pages/FormFill/FormPreview";
 import FormSuccess from "./pages/FormFill/FormSuccess";
 import FormReview from "./pages/FormReview/FormReview";
+import KeyboardShortcutsPage from "./pages/KeyboardShortcutsPage";
 
 const router = createBrowserRouter([
   {
@@ -29,6 +30,10 @@ const router = createBrowserRouter([
       {
         index: true,
         element: <Home />,
+      },
+      {
+        path: "keyboard-shortcuts",
+        element: <KeyboardShortcutsPage />,
       },
       {
         path: "form-builder/:formId",

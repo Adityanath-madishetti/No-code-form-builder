@@ -31,6 +31,8 @@ import { RightFloatingPanel } from './components/RightFloatingPanel';
 import { LogicPlayground } from './components/LogicPlayground';
 import { useLogicStore } from '@/form/logic/logicStore';
 import { Bug, PanelLeftClose, PanelRightClose, Save, ArrowLeft, Loader2, Eye, Globe, Zap, LayoutGrid, GitBranch, Settings2 } from 'lucide-react';
+import { useFormEditorShortcuts } from './useFormEditorShortcuts';
+import { KeyboardShortcutsHelp } from './KeyboardShortcutsHelp';
 import { useShallow } from 'zustand/react/shallow';
 import { loadFormVersion, saveFormVersion, createNewVersion, loadWorkflow } from '@/lib/formApi';
 import { useWorkflowStore } from '@/form/workflow/workflowStore';
@@ -91,6 +93,7 @@ export default function FormEditor() {
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [formLoaded, setFormLoaded] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
   const logicActiveRuleId = useLogicStore((s) => s.activeRuleId);
   const logicActiveFormulaId = useLogicStore((s) => s.activeFormulaId);
@@ -242,6 +245,28 @@ export default function FormEditor() {
     }
   }, [components, form, formId, pages, setCurrentVersionInStore, user?.uid]);
 
+  useFormEditorShortcuts({
+    enabled: Boolean(formId && formLoaded),
+    formLoaded,
+    formId,
+    saving,
+    publishing,
+    currentPageIndex,
+    totalPages,
+    setCurrentPageIndex,
+    activePanel,
+    setActivePanel,
+    editorView,
+    setEditorView,
+    setShowDebug,
+    hasSelection,
+    onSave: handleSave,
+    onPreview: () => {
+      if (formId) window.open(`/forms/${formId}/preview`, '_blank');
+    },
+    onOpenShortcutsHelp: () => setShortcutsOpen(true),
+  });
+
   return (
     <DragDropProvider
       onDragStart={onDragStart}
@@ -351,7 +376,7 @@ export default function FormEditor() {
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  title="Save form"
+                  title="Save form (Ctrl+S or ⌘S)"
                   className={`group flex h-7 items-center gap-0 border px-1.5 shadow-sm transition-all duration-300 rounded-sm hover:gap-1 hover:px-2 ${
                     saving
                       ? 'border-primary/40 bg-primary/10 text-primary cursor-wait'
@@ -369,7 +394,7 @@ export default function FormEditor() {
                 </button>
                 <button
                   onClick={() => window.open(`/forms/${formId}/preview`, '_blank')}
-                  title="Preview form"
+                  title="Preview form (Ctrl+Shift+E or ⌘⇧E)"
                   className="group flex h-7 items-center gap-0 rounded-sm border border-border bg-background px-1.5 shadow-sm transition-all duration-300 text-muted-foreground hover:text-foreground hover:bg-muted hover:gap-1 hover:px-2"
                 >
                   <Eye className="h-3 w-3" />
@@ -558,7 +583,7 @@ export default function FormEditor() {
           </span>
           <button
             onClick={() => setShowDebug((p) => !p)}
-            title="Toggle debug panel"
+            title="Toggle debug panel (Ctrl+Alt+D or ⌘⌥D)"
             className={`flex h-7 w-7 items-center justify-center border shadow-sm transition-colors ${showDebug
               ? 'border-amber-400/60 bg-amber-400/10 text-amber-500'
               : 'border-border bg-background text-muted-foreground hover:text-amber-500'
@@ -566,6 +591,10 @@ export default function FormEditor() {
           >
             <Bug className="h-3 w-3" />
           </button>
+          <KeyboardShortcutsHelp
+            open={shortcutsOpen}
+            onOpenChange={setShortcutsOpen}
+          />
         </div>
       </div>
 

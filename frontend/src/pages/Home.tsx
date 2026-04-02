@@ -1,10 +1,10 @@
 // src/pages/Home.tsx
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
-import { Plus, FileText, LogOut, Loader2, Inbox, Eye } from 'lucide-react';
+import { Plus, FileText, LogOut, Loader2, Inbox, Eye, Keyboard } from 'lucide-react';
 
 interface FormHeader {
   formId: string;
@@ -102,7 +102,13 @@ export default function Home() {
           <img src="/logo.png" alt="Form Builder" className="h-6 w-6" />
           Form Builder
         </h1>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/keyboard-shortcuts">
+              <Keyboard className="mr-1.5 h-3.5 w-3.5" />
+              Keyboard shortcuts
+            </Link>
+          </Button>
           <span className="text-sm text-muted-foreground">{user?.email}</span>
           <Button variant="ghost" size="sm" onClick={handleLogout}>
             <LogOut className="mr-1.5 h-3.5 w-3.5" />
