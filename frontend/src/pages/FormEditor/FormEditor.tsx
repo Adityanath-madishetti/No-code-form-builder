@@ -320,6 +320,7 @@ export default function FormEditor() {
           activePanel={activePanel}
           onPanelChange={(panel) => {
             if (panel === 'theme') {
+              setActivePanel(null);
               setEditorView('theming');
               return;
             }
@@ -414,7 +415,10 @@ export default function FormEditor() {
                   Workflow
                 </button>
                 <button
-                  onClick={() => setEditorView('theming')}
+                  onClick={() => {
+                    setActivePanel(null);
+                    setEditorView('theming');
+                  }}
                   className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors ${
                     editorView === 'theming'
                       ? 'bg-primary text-primary-foreground shadow-sm'
@@ -436,15 +440,17 @@ export default function FormEditor() {
                 {/* Dark / Light toggle */}
                 <button
                   onClick={() => {
-                    const next = editorTheme === 'dark' ? 'light' : 'dark';
+                    // Resolve current actual theme (could be 'system')
+                    const isDark = document.documentElement.classList.contains('dark');
+                    const next = isDark ? 'light' : 'dark';
                     setEditorTheme(next);
                     // Also sync form theme mode
                     useFormStore.getState().updateFormTheme({ mode: next });
                   }}
-                  title={editorTheme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                  title={document.documentElement.classList.contains('dark') ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
                   className="group flex h-7 items-center gap-0 rounded-sm border border-border bg-background px-1.5 text-muted-foreground shadow-sm transition-all duration-300 hover:gap-1 hover:bg-muted hover:px-2 hover:text-foreground"
                 >
-                  {editorTheme === 'dark' ? (
+                  {document.documentElement.classList.contains('dark') ? (
                     <Sun className="h-3 w-3" />
                   ) : (
                     <Moon className="h-3 w-3" />

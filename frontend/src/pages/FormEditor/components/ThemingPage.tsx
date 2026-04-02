@@ -839,6 +839,7 @@ function PageSelector() {
 function LivePreview() {
   const form = useFormStore((s) => s.form);
   const pages = useFormStore((s) => s.pages);
+  const formName = useFormStore((s) => s.form?.name ?? '');
 
   if (!form || form.pages.length === 0) {
     return (
@@ -848,94 +849,67 @@ function LivePreview() {
     );
   }
 
-  // Show first page as preview
+  // Use first page's overrides for preview (if any)
   const firstPageId = form.pages[0];
   const pageOverrides = pages[firstPageId]?.themeOverrides;
 
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="px-2 py-4">
-        <div className="mb-3 text-center">
-          <span className="inline-block rounded-full bg-muted px-3 py-1 text-[10px] font-medium text-muted-foreground uppercase tracking-widest">
-            Live Preview
-          </span>
-        </div>
-        <FormThemeProvider pageOverrides={pageOverrides}>
-          <FormModeProvider value="view">
-            <div className="mx-auto w-full max-w-3xl rounded-xl border border-border bg-background/50 p-6 shadow-lg">
-              {/* Preview header */}
-              <div className="mb-6">
-                <h2 className="text-xl font-bold text-foreground">
-                  {form.name || 'Untitled Form'}
-                </h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Preview of your form with the current theme applied
-                </p>
-              </div>
+    <FormThemeProvider pageOverrides={pageOverrides}>
+      <div className="h-full overflow-y-auto">
+        <div className="px-4 py-6">
+          <div className="mb-4 text-center">
+            <span className="inline-block rounded-full bg-black/5 px-3 py-1 text-[10px] font-medium uppercase tracking-widest dark:bg-white/10">
+              Live Preview
+            </span>
+          </div>
 
-              {/* Sample form fields */}
-              <div className="space-y-4">
-                <div>
-                  <label className="mb-1.5 block text-sm font-medium text-foreground">
-                    Full Name
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Enter your name"
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-                    readOnly
-                  />
-                </div>
-                <div>
-                  <label className="mb-1.5 block text-sm font-medium text-foreground">
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    placeholder="you@example.com"
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-                    readOnly
-                  />
-                </div>
-                <div>
-                  <label className="mb-1.5 block text-sm font-medium text-foreground">
-                    Message
-                  </label>
-                  <textarea
-                    placeholder="Write your message..."
-                    rows={3}
-                    className="w-full resize-none rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-                    readOnly
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <input type="checkbox" className="h-4 w-4 rounded border-border" readOnly />
-                  <label className="text-sm text-foreground">
-                    I agree to the terms and conditions
-                  </label>
-                </div>
-                <button
-                  className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-sm"
-                  type="button"
-                >
-                  Submit
-                </button>
-              </div>
-
-              {/* Actual form page renders if available */}
-              {firstPageId && (
-                <div className="mt-6 border-t border-border pt-6">
-                  <p className="mb-3 text-[10px] font-medium tracking-widest text-muted-foreground uppercase">
-                    Actual Components
-                  </p>
-                  <RenderPage pageId={firstPageId} index={0} />
-                </div>
-              )}
+          <div className="mx-auto w-full max-w-3xl">
+            {/* Form title */}
+            <div className="mb-5">
+              <h2 className="text-2xl font-bold tracking-tight text-foreground">
+                {formName || 'Untitled Form'}
+              </h2>
             </div>
-          </FormModeProvider>
-        </FormThemeProvider>
+
+            {/* Render all actual form pages */}
+            <FormModeProvider value="view">
+              {form.pages.map((pageId, index) => {
+                const page = pages[pageId];
+                const hasChildren = (page?.children ?? []).length > 0;
+
+                return (
+                  <div key={pageId} className="mb-6">
+                    {/* Page title (for multi-page forms) */}
+                    {form.pages.length > 1 && (
+                      <div className="mb-3">
+                        <h3 className="text-lg font-semibold text-foreground">
+                          {page?.title || `Page ${index + 1}`}
+                        </h3>
+                        {page?.description && (
+                          <p className="mt-0.5 text-sm text-muted-foreground">
+                            {page.description}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {hasChildren ? (
+                      <RenderPage pageId={pageId} index={index} />
+                    ) : (
+                      <div className="flex items-center justify-center rounded-lg border-2 border-dashed border-border/40 py-12 text-muted-foreground/40">
+                        <p className="text-xs">
+                          No components on {page?.title || `Page ${index + 1}`}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </FormModeProvider>
+          </div>
+        </div>
       </div>
-    </div>
+    </FormThemeProvider>
   );
 }
 
