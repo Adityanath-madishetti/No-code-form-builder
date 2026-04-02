@@ -90,7 +90,7 @@ const backendToFrontend: Record<string, string> = {
   'name-block': ComponentIDs.NameBlock,
   'color-picker': ComponentIDs.ColorPicker,
   signature: ComponentIDs.Signature,
-  payment: ComponentIDs.Payment,
+  // payment: ComponentIDs.Payment,
   captcha: ComponentIDs.Captcha,
   'page-break': ComponentIDs.LineDivider,
   custom: ComponentIDs.ColumnLayout,
@@ -182,12 +182,12 @@ export default function FormFill() {
     return false;
   }, [settings, user, hasExisting, editingSubmissionId]);
 
-  const handleResponseChange = useCallback(
-    (componentId: string, value: unknown) => {
-      setResponses((prev) => ({ ...prev, [componentId]: value }));
-    },
-    []
-  );
+  // const handleResponseChange = useCallback(
+  //   (componentId: string, value: unknown) => {
+  //     setResponses((prev) => ({ ...prev, [componentId]: value }));
+  //   },
+  //   []
+  // );
 
   const startEditingSubmission = (submission: SubmissionEntry) => {
     setEditingSubmissionId(submission.submissionId);
@@ -364,6 +364,23 @@ export default function FormFill() {
                       props={comp.props as never}
                       validation={comp.validation as never}
                     />
+                    {/* TODO: fix this to use handleResponseChange  */}
+                    {/* {comp.componentType !== 'heading' && (
+                      <div className="mt-2">
+                        <input
+                          type="text"
+                          placeholder="Your answer..."
+                          className="w-full rounded border border-input bg-background px-3 py-2 text-sm"
+                          value={(responses[comp.componentId] as string) || ''}
+                          onChange={(e) =>
+                            handleResponseChange(
+                              comp.componentId,
+                              e.target.value
+                            )
+                          }
+                        />
+                      </div>
+                    )} */}
                   </div>
                 );
               })}
