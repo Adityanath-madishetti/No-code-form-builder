@@ -43,7 +43,7 @@ export const createInputComponent = (
   props: InputProps,
   validation: InputValidation
 ): FormComponent<'Input', InputProps, InputValidation> => ({
-  id: ComponentIDs.Input,
+  id: ComponentIDs.SingleLineInput,
   instanceId,
   metadata,
   children: [],

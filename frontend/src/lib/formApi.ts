@@ -14,39 +14,39 @@ import type { Workflow } from '@/form/workflow/workflowTypes';
 import type { AnyFormComponent } from '@/form/registry/componentRegistry';
 import { deserializeComponent } from '@/form/registry/componentRegistry';
 import type { ComponentID } from '@/form/components/base';
+import { ComponentIDs } from '@/form/components/base';
 
 const frontendToBackend: Record<string, string> = {
-  Header: 'heading',
-  Input: 'single-line-text',
-  Textbox: 'single-line-text',
-  Radio: 'radio',
-  Checkbox: 'checkbox',
-  Dropdown: 'dropdown',
-  MultiLineText: 'multi-line-text',
-  Email: 'email',
-  Phone: 'phone',
-  Number: 'number',
-  Decimal: 'decimal',
-  URL: 'url',
-  Date: 'date',
-  Time: 'time',
-  FileUpload: 'file-upload',
-  ImageUpload: 'image-upload',
-  SingleChoiceGrid: 'single-choice-grid',
-  MultiChoiceGrid: 'multi-choice-grid',
-  MatrixTable: 'matrix-table',
-  RatingScale: 'rating',
-  LinearScale: 'linear-scale',
-  Slider: 'slider',
-  AddressBlock: 'address-block',
-  NameBlock: 'name-block',
-  ColorPicker: 'color-picker',
-  Signature: 'signature',
-  Payment: 'payment',
-  Captcha: 'captcha',
-  SectionDivider: 'section-divider',
-  LineDivider: 'page-break',
-  ColumnLayout: 'custom',
+  [ComponentIDs.Header]: 'heading',
+  [ComponentIDs.SingleLineInput]: 'single-line-text',
+  [ComponentIDs.Radio]: 'radio',
+  [ComponentIDs.Checkbox]: 'checkbox',
+  [ComponentIDs.Dropdown]: 'dropdown',
+  [ComponentIDs.MultiLineInput]: 'multi-line-text',
+  [ComponentIDs.Email]: 'email',
+  [ComponentIDs.Phone]: 'phone',
+  [ComponentIDs.Number]: 'number',
+  [ComponentIDs.Decimal]: 'decimal',
+  [ComponentIDs.URL]: 'url',
+  [ComponentIDs.Date]: 'date',
+  [ComponentIDs.Time]: 'time',
+  [ComponentIDs.FileUpload]: 'file-upload',
+  [ComponentIDs.ImageUpload]: 'image-upload',
+  [ComponentIDs.SingleChoiceGrid]: 'single-choice-grid',
+  [ComponentIDs.MultiChoiceGrid]: 'multi-choice-grid',
+  [ComponentIDs.MatrixTable]: 'matrix-table',
+  [ComponentIDs.RatingScale]: 'rating',
+  [ComponentIDs.LinearScale]: 'linear-scale',
+  [ComponentIDs.Slider]: 'slider',
+  [ComponentIDs.AddressBlock]: 'address-block',
+  [ComponentIDs.NameBlock]: 'name-block',
+  [ComponentIDs.ColorPicker]: 'color-picker',
+  [ComponentIDs.Signature]: 'signature',
+  // [ComponentIDs.Payment]: 'payment',
+  [ComponentIDs.Captcha]: 'captcha',
+  // [ComponentIDs.SectionDivider]: 'section-divider',
+  [ComponentIDs.LineDivider]: 'page-break',
+  [ComponentIDs.ColumnLayout]: 'custom',
 };
 
 const backendToFrontend: Record<string, string> = {};
@@ -115,13 +115,16 @@ interface BackendFormVersion {
   };
 }
 
-function normalizeIdentityList(list: BackendIdentity[] | undefined): AccessIdentity[] {
+function normalizeIdentityList(
+  list: BackendIdentity[] | undefined
+): AccessIdentity[] {
   if (!Array.isArray(list)) return [];
   const seen = new Set<string>();
   const out: AccessIdentity[] = [];
 
   for (const entry of list) {
-    const email = typeof entry?.email === 'string' ? entry.email.trim().toLowerCase() : '';
+    const email =
+      typeof entry?.email === 'string' ? entry.email.trim().toLowerCase() : '';
     const uid = typeof entry?.uid === 'string' ? entry.uid.trim() : '';
     if (!email) continue;
     const key = uid || email;
@@ -149,7 +152,9 @@ function normalizeAccess(access: BackendAccess | undefined): FormAccess {
   };
 }
 
-function normalizeSettings(settings: BackendSettings | undefined): FormSettings {
+function normalizeSettings(
+  settings: BackendSettings | undefined
+): FormSettings {
   const collectEmailMode: CollectEmailMode =
     settings?.collectEmailMode ??
     (settings?.collectEmail ? 'required' : 'none');
@@ -276,8 +281,8 @@ export async function saveFormVersion(
           label: comp.metadata?.label || comp.id,
           description: '',
           required:
-            (comp.validation as unknown as Record<string, unknown>)?.required ===
-            true,
+            (comp.validation as unknown as Record<string, unknown>)
+              ?.required === true,
           group: 'input',
           props: comp.props as Record<string, unknown>,
           validation: comp.validation as unknown as Record<string, unknown>,
@@ -317,13 +322,19 @@ export async function saveFormVersion(
     access: {
       visibility: storeForm.access.visibility,
       editors: storeForm.access.editors.map((entry) =>
-        entry.uid ? { uid: entry.uid, email: entry.email } : { email: entry.email }
+        entry.uid
+          ? { uid: entry.uid, email: entry.email }
+          : { email: entry.email }
       ),
       reviewers: storeForm.access.reviewers.map((entry) =>
-        entry.uid ? { uid: entry.uid, email: entry.email } : { email: entry.email }
+        entry.uid
+          ? { uid: entry.uid, email: entry.email }
+          : { email: entry.email }
       ),
       viewers: storeForm.access.viewers.map((entry) =>
-        entry.uid ? { uid: entry.uid, email: entry.email } : { email: entry.email }
+        entry.uid
+          ? { uid: entry.uid, email: entry.email }
+          : { email: entry.email }
       ),
     },
     pages,
@@ -352,6 +363,9 @@ export async function loadWorkflow(formId: string): Promise<Workflow> {
   return res.workflow;
 }
 
-export async function saveWorkflow(formId: string, workflow: Workflow): Promise<void> {
+export async function saveWorkflow(
+  formId: string,
+  workflow: Workflow
+): Promise<void> {
   await api.put(`/api/forms/${formId}/workflow`, workflow);
 }

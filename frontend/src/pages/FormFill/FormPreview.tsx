@@ -10,6 +10,8 @@ import type { ComponentID } from '@/form/components/base';
 import { Button } from '@/components/ui/button';
 import { Loader2, ArrowLeft, Eye } from 'lucide-react';
 
+import { ComponentIDs } from '@/form/components/base';
+
 interface BackendComponent {
   componentId: string;
   componentType: string;
@@ -34,12 +36,37 @@ interface VersionData {
   pages: BackendPage[];
 }
 
+// 1st record from formApi.ts
 const backendToFrontend: Record<string, string> = {
-  heading: 'Header',
-  'single-line-text': 'Input',
-  radio: 'Radio',
-  checkbox: 'Checkbox',
-  dropdown: 'Dropdown',
+  heading: ComponentIDs.Header,
+  'single-line-text': ComponentIDs.SingleLineInput,
+  radio: ComponentIDs.Radio,
+  checkbox: ComponentIDs.Checkbox,
+  dropdown: ComponentIDs.Dropdown,
+  'multi-line-text': ComponentIDs.MultiLineInput,
+  'single-choice-grid': ComponentIDs.SingleChoiceGrid,
+  'multi-choice-grid': ComponentIDs.MultiChoiceGrid,
+  'matrix-table': ComponentIDs.MatrixTable,
+  rating: ComponentIDs.RatingScale,
+  'linear-scale': ComponentIDs.LinearScale,
+  slider: ComponentIDs.Slider,
+  'file-upload': ComponentIDs.FileUpload,
+  'image-upload': ComponentIDs.ImageUpload,
+  email: ComponentIDs.Email,
+  phone: ComponentIDs.Phone,
+  number: ComponentIDs.Number,
+  decimal: ComponentIDs.Decimal,
+  url: ComponentIDs.URL,
+  date: ComponentIDs.Date,
+  time: ComponentIDs.Time,
+  'address-block': ComponentIDs.AddressBlock,
+  'name-block': ComponentIDs.NameBlock,
+  'color-picker': ComponentIDs.ColorPicker,
+  signature: ComponentIDs.Signature,
+  // payment: ComponentIDs.Payment,
+  captcha: ComponentIDs.Captcha,
+  'page-break': ComponentIDs.LineDivider,
+  custom: ComponentIDs.ColumnLayout,
 };
 
 export default function FormPreview() {
@@ -120,7 +147,8 @@ export default function FormPreview() {
             )}
             <div className="space-y-6">
               {page.components.map((comp) => {
-                const feId = backendToFrontend[comp.componentType] || comp.componentType;
+                const feId =
+                  backendToFrontend[comp.componentType] || comp.componentType;
                 const Renderer = getComponentRenderer(feId as ComponentID);
 
                 if (!Renderer) {
@@ -135,23 +163,16 @@ export default function FormPreview() {
                 }
 
                 return (
-                  <div key={comp.componentId} className="rounded-lg border border-border bg-background p-4">
+                  <div
+                    key={comp.componentId}
+                    // className="rounded-lg border border-border bg-background p-4"
+                  >
                     <Renderer
                       instanceId={comp.componentId}
                       metadata={{ label: comp.label }}
                       props={comp.props as never}
                       validation={comp.validation as never}
                     />
-                    {comp.componentType !== 'heading' && (
-                      <div className="mt-2">
-                        <input
-                          type="text"
-                          placeholder="Your answer..."
-                          className="w-full rounded border border-input bg-muted/30 px-3 py-2 text-sm"
-                          disabled
-                        />
-                      </div>
-                    )}
                   </div>
                 );
               })}
@@ -161,9 +182,7 @@ export default function FormPreview() {
 
         {/* Disabled submit (preview only) */}
         <div className="flex justify-end pt-4">
-          <Button disabled>
-            Submit (disabled in preview)
-          </Button>
+          <Button disabled>Submit (disabled in preview)</Button>
         </div>
       </main>
     </div>

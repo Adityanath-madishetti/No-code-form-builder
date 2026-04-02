@@ -121,7 +121,7 @@ export const createInputComponent = (
   props: InputProps,
   validation: InputValidation
 ): FormComponent<'Input', InputProps, InputValidation> => ({
-  id: ComponentIDs.Input,
+  id: ComponentIDs.SingleLineInput,
   instanceId,
   metadata,
   children: [],
@@ -130,19 +130,19 @@ export const createInputComponent = (
 });
 
 // ── Multi-line Text ──
-export interface MultiLineTextProps {
+export interface MultiLineInputProps {
   questionText: string;
   placeholder: string;
   defaultValue: string;
   rows: number;
 }
-export const createMultiLineTextComponent = (
+export const createMultiLineInputComponent = (
   instanceId: string,
   metadata: ComponentMetadata,
-  props?: Partial<MultiLineTextProps>
+  props?: Partial<MultiLineInputProps>
 ) =>
   createComponent(
-    ComponentIDs.MultiLineText,
+    ComponentIDs.MultiLineInput,
     instanceId,
     metadata,
     {

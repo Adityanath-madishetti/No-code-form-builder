@@ -22,7 +22,7 @@ import type {
   ColumnLayoutProps,
   InputProps,
   InputValidation,
-  MultiLineTextProps,
+  MultiLineInputProps,
   EmailProps,
   PhoneProps,
   NumberProps,
@@ -97,7 +97,7 @@ export function HeaderRenderer({
   instanceId,
   props,
 }: RendererProps<HeaderProps, NoValidation>) {
-  const u = useFormStore((s) => s.updateComponentProps);
+  // const u = useFormStore((s) => s.updateComponentProps);
   const sizes: Record<string, string> = {
     h1: 'text-3xl font-bold',
     h2: 'text-2xl font-bold',
@@ -287,10 +287,10 @@ export function InputComponentPropsRenderer({
   );
 }
 
-export function MultiLineTextRenderer({
+export function MultiLineInputRenderer({
   instanceId,
   props,
-}: RendererProps<MultiLineTextProps, TextValidation>) {
+}: RendererProps<MultiLineInputProps, TextValidation>) {
   const u = useFormStore((s) => s.updateComponentProps);
   return (
     <Card>
@@ -306,10 +306,10 @@ export function MultiLineTextRenderer({
   );
 }
 
-export function MultiLineTextPropsRenderer({
+export function MultiLineInputPropsRenderer({
   instanceId,
   props,
-}: RendererProps<MultiLineTextProps, NoValidation>) {
+}: RendererProps<MultiLineInputProps, NoValidation>) {
   const u = useFormStore((s) => s.updateComponentProps);
   return (
     <div className="space-y-4">
@@ -759,7 +759,7 @@ export function CheckboxComponentRenderer({
         {(props.options || []).map((option) => (
           <label
             key={option.id}
-            className="flex items-center gap-2 text-sm text-foreground cursor-pointer"
+            className="flex cursor-pointer items-center gap-2 text-sm text-foreground"
           >
             <input
               type="checkbox"
@@ -922,7 +922,7 @@ export function RadioComponentRenderer({
         {(props.options || []).map((option) => (
           <label
             key={option.id}
-            className="flex items-center gap-2 text-sm text-foreground cursor-pointer"
+            className="flex cursor-pointer items-center gap-2 text-sm text-foreground"
           >
             <input
               type="radio"
@@ -1034,7 +1034,8 @@ export function RadioComponentPropsRenderer({
             value={props.defaultValue || 'none'}
             onChange={(e) =>
               u(instanceId, {
-                defaultValue: e.target.value === 'none' ? undefined : e.target.value,
+                defaultValue:
+                  e.target.value === 'none' ? undefined : e.target.value,
               })
             }
             className={inp}
@@ -1051,7 +1052,11 @@ export function RadioComponentPropsRenderer({
           <label className={lbl}>Layout</label>
           <select
             value={props.layout || 'vertical'}
-            onChange={(e) => u(instanceId, { layout: (e.target.value as 'vertical' | 'horizontal') })}
+            onChange={(e) =>
+              u(instanceId, {
+                layout: e.target.value as 'vertical' | 'horizontal',
+              })
+            }
             className={inp}
           >
             <option value="vertical">Vertical</option>
@@ -1073,10 +1078,7 @@ export function DropdownComponentRenderer({
   return (
     <Card>
       <Q html={props.questionText} />
-      <select
-        defaultValue={props.defaultValue || ''}
-        className={inp}
-      >
+      <select defaultValue={props.defaultValue || ''} className={inp}>
         <option value="" disabled>
           {props.placeholder || 'Select an option...'}
         </option>
@@ -1193,7 +1195,8 @@ export function DropdownComponentPropsRenderer({
           value={props.defaultValue || 'none'}
           onChange={(e) =>
             u(instanceId, {
-              defaultValue: e.target.value === 'none' ? undefined : e.target.value,
+              defaultValue:
+                e.target.value === 'none' ? undefined : e.target.value,
             })
           }
           className={inp}

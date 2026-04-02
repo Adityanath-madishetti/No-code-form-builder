@@ -6,6 +6,7 @@ import type { ComponentID } from '@/form/components/base';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Loader2, Send, Pencil, LogIn } from 'lucide-react';
+import { ComponentIDs } from '@/form/components/base';
 
 interface BackendComponent {
   componentId: string;
@@ -64,11 +65,35 @@ const DEFAULT_VERSION_SETTINGS: VersionSettings = {
 };
 
 const backendToFrontend: Record<string, string> = {
-  heading: 'Header',
-  'single-line-text': 'Input',
-  radio: 'Radio',
-  checkbox: 'Checkbox',
-  dropdown: 'Dropdown',
+  heading: ComponentIDs.Header,
+  'single-line-text': ComponentIDs.SingleLineInput,
+  radio: ComponentIDs.Radio,
+  checkbox: ComponentIDs.Checkbox,
+  dropdown: ComponentIDs.Dropdown,
+  'multi-line-text': ComponentIDs.MultiLineInput,
+  'single-choice-grid': ComponentIDs.SingleChoiceGrid,
+  'multi-choice-grid': ComponentIDs.MultiChoiceGrid,
+  'matrix-table': ComponentIDs.MatrixTable,
+  rating: ComponentIDs.RatingScale,
+  'linear-scale': ComponentIDs.LinearScale,
+  slider: ComponentIDs.Slider,
+  'file-upload': ComponentIDs.FileUpload,
+  'image-upload': ComponentIDs.ImageUpload,
+  email: ComponentIDs.Email,
+  phone: ComponentIDs.Phone,
+  number: ComponentIDs.Number,
+  decimal: ComponentIDs.Decimal,
+  url: ComponentIDs.URL,
+  date: ComponentIDs.Date,
+  time: ComponentIDs.Time,
+  'address-block': ComponentIDs.AddressBlock,
+  'name-block': ComponentIDs.NameBlock,
+  'color-picker': ComponentIDs.ColorPicker,
+  signature: ComponentIDs.Signature,
+  payment: ComponentIDs.Payment,
+  captcha: ComponentIDs.Captcha,
+  'page-break': ComponentIDs.LineDivider,
+  custom: ComponentIDs.ColumnLayout,
 };
 
 function flattenResponses(
@@ -209,7 +234,15 @@ export default function FormFill() {
     } finally {
       setSubmitting(false);
     }
-  }, [formId, data, settings?.collectEmailMode, email, buildSubmissionPages, editingSubmissionId, navigate]);
+  }, [
+    formId,
+    data,
+    settings?.collectEmailMode,
+    email,
+    buildSubmissionPages,
+    editingSubmissionId,
+    navigate,
+  ]);
 
   if (loading) {
     return (
@@ -257,9 +290,13 @@ export default function FormFill() {
           <section className="mb-8 rounded-lg border border-border bg-background p-4">
             <h2 className="text-sm font-semibold">Your Submissions</h2>
             {mineLoading ? (
-              <div className="mt-2 text-xs text-muted-foreground">Loading...</div>
+              <div className="mt-2 text-xs text-muted-foreground">
+                Loading...
+              </div>
             ) : mySubmissions.length === 0 ? (
-              <div className="mt-2 text-xs text-muted-foreground">No submissions yet.</div>
+              <div className="mt-2 text-xs text-muted-foreground">
+                No submissions yet.
+              </div>
             ) : (
               <div className="mt-3 space-y-2">
                 {mySubmissions.map((submission) => (
@@ -289,7 +326,8 @@ export default function FormFill() {
 
         {submitDisabledByPolicy && !editingSubmissionId && (
           <div className="mb-6 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
-            New submissions are disabled by form policy. {canEditSubmission ? 'Edit an existing submission.' : ''}
+            New submissions are disabled by form policy.{' '}
+            {canEditSubmission ? 'Edit an existing submission.' : ''}
           </div>
         )}
 
@@ -318,7 +356,7 @@ export default function FormFill() {
                 return (
                   <div
                     key={comp.componentId}
-                    className="rounded-lg border border-border bg-background p-4"
+                    // className="rounded-lg border border-border bg-background p-4"
                   >
                     <Renderer
                       instanceId={comp.componentId}
@@ -326,19 +364,6 @@ export default function FormFill() {
                       props={comp.props as never}
                       validation={comp.validation as never}
                     />
-                    {comp.componentType !== 'heading' && (
-                      <div className="mt-2">
-                        <input
-                          type="text"
-                          placeholder="Your answer..."
-                          className="w-full rounded border border-input bg-background px-3 py-2 text-sm"
-                          value={(responses[comp.componentId] as string) || ''}
-                          onChange={(e) =>
-                            handleResponseChange(comp.componentId, e.target.value)
-                          }
-                        />
-                      </div>
-                    )}
                   </div>
                 );
               })}
@@ -378,7 +403,9 @@ export default function FormFill() {
           )}
           <Button
             onClick={handleSubmit}
-            disabled={submitting || (submitDisabledByPolicy && !editingSubmissionId)}
+            disabled={
+              submitting || (submitDisabledByPolicy && !editingSubmissionId)
+            }
           >
             {submitting ? (
               <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />

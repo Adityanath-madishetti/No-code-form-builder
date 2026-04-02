@@ -55,7 +55,7 @@
 export const ComponentIDs = {
   // ── Existing ──
   TextBox: 'Textbox',
-  Input: 'Input',
+  SingleLineInput: 'Input',
   Radio: 'Radio',
   Checkbox: 'Checkbox',
   Dropdown: 'Dropdown',
@@ -66,7 +66,7 @@ export const ComponentIDs = {
   ColumnLayout: 'ColumnLayout',
 
   // ── Text Inputs ──
-  MultiLineText: 'MultiLineText',
+  MultiLineInput: 'MultiLineInput',
   Email: 'Email',
   Phone: 'Phone',
   Number: 'Number',
@@ -98,6 +98,7 @@ export const ComponentIDs = {
   // ── Specialty ──
   ColorPicker: 'ColorPicker',
   Signature: 'Signature',
+  // Payment: 'Payment',
   Location: 'Location',
   Toggle: 'Toggle',
   RichTextInput: 'RichTextInput',

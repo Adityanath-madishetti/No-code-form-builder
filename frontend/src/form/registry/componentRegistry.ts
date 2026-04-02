@@ -37,8 +37,8 @@ import {
   DropdownComponentPropsRenderer,
   RadioComponentRenderer,
   RadioComponentPropsRenderer,
-  MultiLineTextRenderer,
-  MultiLineTextPropsRenderer,
+  MultiLineInputRenderer,
+  MultiLineInputPropsRenderer,
   EmailRenderer,
   EmailPropsRenderer,
   PhoneRenderer,
@@ -82,7 +82,7 @@ import {
   createHeaderComponent,
   createLineDividerComponent,
   createColumnLayoutComponent,
-  createMultiLineTextComponent,
+  createMultiLineInputComponent,
   createInputComponent,
   createCheckboxComponent,
   createDropdownComponent,
@@ -120,7 +120,7 @@ import type {
   HeaderProps,
   LineDividerProps,
   ColumnLayoutProps,
-  MultiLineTextProps,
+  MultiLineInputProps,
   InputProps,
   InputValidation,
   CheckboxProps,
@@ -158,14 +158,14 @@ import type {
 
 export type ComponentPropsMap = {
   [ComponentIDs.TextBox]: TextBoxProps;
-  [ComponentIDs.Input]: InputProps;
+  [ComponentIDs.SingleLineInput]: InputProps;
   [ComponentIDs.Radio]: RadioProps;
   [ComponentIDs.Checkbox]: CheckboxProps;
   [ComponentIDs.Dropdown]: DropdownProps;
   [ComponentIDs.Header]: HeaderProps;
   [ComponentIDs.LineDivider]: LineDividerProps;
   [ComponentIDs.ColumnLayout]: ColumnLayoutProps;
-  [ComponentIDs.MultiLineText]: MultiLineTextProps;
+  [ComponentIDs.MultiLineInput]: MultiLineInputProps;
   [ComponentIDs.Email]: EmailProps;
   [ComponentIDs.Phone]: PhoneProps;
   [ComponentIDs.Number]: NumberProps;
@@ -193,14 +193,14 @@ export type ComponentPropsMap = {
 
 export type ComponentValidationMap = {
   [ComponentIDs.TextBox]: TextBoxValidation;
-  [ComponentIDs.Input]: InputValidation;
+  [ComponentIDs.SingleLineInput]: InputValidation;
   [ComponentIDs.Radio]: RadioValidation;
   [ComponentIDs.Checkbox]: CheckboxValidation;
   [ComponentIDs.Dropdown]: DropdownValidation;
   [ComponentIDs.Header]: NoValidation;
   [ComponentIDs.LineDivider]: NoValidation;
   [ComponentIDs.ColumnLayout]: NoValidation;
-  [ComponentIDs.MultiLineText]: TextValidation;
+  [ComponentIDs.MultiLineInput]: TextValidation;
   [ComponentIDs.Email]: TextValidation;
   [ComponentIDs.Phone]: TextValidation;
   [ComponentIDs.Number]: NumericValidation;
@@ -345,8 +345,8 @@ const registry: Registry = {
         json.validation
       ),
   },
-  [ComponentIDs.Input]: {
-    id: ComponentIDs.Input,
+  [ComponentIDs.SingleLineInput]: {
+    id: ComponentIDs.SingleLineInput,
     catalog: {
       label: 'Single-line Text',
       description: 'A single-line text input.',
@@ -510,14 +510,14 @@ const registry: Registry = {
   // ════════════════════════════════════════════════════════
   //  TEXT INPUTS
   // ════════════════════════════════════════════════════════
-  [ComponentIDs.MultiLineText]: makeEntry(
-    ComponentIDs.MultiLineText,
+  [ComponentIDs.MultiLineInput]: makeEntry(
+    ComponentIDs.MultiLineInput,
     'Multi-line Text',
     'A multi-line text area.',
     'Text Inputs',
-    (id, m) => createMultiLineTextComponent(id, m),
-    MultiLineTextRenderer,
-    MultiLineTextPropsRenderer
+    (id, m) => createMultiLineInputComponent(id, m),
+    MultiLineInputRenderer,
+    MultiLineInputPropsRenderer
   ),
 
   [ComponentIDs.Email]: makeEntry(
@@ -823,8 +823,8 @@ const ENABLED_CATALOG_IDS: Set<string> = new Set([
   // ComponentIDs.ColumnLayout,
 
   // Text Inputs
-  ComponentIDs.Input,
-  ComponentIDs.MultiLineText,
+  ComponentIDs.SingleLineInput,
+  ComponentIDs.MultiLineInput,
   ComponentIDs.Email,
   ComponentIDs.Phone,
   ComponentIDs.Number,
