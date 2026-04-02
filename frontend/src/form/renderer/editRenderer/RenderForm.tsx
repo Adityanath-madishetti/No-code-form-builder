@@ -115,7 +115,7 @@ export const RenderFormOverview = () => {
       </div>
 
       {/* Theme Options Section */}
-      <div className="space-y-4 rounded-md border p-4">
+      <div className="space-y-4 border p-4">
         <h3 className="text-sm font-semibold">Theme Settings</h3>
         <RenderFormTheme />
       </div>

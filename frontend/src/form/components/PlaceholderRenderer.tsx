@@ -25,7 +25,7 @@ export function PlaceholderRenderer({
   const plainQuestion = question.replace(/<[^>]*>/g, '').trim();
 
   return (
-    <div className="rounded-xl border border-dashed border-border/60 bg-muted/20 px-4 py-3">
+    <div className="border border-dashed border-border/60 bg-muted/20 px-4 py-3">
       <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
         {label}
       </p>
@@ -33,7 +33,7 @@ export function PlaceholderRenderer({
         <p className="mt-1 text-sm text-foreground/70">{plainQuestion}</p>
       )}
       {props.placeholder && (
-        <div className="mt-2 rounded-md border border-border bg-background px-3 py-2 text-sm text-muted-foreground">
+        <div className="mt-2 border border-border bg-background px-3 py-2 text-sm text-muted-foreground">
           {props.placeholder}
         </div>
       )}

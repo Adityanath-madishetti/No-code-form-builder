@@ -30,7 +30,7 @@ export const RadioComponentRenderer = ({
 
   return (
     <FormThemeProvider>
-      <div className="w-full rounded-md border border-border bg-card shadow-sm pointer-events-auto">
+      <div className="w-full border border-border bg-card shadow-sm pointer-events-auto">
         <div className="p-6 text-foreground space-y-4">
           {props.questionText && (
             <div
@@ -161,7 +161,7 @@ export const RadioComponentPropsRenderer = ({
           ))}
 
           {(!props.options || props.options.length === 0) && (
-            <div className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
+            <div className="border border-dashed p-4 text-center text-sm text-muted-foreground">
               No choices added.
             </div>
           )}

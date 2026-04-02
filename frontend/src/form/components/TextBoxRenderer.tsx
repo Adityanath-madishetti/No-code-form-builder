@@ -15,7 +15,7 @@ export const TextBoxComponentRenderer = ({
 }: RendererProps<TextBoxProps, TextBoxValidation>) => {
   return (
     <FormThemeProvider>
-      <div className="w-full rounded-md border border-border bg-card shadow-sm">
+      <div className="w-full border border-border bg-card shadow-sm">
         <div className="p-6 text-foreground">
           <div
             className={sharedProseClasses}

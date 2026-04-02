@@ -19,7 +19,7 @@ export const InputComponentRenderer = ({
 }: RendererProps<InputProps, InputValidation>) => {
   return (
     <FormThemeProvider>
-      <div className="w-full rounded-md border border-border bg-card shadow-sm relative pointer-events-auto">
+      <div className="w-full border border-border bg-card shadow-sm relative pointer-events-auto">
         <div className="p-6 space-y-4 text-foreground">
           {props.questionText && (
             <div

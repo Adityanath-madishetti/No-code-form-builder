@@ -6,8 +6,6 @@ import {
   Zap,
   GitBranch,
   Sparkles,
-  Eye,
-  Settings2,
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -17,23 +15,19 @@ export type SidebarPanelId =
   | 'theme'
   | 'logic'
   | 'workflow'
-  | 'ai'
-  | 'preview'
-  | 'form';
+  | 'ai';
 
 const NAV_ITEMS: {
   id: SidebarPanelId;
   label: string;
   icon: React.ElementType;
 }[] = [
-    { id: 'form', label: 'Form Properties', icon: Settings2 },
     { id: 'components', label: 'Components', icon: LayoutGrid },
     { id: 'templates', label: 'Templates', icon: Layers },
     { id: 'theme', label: 'Theme', icon: Palette },
     { id: 'logic', label: 'Logic', icon: Zap },
     { id: 'workflow', label: 'Workflow', icon: GitBranch },
     { id: 'ai', label: 'AI Assistant', icon: Sparkles },
-    { id: 'preview', label: 'Preview & Publish', icon: Eye },
   ];
 
 interface EditorSidebarProps {

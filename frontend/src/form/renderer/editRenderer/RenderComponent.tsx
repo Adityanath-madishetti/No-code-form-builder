@@ -27,7 +27,7 @@ export const RenderComponent = ({
   // ------------------------------------------
   if ((component.id as string) === 'Placeholder') {
     return (
-      <div className="flex h-20 w-full items-center justify-center rounded-lg transition-all duration-200">
+      <div className="flex h-20 w-full items-center justify-center transition-all duration-200">
         <span className="text-primary">Drop Component?</span>
       </div>
     );

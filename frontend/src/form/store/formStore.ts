@@ -161,8 +161,10 @@ interface FormUIState {
   activeDragData: FormDragData | null;
 
   activeSidePanelTab: string;
+  showPropertiesPanel: boolean;
 
   catalogRefreshKey: number;
+  collapsedComponents: Set<InstanceID>;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -221,6 +223,8 @@ interface FormSchemaActions {
   ) => void;
 
   duplicateComponent: (instanceId: InstanceID) => InstanceID | undefined;
+  toggleComponentCollapsed: (instanceId: InstanceID) => void;
+  togglePropertiesPanel: () => void;
 }
 
 interface FormUIActions {
@@ -305,7 +309,9 @@ export const useFormStore = create<FormStore>()(
     activeDragData: null,
 
     activeSidePanelTab: 'overview',
+    showPropertiesPanel: false,
     catalogRefreshKey: 0,
+    collapsedComponents: new Set(),
 
     initForm: (id, name, metadata) =>
       set((state) => {
@@ -608,6 +614,21 @@ export const useFormStore = create<FormStore>()(
 
     refreshCatalog: () =>
       set((state) => ({ catalogRefreshKey: state.catalogRefreshKey + 1 })),
+
+    // New component actions
+    toggleComponentCollapsed: (instanceId) =>
+      set((state) => {
+        // Replace the Set instance so Zustand/Immer reliably triggers updates.
+        const next = new Set(state.collapsedComponents);
+        if (next.has(instanceId)) next.delete(instanceId);
+        else next.add(instanceId);
+        state.collapsedComponents = next;
+      }),
+
+    togglePropertiesPanel: () =>
+      set((state) => {
+        state.showPropertiesPanel = !state.showPropertiesPanel;
+      }),
   }))
 );
 

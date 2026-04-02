@@ -35,10 +35,9 @@ import { DropdownComponentPropsRenderer, DropdownComponentRenderer } from '../co
 // ── Generic renderer for settings (still placeholder) ──
 import { PlaceholderSettingsRenderer } from '../components/PlaceholderRenderer';
 
-// ── Functional renderers for all new components ──
+// ── New component renderers ──
 import {
   HeaderRenderer,
-  SectionDividerRenderer,
   LineDividerRenderer,
   ColumnLayoutRenderer,
   MultiLineTextRenderer,
@@ -62,17 +61,14 @@ import {
   ColorPickerRenderer,
   SignatureRenderer,
   LocationRenderer,
-  PasswordInputRenderer,
   ToggleRenderer,
   RichTextInputRenderer,
-  PaymentRenderer,
   CaptchaRenderer,
 } from '../components/NewComponentRenderers';
 
 // ── New component factories ──
 import {
   createHeaderComponent,
-  createSectionDividerComponent,
   createLineDividerComponent,
   createColumnLayoutComponent,
   createMultiLineTextComponent,
@@ -96,10 +92,8 @@ import {
   createColorPickerComponent,
   createSignatureComponent,
   createLocationComponent,
-  createPasswordInputComponent,
   createToggleComponent,
   createRichTextInputComponent,
-  createPaymentComponent,
   createCaptchaComponent,
 } from '../components/allComponents';
 
@@ -109,7 +103,6 @@ import type {
   NumericValidation,
   NoValidation,
   HeaderProps,
-  SectionDividerProps,
   LineDividerProps,
   ColumnLayoutProps,
   MultiLineTextProps,
@@ -133,10 +126,8 @@ import type {
   ColorPickerProps,
   SignatureProps,
   LocationProps,
-  PasswordInputProps,
   ToggleProps,
   RichTextInputProps,
-  PaymentProps,
   CaptchaProps,
 } from '../components/allComponents';
 
@@ -149,7 +140,6 @@ export type ComponentPropsMap = {
   [ComponentIDs.Checkbox]: CheckboxProps;
   [ComponentIDs.Dropdown]: DropdownProps;
   [ComponentIDs.Header]: HeaderProps;
-  [ComponentIDs.SectionDivider]: SectionDividerProps;
   [ComponentIDs.LineDivider]: LineDividerProps;
   [ComponentIDs.ColumnLayout]: ColumnLayoutProps;
   [ComponentIDs.MultiLineText]: MultiLineTextProps;
@@ -173,10 +163,8 @@ export type ComponentPropsMap = {
   [ComponentIDs.ColorPicker]: ColorPickerProps;
   [ComponentIDs.Signature]: SignatureProps;
   [ComponentIDs.Location]: LocationProps;
-  [ComponentIDs.PasswordInput]: PasswordInputProps;
   [ComponentIDs.Toggle]: ToggleProps;
   [ComponentIDs.RichTextInput]: RichTextInputProps;
-  [ComponentIDs.Payment]: PaymentProps;
   [ComponentIDs.Captcha]: CaptchaProps;
 };
 
@@ -187,7 +175,6 @@ export type ComponentValidationMap = {
   [ComponentIDs.Checkbox]: CheckboxValidation;
   [ComponentIDs.Dropdown]: DropdownValidation;
   [ComponentIDs.Header]: NoValidation;
-  [ComponentIDs.SectionDivider]: NoValidation;
   [ComponentIDs.LineDivider]: NoValidation;
   [ComponentIDs.ColumnLayout]: NoValidation;
   [ComponentIDs.MultiLineText]: TextValidation;
@@ -211,10 +198,8 @@ export type ComponentValidationMap = {
   [ComponentIDs.ColorPicker]: BasicValidation;
   [ComponentIDs.Signature]: BasicValidation;
   [ComponentIDs.Location]: BasicValidation;
-  [ComponentIDs.PasswordInput]: TextValidation;
   [ComponentIDs.Toggle]: BasicValidation;
   [ComponentIDs.RichTextInput]: BasicValidation;
-  [ComponentIDs.Payment]: BasicValidation;
   [ComponentIDs.Captcha]: NoValidation;
 };
 
@@ -357,10 +342,6 @@ const registry: Registry = {
     'Header', 'A heading / title element.', 'Layout',
     (id, m) => createHeaderComponent(id, m), HeaderRenderer),
 
-  [ComponentIDs.SectionDivider]: makeEntry(ComponentIDs.SectionDivider,
-    'Section Divider', 'A titled section separator.', 'Layout',
-    (id, m) => createSectionDividerComponent(id, m), SectionDividerRenderer),
-
   [ComponentIDs.LineDivider]: makeEntry(ComponentIDs.LineDivider,
     'Line Divider', 'A horizontal line separator.', 'Layout',
     (id, m) => createLineDividerComponent(id, m), LineDividerRenderer),
@@ -474,10 +455,6 @@ const registry: Registry = {
     'Location', 'A map / location picker.', 'Specialty',
     (id, m) => createLocationComponent(id, m), LocationRenderer),
 
-  [ComponentIDs.PasswordInput]: makeEntry(ComponentIDs.PasswordInput,
-    'Password', 'A masked password input.', 'Specialty',
-    (id, m) => createPasswordInputComponent(id, m), PasswordInputRenderer),
-
   [ComponentIDs.Toggle]: makeEntry(ComponentIDs.Toggle,
     'Toggle', 'An on/off switch.', 'Specialty',
     (id, m) => createToggleComponent(id, m), ToggleRenderer),
@@ -485,10 +462,6 @@ const registry: Registry = {
   [ComponentIDs.RichTextInput]: makeEntry(ComponentIDs.RichTextInput,
     'Rich Text Input', 'A rich text editor field.', 'Specialty',
     (id, m) => createRichTextInputComponent(id, m), RichTextInputRenderer),
-
-  [ComponentIDs.Payment]: makeEntry(ComponentIDs.Payment,
-    'Payment', 'A payment amount field.', 'Specialty',
-    (id, m) => createPaymentComponent(id, m), PaymentRenderer),
 
   [ComponentIDs.Captcha]: makeEntry(ComponentIDs.Captcha,
     'Captcha', 'Bot verification challenge.', 'Specialty',
@@ -548,11 +521,52 @@ export interface CatalogEntry {
 
 // ── IDs of components currently enabled in the catalog ──
 const ENABLED_CATALOG_IDS: Set<string> = new Set([
+  // Layout
   ComponentIDs.Header,
+  ComponentIDs.LineDivider,
+  ComponentIDs.ColumnLayout,
+  
+  // Text Inputs
   ComponentIDs.Input,
+  ComponentIDs.MultiLineText,
+  ComponentIDs.Email,
+  ComponentIDs.Phone,
+  ComponentIDs.Number,
+  ComponentIDs.Decimal,
+  ComponentIDs.URL,
+  
+  // Date & Time
+  ComponentIDs.Date,
+  ComponentIDs.Time,
+  
+  // File / Media
+  ComponentIDs.FileUpload,
+  ComponentIDs.ImageUpload,
+  
+  // Selection
   ComponentIDs.Radio,
   ComponentIDs.Checkbox,
   ComponentIDs.Dropdown,
+  ComponentIDs.SingleChoiceGrid,
+  ComponentIDs.MultiChoiceGrid,
+  ComponentIDs.MatrixTable,
+  
+  // Scales & Sliders
+  ComponentIDs.RatingScale,
+  ComponentIDs.LinearScale,
+  ComponentIDs.Slider,
+  
+  // Blocks
+  ComponentIDs.NameBlock,
+  ComponentIDs.AddressBlock,
+  
+  // Specialty
+  ComponentIDs.ColorPicker,
+  ComponentIDs.Signature,
+  ComponentIDs.Location,
+  ComponentIDs.Toggle,
+  ComponentIDs.RichTextInput,
+  ComponentIDs.Captcha,
 ]);
 
 export const catalogRegistry: CatalogEntry[] = Object.values(registry)

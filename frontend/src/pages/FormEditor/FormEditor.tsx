@@ -21,8 +21,8 @@ import { ThemePanel } from './components/ThemePanel';
 import { LogicPanel } from './components/LogicPanel';
 import { WorkflowPanel } from './components/WorkflowPanel';
 import { AIPanel } from './components/AIPanel';
-import { PreviewPublishPanel } from './components/PreviewPublishPanel';
 import { FormPropertiesPanel } from './components/FormPropertiesPanel';
+import { WorkflowListPanel } from './components/WorkflowListPanel';
 import { FormCanvas } from './components/FormCanvas';
 import { PageNavigator } from './components/PageNavigator';
 import { DebugPanel } from './components/DebugPanel';
@@ -30,32 +30,28 @@ import { ComponentPropertiesPanel } from './components/ComponentPropertiesPanel'
 import { RightFloatingPanel } from './components/RightFloatingPanel';
 import { LogicPlayground } from './components/LogicPlayground';
 import { useLogicStore } from '@/form/logic/logicStore';
-import { Bug, PanelLeftClose, PanelRightClose, Save, ArrowLeft, Loader2, Eye, Globe, Zap, LayoutGrid } from 'lucide-react';
+import { Bug, PanelLeftClose, PanelRightClose, Save, ArrowLeft, Loader2, Eye, Globe, Zap, LayoutGrid, GitBranch, Settings2 } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 import { loadFormVersion, saveFormVersion, createNewVersion, loadWorkflow } from '@/lib/formApi';
 import { useWorkflowStore } from '@/form/workflow/workflowStore';
 
 const PANEL_TITLES: Record<SidebarPanelId, string> = {
-  form: 'Form Properties',
   components: 'Components',
   templates: 'Templates',
   theme: 'Theme',
   logic: 'Logic',
   workflow: 'Workflow',
   ai: 'AI Assistant',
-  preview: 'Preview & Publish',
 };
 
 function PanelContent({ panelId }: { panelId: SidebarPanelId }) {
   switch (panelId) {
-    case 'form': return <FormPropertiesPanel />;
     case 'components': return <ComponentCatalogPanel />;
     case 'templates': return <TemplateCatalogPanel />;
     case 'theme': return <ThemePanel />;
     case 'logic': return <LogicPanel />;
-    case 'workflow': return <WorkflowPanel />;
+    case 'workflow': return <WorkflowListPanel />;
     case 'ai': return <AIPanel />;
-    case 'preview': return <PreviewPublishPanel />;
   }
 }
 
@@ -77,7 +73,11 @@ export default function FormEditor() {
   const [activePanel, setActivePanel] = useState<SidebarPanelId | null>('components');
   const [showDebug, setShowDebug] = useState(false);
   const [showProperties, setShowProperties] = useState(true);
-  const [editorView, setEditorView] = useState<'form' | 'logic'>('form');
+  const showPropertiesPanel = useFormStore((s) => s.showPropertiesPanel);
+  const togglePropertiesPanel = useFormStore((s) => s.togglePropertiesPanel);
+  const [editorView, setEditorView] = useState<
+    'canvas' | 'logic' | 'workflow' | 'formProperties'
+  >('canvas');
 
   const [leftWidth, setLeftWidth] = useState<number | string>('20%');
   const [rightWidth, setRightWidth] = useState(340);
@@ -180,6 +180,11 @@ export default function FormEditor() {
     }
   }, [activeComponentId, activePageId]);
 
+  // Sync local state with store state for properties panel
+  useEffect(() => {
+    setShowProperties(showPropertiesPanel);
+  }, [showPropertiesPanel]);
+
   // Auto-switch to logic view when a rule/formula is activated
   useEffect(() => {
     if (logicActiveRuleId || logicActiveFormulaId) {
@@ -278,37 +283,138 @@ export default function FormEditor() {
 
           {/* ── Centre area: Form canvas OR Logic playground ── */}
           <div className="flex-1 min-w-[400px] relative flex h-full flex-col overflow-hidden bg-neutral-100 dark:bg-neutral-900">
-            {/* View toggle tabs */}
-            <div className="flex shrink-0 items-center gap-1 border-b border-border bg-background px-3 py-1">
-              <button
-                onClick={() => setEditorView('form')}
-                className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors ${
-                  editorView === 'form'
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                }`}
+            {/* Top bar: editor view + save/preview/publish */}
+            <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border bg-background px-3 py-1">
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setEditorView('formProperties')}
+                  className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors ${
+                    editorView === 'formProperties'
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                  }`}
+                >
+                  <Settings2 className="h-3 w-3" />
+                  Form Properties
+                </button>
+                <button
+                  onClick={() => setEditorView('canvas')}
+                  className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors ${
+                    editorView === 'canvas'
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                  }`}
+                >
+                  <LayoutGrid className="h-3 w-3" />
+                  Form
+                </button>
+                <button
+                  onClick={() => setEditorView('logic')}
+                  className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors ${
+                    editorView === 'logic'
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                  }`}
+                >
+                  <Zap className="h-3 w-3" />
+                  Logic
+                  {(logicActiveRuleId || logicActiveFormulaId) && (
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                  )}
+                </button>
+                <button
+                  onClick={() => setEditorView('workflow')}
+                  className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors ${
+                    editorView === 'workflow'
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                  }`}
+                >
+                  <GitBranch className="h-3 w-3" />
+                  Workflow
+                </button>
+              </div>
+
+              <div
+                className="flex items-center gap-1 will-change-transform"
+                style={{
+                  transform: `translateX(-${(showProperties ? rightWidth : 0) + (showDebug ? debugWidth : 0)}px)`,
+                  transition: 'transform 100ms ease-out',
+                }}
               >
-                <LayoutGrid className="h-3 w-3" />
-                Form
-              </button>
-              <button
-                onClick={() => setEditorView('logic')}
-                className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors ${
-                  editorView === 'logic'
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                }`}
-              >
-                <Zap className="h-3 w-3" />
-                Logic
-                {(logicActiveRuleId || logicActiveFormulaId) && (
-                  <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                )}
-              </button>
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  title="Save form"
+                  className={`group flex h-7 items-center gap-0 border px-1.5 shadow-sm transition-all duration-300 rounded-sm hover:gap-1 hover:px-2 ${
+                    saving
+                      ? 'border-primary/40 bg-primary/10 text-primary cursor-wait'
+                      : 'border-primary/60 bg-primary text-primary-foreground hover:bg-primary/90'
+                  }`}
+                >
+                  {saving ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Save className="h-3 w-3" />
+                  )}
+                  <span className="max-w-0 overflow-hidden whitespace-nowrap text-[11px] font-medium transition-all duration-300 group-hover:max-w-[60px]">
+                    {saving ? 'Saving...' : 'Save'}
+                  </span>
+                </button>
+                <button
+                  onClick={() => window.open(`/forms/${formId}/preview`, '_blank')}
+                  title="Preview form"
+                  className="group flex h-7 items-center gap-0 rounded-sm border border-border bg-background px-1.5 shadow-sm transition-all duration-300 text-muted-foreground hover:text-foreground hover:bg-muted hover:gap-1 hover:px-2"
+                >
+                  <Eye className="h-3 w-3" />
+                  <span className="max-w-0 overflow-hidden whitespace-nowrap text-[11px] font-medium transition-all duration-300 group-hover:max-w-[60px]">
+                    Preview
+                  </span>
+                </button>
+                <button
+                  onClick={async () => {
+                    if (!formId) return;
+                    setPublishing(true);
+                    try {
+                      await handleSave();
+                      const { api: apiClient } = await import('@/lib/api');
+                      await apiClient.post(
+                        `/api/forms/${formId}/publish`
+                      );
+                      alert(
+                        'Form published! Share this link:\\n' +
+                          window.location.origin +
+                          '/forms/' +
+                          formId
+                      );
+                    } catch (err) {
+                      console.error('Publish failed:', err);
+                    } finally {
+                      setPublishing(false);
+                    }
+                  }}
+                  disabled={publishing || saving}
+                  title="Publish form"
+                  className={`group flex h-7 items-center gap-0 rounded-sm border px-1.5 shadow-sm transition-all duration-300 hover:gap-1 hover:px-2 ${
+                    publishing
+                      ? 'border-green-400/40 bg-green-400/10 text-green-600 cursor-wait'
+                      : 'border-green-600/60 bg-green-600 text-white hover:bg-green-700'
+                  }`}
+                >
+                  {publishing ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Globe className="h-3 w-3" />
+                  )}
+                  <span className="max-w-0 overflow-hidden whitespace-nowrap text-[11px] font-medium transition-all duration-300 group-hover:max-w-[70px]">
+                    {publishing ? 'Publishing...' : 'Publish'}
+                  </span>
+                </button>
+              </div>
             </div>
 
             {/* Form canvas view */}
-            {editorView === 'form' && (
+            {editorView === 'canvas' && (
               <div
                 className="flex-1 overflow-y-auto"
                 onClick={handleCanvasClick}
@@ -343,7 +449,23 @@ export default function FormEditor() {
             {/* Logic playground view */}
             {editorView === 'logic' && (
               <div className="flex-1 overflow-hidden">
-                <LogicPlayground onClose={() => setEditorView('form')} />
+                <LogicPlayground onClose={() => setEditorView('canvas')} />
+              </div>
+            )}
+
+            {/* Workflow editor view */}
+            {editorView === 'workflow' && (
+              <div className="flex-1 overflow-y-auto">
+                <WorkflowPanel />
+              </div>
+            )}
+
+            {/* Form properties view */}
+            {editorView === 'formProperties' && (
+              <div className="flex-1 overflow-y-auto">
+                <div className="p-3">
+                  <FormPropertiesPanel />
+                </div>
               </div>
             )}
           </div>
@@ -364,7 +486,7 @@ export default function FormEditor() {
                     Properties
                   </span>
                   <button
-                    onClick={() => setShowProperties(false)}
+                    onClick={togglePropertiesPanel}
                     title="Collapse Properties"
                     className="text-muted-foreground hover:text-foreground transition-colors"
                   >
@@ -408,68 +530,6 @@ export default function FormEditor() {
               </div>
             </RightFloatingPanel>
           )}
-        </div>
-
-        {/* ── Top-right action buttons ── */}
-        <div
-          className="fixed top-3 right-4 z-[60] flex items-center gap-1 will-change-transform"
-          style={{ transform: `translateX(-${(showProperties ? rightWidth : 0) + (showDebug ? debugWidth : 0)}px)`, transition: 'transform 100ms ease-out' }}
-        >
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            title="Save form"
-            className={`group flex h-7 items-center gap-0 border px-1.5 shadow-sm transition-all duration-300 rounded-sm hover:gap-1 hover:px-2 ${
-              saving
-                ? 'border-primary/40 bg-primary/10 text-primary cursor-wait'
-                : 'border-primary/60 bg-primary text-primary-foreground hover:bg-primary/90'
-            }`}
-          >
-            {saving ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
-            ) : (
-              <Save className="h-3 w-3" />
-            )}
-            <span className="max-w-0 overflow-hidden whitespace-nowrap text-[11px] font-medium transition-all duration-300 group-hover:max-w-[60px]">{saving ? 'Saving...' : 'Save'}</span>
-          </button>
-          <button
-            onClick={() => window.open(`/forms/${formId}/preview`, '_blank')}
-            title="Preview form"
-            className="group flex h-7 items-center gap-0 rounded-sm border border-border bg-background px-1.5 shadow-sm transition-all duration-300 text-muted-foreground hover:text-foreground hover:bg-muted hover:gap-1 hover:px-2"
-          >
-            <Eye className="h-3 w-3" />
-            <span className="max-w-0 overflow-hidden whitespace-nowrap text-[11px] font-medium transition-all duration-300 group-hover:max-w-[60px]">Preview</span>
-          </button>
-          <button
-            onClick={async () => {
-              if (!formId) return;
-              setPublishing(true);
-              try {
-                await handleSave();
-                const { api: apiClient } = await import('@/lib/api');
-                await apiClient.post(`/api/forms/${formId}/publish`);
-                alert('Form published! Share this link:\n' + window.location.origin + '/forms/' + formId);
-              } catch (err) {
-                console.error('Publish failed:', err);
-              } finally {
-                setPublishing(false);
-              }
-            }}
-            disabled={publishing || saving}
-            title="Publish form"
-            className={`group flex h-7 items-center gap-0 rounded-sm border px-1.5 shadow-sm transition-all duration-300 hover:gap-1 hover:px-2 ${
-              publishing
-                ? 'border-green-400/40 bg-green-400/10 text-green-600 cursor-wait'
-                : 'border-green-600/60 bg-green-600 text-white hover:bg-green-700'
-            }`}
-          >
-            {publishing ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
-            ) : (
-              <Globe className="h-3 w-3" />
-            )}
-            <span className="max-w-0 overflow-hidden whitespace-nowrap text-[11px] font-medium transition-all duration-300 group-hover:max-w-[70px]">{publishing ? 'Publishing...' : 'Publish'}</span>
-          </button>
         </div>
 
         {/* ── Bottom-right utility buttons ── */}
