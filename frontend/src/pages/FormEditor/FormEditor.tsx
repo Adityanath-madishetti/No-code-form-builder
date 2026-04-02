@@ -4,7 +4,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFormStore } from '@/form/store/formStore';
 import { DragDropProvider, DragOverlay } from '@dnd-kit/react';
-import { componentRenderers } from '@/form/registry/componentRegistry';
+import {
+  componentRenderers,
+  type AnyFormComponent,
+} from '@/form/registry/componentRegistry';
 import { useFormDragHandlers } from '@/form/hooks/useFormDragHandlers';
 import {
   DRAG_CATALOG_COMPONENT_ID,
@@ -684,7 +687,7 @@ export default function FormEditor() {
         {activeDragData?.type === DRAG_CATALOG_GROUP_ID && (
           <div className="pointer-events-none flex w-[400px] flex-col gap-2 opacity-90 drop-shadow-2xl">
             {activeDragData.group?.components.map(
-              (comp: any, index: number) => {
+              (comp: AnyFormComponent, index: number) => {
                 const Renderer =
                   componentRenderers[
                     comp.id as keyof typeof componentRenderers
@@ -705,7 +708,9 @@ export default function FormEditor() {
                         instanceId={comp.instanceId}
                         metadata={comp.metadata}
                         // @ts-expect-error type union
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         props={comp.props as any}
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         validation={comp.validation as any}
                       />
                     </div>

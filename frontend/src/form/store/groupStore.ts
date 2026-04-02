@@ -14,6 +14,8 @@ interface GroupStore {
   removeGroup: (id: string) => void;
 }
 
+// TODO: probably need to fetch the user's groups from the database
+
 export const useGroupStore = create<GroupStore>()(
   persist(
     (set) => ({
