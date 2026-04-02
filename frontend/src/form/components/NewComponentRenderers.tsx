@@ -11,11 +11,9 @@ import {
   MapPin,
   PenTool,
   ShieldCheck,
-  CreditCard,
 } from 'lucide-react';
 import type {
   HeaderProps,
-  SectionDividerProps,
   LineDividerProps,
   ColumnLayoutProps,
   MultiLineTextProps,
@@ -39,10 +37,8 @@ import type {
   ColorPickerProps,
   SignatureProps,
   LocationProps,
-  PasswordInputProps,
   ToggleProps,
   RichTextInputProps,
-  PaymentProps,
   CaptchaProps,
   NoValidation,
   BasicValidation,
@@ -86,16 +82,6 @@ export function HeaderRenderer({ instanceId, props }: RendererProps<HeaderProps,
         placeholder="Heading..."
         className={`w-full bg-transparent outline-none placeholder:text-muted-foreground/20 ${sizes[props.level] || sizes.h2}`}
       />
-    </div>
-  );
-}
-
-export function SectionDividerRenderer({ instanceId, props }: RendererProps<SectionDividerProps, NoValidation>) {
-  const u = useFormStore((s) => s.updateComponentProps);
-  return (
-    <div className="border-t-2 border-foreground/10 pt-3 pb-1">
-      <input value={props.title} onChange={(e) => u(instanceId, { title: e.target.value })} placeholder="Section title" className="w-full bg-transparent text-xs font-bold uppercase tracking-widest text-muted-foreground outline-none placeholder:text-muted-foreground/20" />
-      <input value={props.subtitle || ''} onChange={(e) => u(instanceId, { subtitle: e.target.value })} placeholder="Subtitle (optional)" className="mt-0.5 w-full bg-transparent text-xs text-muted-foreground/60 outline-none placeholder:text-muted-foreground/20" />
     </div>
   );
 }
@@ -421,16 +407,6 @@ export function LocationRenderer({ props }: RendererProps<LocationProps, BasicVa
   );
 }
 
-export function PasswordInputRenderer({ props }: RendererProps<PasswordInputProps, TextValidation>) {
-  return (
-    <Card>
-      <Q html={props.questionText} />
-      <input type="password" placeholder={props.placeholder || '••••••••'} className={inp} />
-      {props.showStrengthMeter && <div className="mt-1.5 flex gap-0.5">{[1,2,3,4].map((i) => <div key={i} className="h-0.5 flex-1 bg-border" />)}</div>}
-    </Card>
-  );
-}
-
 export function ToggleRenderer({ instanceId, props }: RendererProps<ToggleProps, BasicValidation>) {
   const u = useFormStore((s) => s.updateComponentProps);
   return (
@@ -457,22 +433,6 @@ export function RichTextInputRenderer({ props }: RendererProps<RichTextInputProp
           <span className="px-1.5 py-0.5 text-[10px] underline hover:bg-muted cursor-pointer">U</span>
         </div>
         <p className="text-xs text-muted-foreground/40">{props.placeholder || 'Type formatted text...'}</p>
-      </div>
-    </Card>
-  );
-}
-
-export function PaymentRenderer({ instanceId, props }: RendererProps<PaymentProps, BasicValidation>) {
-  const u = useFormStore((s) => s.updateComponentProps);
-  return (
-    <Card>
-      <Q html={props.questionText} />
-      <div className="flex items-center gap-2">
-        <CreditCard className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
-        <select value={props.currency} onChange={(e) => u(instanceId, { currency: e.target.value })} className="border border-border bg-background px-2 py-2 text-sm outline-none">
-          {['USD','EUR','GBP','INR','JPY'].map((c) => <option key={c} value={c}>{c}</option>)}
-        </select>
-        <input type="number" value={props.amount || ''} onChange={(e) => u(instanceId, { amount: Number(e.target.value) })} placeholder="0.00" className={inp + ' flex-1'} step="0.01" />
       </div>
     </Card>
   );

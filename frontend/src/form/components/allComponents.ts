@@ -54,17 +54,6 @@ export const createHeaderComponent = (instanceId: string, metadata: ComponentMet
     { proxy: 0 } as NoValidation
   );
 
-// ── Section Divider ──
-export interface SectionDividerProps {
-  title: string;
-  subtitle?: string;
-}
-export const createSectionDividerComponent = (instanceId: string, metadata: ComponentMetadata, props?: Partial<SectionDividerProps>) =>
-  createComponent(ComponentIDs.SectionDivider, instanceId, metadata,
-    { title: 'Section', subtitle: '', ...props },
-    { proxy: 0 } as NoValidation
-  );
-
 // ── Line Divider ──
 export interface LineDividerProps {
   style: 'solid' | 'dashed' | 'dotted';
@@ -408,18 +397,6 @@ export const createLocationComponent = (instanceId: string, metadata: ComponentM
 //  EXTRA (suggested)
 // ========================================================================================
 
-// ── Password ──
-export interface PasswordInputProps {
-  questionText: string;
-  placeholder: string;
-  showStrengthMeter: boolean;
-}
-export const createPasswordInputComponent = (instanceId: string, metadata: ComponentMetadata, props?: Partial<PasswordInputProps>) =>
-  createComponent(ComponentIDs.PasswordInput, instanceId, metadata,
-    { questionText: '<p>Enter password</p>', placeholder: '••••••••', showStrengthMeter: false, ...props },
-    { required: false, minLength: 6 } as TextValidation
-  );
-
 // ── Toggle ──
 export interface ToggleProps {
   questionText: string;
@@ -441,18 +418,6 @@ export interface RichTextInputProps {
 export const createRichTextInputComponent = (instanceId: string, metadata: ComponentMetadata, props?: Partial<RichTextInputProps>) =>
   createComponent(ComponentIDs.RichTextInput, instanceId, metadata,
     { questionText: '<p>Enter formatted text</p>', placeholder: 'Type here...', defaultValue: '', ...props },
-    { required: false } as BasicValidation
-  );
-
-// ── Payment ──
-export interface PaymentProps {
-  questionText: string;
-  currency: string;
-  amount: number;
-}
-export const createPaymentComponent = (instanceId: string, metadata: ComponentMetadata, props?: Partial<PaymentProps>) =>
-  createComponent(ComponentIDs.Payment, instanceId, metadata,
-    { questionText: '<p>Payment</p>', currency: 'USD', amount: 0, ...props },
     { required: false } as BasicValidation
   );
 

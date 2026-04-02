@@ -37,7 +37,7 @@ export function LogicPlayground({ onClose }: LogicPlaygroundProps) {
   const fieldOptions = useMemo(
     () =>
       Object.values(components)
-        .filter((c) => c.id !== 'Header' && c.id !== 'SectionDivider' && c.id !== 'LineDivider')
+        .filter((c) => c.id !== 'Header' && c.id !== 'LineDivider')
         .map((c) => ({
           id: c.instanceId,
           label: c.metadata.label || c.id,
