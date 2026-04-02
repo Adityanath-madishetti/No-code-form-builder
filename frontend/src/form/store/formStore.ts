@@ -45,11 +45,13 @@ import type {
   PageID,
   FormTheme,
 } from '../components/base';
-import type {
-  AnyFormComponent,
-} from '../registry/componentRegistry';
+import type { AnyFormComponent } from '../registry/componentRegistry';
 
-const createForm = (id: FormID, name: string, metadata?: Partial<FormMetadata>): Form => ({
+const createForm = (
+  id: FormID,
+  name: string,
+  metadata?: Partial<FormMetadata>
+): Form => ({
   id,
   name,
   metadata: {
@@ -164,7 +166,7 @@ interface FormUIState {
   showPropertiesPanel: boolean;
 
   catalogRefreshKey: number;
-  collapsedComponents: Set<InstanceID>;
+  collapsedComponents: Record<InstanceID, boolean>;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -311,7 +313,7 @@ export const useFormStore = create<FormStore>()(
     activeSidePanelTab: 'overview',
     showPropertiesPanel: false,
     catalogRefreshKey: 0,
-    collapsedComponents: new Set(),
+    collapsedComponents: {},
 
     initForm: (id, name, metadata) =>
       set((state) => {
@@ -618,11 +620,8 @@ export const useFormStore = create<FormStore>()(
     // New component actions
     toggleComponentCollapsed: (instanceId) =>
       set((state) => {
-        // Replace the Set instance so Zustand/Immer reliably triggers updates.
-        const next = new Set(state.collapsedComponents);
-        if (next.has(instanceId)) next.delete(instanceId);
-        else next.add(instanceId);
-        state.collapsedComponents = next;
+        state.collapsedComponents[instanceId] =
+          !state.collapsedComponents[instanceId];
       }),
 
     togglePropertiesPanel: () =>
@@ -631,4 +630,3 @@ export const useFormStore = create<FormStore>()(
       }),
   }))
 );
-

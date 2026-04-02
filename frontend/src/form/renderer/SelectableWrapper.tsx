@@ -38,7 +38,7 @@ export const SelectableComponent = ({
   const toggleComponentCollapsed = useFormStore((s) => s.toggleComponentCollapsed);
   const showPropertiesPanel = useFormStore((s) => s.showPropertiesPanel);
   const togglePropertiesPanel = useFormStore((s) => s.togglePropertiesPanel);
-  const isCollapsed = useFormStore((s) => s.collapsedComponents.has(component.instanceId));
+  const isCollapsed = useFormStore((s) => !!s.collapsedComponents[component.instanceId]);
 
   const isSelected = selectedId === component.instanceId;
 
