@@ -34,6 +34,24 @@ function focusSidebarSearch() {
   el?.select();
 }
 
+function focusActiveComponentInput(instanceId: string): boolean {
+  const root = document.querySelector<HTMLElement>(
+    `[data-component-instance-id="${instanceId}"]`
+  );
+  if (!root) return false;
+  const input = root.querySelector<
+    HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | HTMLElement
+  >(
+    'input:not([type="hidden"]):not([disabled]), textarea:not([disabled]), select:not([disabled]), [contenteditable="true"]'
+  );
+  if (!input) return false;
+  input.focus();
+  if (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement) {
+    input.select();
+  }
+  return true;
+}
+
 export interface UseFormEditorShortcutsParams {
   enabled: boolean;
   formLoaded: boolean;
@@ -283,7 +301,8 @@ export function useFormEditorShortcuts(opts: UseFormEditorShortcutsParams) {
           e.preventDefault();
           const i = children.indexOf(activeId);
           if (i !== -1 && i + 1 < children.length) {
-            store.moveComponent(pageId, i, pageId, i + 1);
+            // moveComponent uses insertion index semantics for same-page moves
+            store.moveComponent(pageId, i, pageId, i + 2);
           }
           return;
         }
@@ -299,7 +318,17 @@ export function useFormEditorShortcuts(opts: UseFormEditorShortcutsParams) {
         // Enter — open properties
         if (e.key === 'Enter' && activeId) {
           e.preventDefault();
+          store.setActiveComponent(activeId);
           store.openPropertiesPanel();
+          return;
+        }
+
+        // "/" — jump to first editable input inside selected component
+        if (e.key === '/' && activeId) {
+          e.preventDefault();
+          void requestAnimationFrame(() => {
+            focusActiveComponentInput(activeId);
+          });
           return;
         }
 

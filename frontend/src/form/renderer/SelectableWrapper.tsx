@@ -132,6 +132,7 @@ export const SelectableComponent = ({
       <ContextMenuTrigger asChild>
         <div
           ref={ref}
+          data-component-instance-id={component.instanceId}
           onClick={(e) => {
             e.stopPropagation();
 
