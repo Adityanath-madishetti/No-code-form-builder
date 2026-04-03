@@ -25,10 +25,11 @@ import type { FormComponent } from '@/form/components/base';
 
 export interface TextBoxProps {
   text: string;
+  hidden: boolean;
 }
 
 export interface TextBoxValidation {
-  proxy: number
+  proxy: number;
 }
 
 export const createTextBoxComponent = (

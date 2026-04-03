@@ -461,13 +461,18 @@ export default function FormEditor() {
                 <button
                   onClick={() => {
                     // Resolve current actual theme (could be 'system')
-                    const isDark = document.documentElement.classList.contains('dark');
+                    const isDark =
+                      document.documentElement.classList.contains('dark');
                     const next = isDark ? 'light' : 'dark';
                     setEditorTheme(next);
                     // Also sync form theme mode
                     useFormStore.getState().updateFormTheme({ mode: next });
                   }}
-                  title={document.documentElement.classList.contains('dark') ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                  title={
+                    document.documentElement.classList.contains('dark')
+                      ? 'Switch to Light Mode'
+                      : 'Switch to Dark Mode'
+                  }
                   className="group flex h-7 items-center gap-0 rounded-sm border border-border bg-background px-1.5 text-muted-foreground shadow-sm transition-all duration-300 hover:gap-1 hover:bg-muted hover:px-2 hover:text-foreground"
                 >
                   {document.documentElement.classList.contains('dark') ? (

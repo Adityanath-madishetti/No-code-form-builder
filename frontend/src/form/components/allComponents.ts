@@ -39,12 +39,17 @@ export interface NoValidation {
   proxy: number; // placeholder
 }
 
+// ── Shared props base ──
+export interface BaseComponentProps {
+  hidden: boolean; // Hidden by default = false
+}
+
 // ========================================================================================
 //  LAYOUT COMPONENTS
 // ========================================================================================
 
 // ── Header ──
-export interface HeaderProps {
+export interface HeaderProps extends BaseComponentProps {
   text: string;
   level: 'h1' | 'h2' | 'h3' | 'h4';
 }
@@ -57,12 +62,12 @@ export const createHeaderComponent = (
     ComponentIDs.Header,
     instanceId,
     metadata,
-    { text: 'Heading', level: 'h2' as const, ...props },
+    { text: 'Heading', level: 'h2' as const, hidden: false, ...props },
     { proxy: 0 } as NoValidation
   );
 
 // ── Line Divider ──
-export interface LineDividerProps {
+export interface LineDividerProps extends BaseComponentProps {
   style: 'solid' | 'dashed' | 'dotted';
   thickness: number;
 }
@@ -75,12 +80,12 @@ export const createLineDividerComponent = (
     ComponentIDs.LineDivider,
     instanceId,
     metadata,
-    { style: 'solid' as const, thickness: 1, ...props },
+    { style: 'solid' as const, thickness: 1, hidden: false, ...props },
     { proxy: 0 } as NoValidation
   );
 
 // ── Column Layout ──
-export interface ColumnLayoutProps {
+export interface ColumnLayoutProps extends BaseComponentProps {
   columns: number;
   gap: number;
 }
@@ -93,7 +98,7 @@ export const createColumnLayoutComponent = (
     ComponentIDs.ColumnLayout,
     instanceId,
     metadata,
-    { columns: 2, gap: 16, ...props },
+    { columns: 2, gap: 16, hidden: false, ...props },
     { proxy: 0 } as NoValidation
   );
 
@@ -102,25 +107,25 @@ export const createColumnLayoutComponent = (
 // ========================================================================================
 
 // ── Single-line Text (Input) ──
-export interface InputProps {
+export interface InputProps extends BaseComponentProps {
   type?: string;
   questionText?: string;
   placeholder?: string;
   defaultValue?: string;
 }
 
-export interface InputValidation {
-  required: boolean;
-  minLength: number;
-  maxLength?: number;
-}
+// export interface InputValidation {
+//   required: boolean;
+//   minLength: number;
+//   maxLength?: number;
+// }
 
 export const createInputComponent = (
   instanceId: string,
   metadata: ComponentMetadata,
   props: InputProps,
-  validation: InputValidation
-): FormComponent<'Input', InputProps, InputValidation> => ({
+  validation: TextValidation
+): FormComponent<'Input', InputProps, TextValidation> => ({
   id: ComponentIDs.SingleLineInput,
   instanceId,
   metadata,
@@ -130,7 +135,7 @@ export const createInputComponent = (
 });
 
 // ── Multi-line Text ──
-export interface MultiLineInputProps {
+export interface MultiLineInputProps extends BaseComponentProps {
   questionText: string;
   placeholder: string;
   defaultValue: string;
@@ -150,13 +155,14 @@ export const createMultiLineInputComponent = (
       placeholder: '',
       defaultValue: '',
       rows: 4,
+      hidden: false,
       ...props,
     },
     { required: false, minLength: 0 } as TextValidation
   );
 
 // ── Email ──
-export interface EmailProps {
+export interface EmailProps extends BaseComponentProps {
   questionText: string;
   placeholder: string;
   defaultValue: string;
@@ -174,13 +180,17 @@ export const createEmailComponent = (
       questionText: '<p>Email address</p>',
       placeholder: 'user@example.com',
       defaultValue: '',
+      hidden: false,
       ...props,
     },
-    { required: false, pattern: '^[^@]+@[^@]+\\.[^@]+$' } as TextValidation
+    {
+      required: false,
+      pattern: '^[^@]+@[^@]+\\.[^@]+$',
+    } as TextValidation
   );
 
 // ── Phone ──
-export interface PhoneProps {
+export interface PhoneProps extends BaseComponentProps {
   questionText: string;
   placeholder: string;
   defaultValue: string;
@@ -200,13 +210,14 @@ export const createPhoneComponent = (
       placeholder: '+1 (555) 000-0000',
       defaultValue: '',
       countryCode: '+1',
+      hidden: false,
       ...props,
     },
     { required: false } as TextValidation
   );
 
 // ── Number ──
-export interface NumberProps {
+export interface NumberProps extends BaseComponentProps {
   questionText: string;
   placeholder: string;
   defaultValue: string;
@@ -224,13 +235,19 @@ export const createNumberComponent = (
       questionText: '<p>Enter a number</p>',
       placeholder: '0',
       defaultValue: '',
+      hidden: false,
       ...props,
     },
-    { required: false, min: undefined, max: undefined } as NumericValidation
+    {
+      required: false,
+      hidden: false,
+      min: undefined,
+      max: undefined,
+    } as NumericValidation
   );
 
 // ── Decimal ──
-export interface DecimalProps {
+export interface DecimalProps extends BaseComponentProps {
   questionText: string;
   placeholder: string;
   defaultValue: string;
@@ -250,13 +267,18 @@ export const createDecimalComponent = (
       placeholder: '0.00',
       defaultValue: '',
       precision: 2,
+      hidden: false,
       ...props,
     },
-    { required: false, min: undefined, max: undefined } as NumericValidation
+    {
+      required: false,
+      min: undefined,
+      max: undefined,
+    } as NumericValidation
   );
 
 // ── URL ──
-export interface URLProps {
+export interface URLProps extends BaseComponentProps {
   questionText: string;
   placeholder: string;
   defaultValue: string;
@@ -274,6 +296,7 @@ export const createURLComponent = (
       questionText: '<p>Enter a URL</p>',
       placeholder: 'https://example.com',
       defaultValue: '',
+      hidden: false,
       ...props,
     },
     { required: false, pattern: '^https?://' } as TextValidation
@@ -284,7 +307,7 @@ export const createURLComponent = (
 // ========================================================================================
 
 // ── Date ──
-export interface DateProps {
+export interface DateProps extends BaseComponentProps {
   questionText: string;
   placeholder: string;
   includeTime: boolean;
@@ -302,13 +325,14 @@ export const createDateComponent = (
       questionText: '<p>Select a date</p>',
       placeholder: 'YYYY-MM-DD',
       includeTime: false,
+      hidden: false,
       ...props,
     },
     { required: false } as BasicValidation
   );
 
 // ── Time ──
-export interface TimeProps {
+export interface TimeProps extends BaseComponentProps {
   questionText: string;
   placeholder: string;
   format24h: boolean;
@@ -326,6 +350,7 @@ export const createTimeComponent = (
       questionText: '<p>Select a time</p>',
       placeholder: 'HH:MM',
       format24h: false,
+      hidden: false,
       ...props,
     },
     { required: false } as BasicValidation
@@ -336,7 +361,7 @@ export const createTimeComponent = (
 // ========================================================================================
 
 // ── File Upload ──
-export interface FileUploadProps {
+export interface FileUploadProps extends BaseComponentProps {
   questionText: string;
   accept: string;
   maxSizeMB: number;
@@ -356,13 +381,14 @@ export const createFileUploadComponent = (
       accept: '*',
       maxSizeMB: 10,
       multiple: false,
+      hidden: false,
       ...props,
     },
     { required: false } as BasicValidation
   );
 
 // ── Image Upload ──
-export interface ImageUploadProps {
+export interface ImageUploadProps extends BaseComponentProps {
   questionText: string;
   accept: string;
   maxSizeMB: number;
@@ -382,6 +408,7 @@ export const createImageUploadComponent = (
       accept: 'image/*',
       maxSizeMB: 5,
       multiple: false,
+      hidden: false,
       ...props,
     },
     { required: false } as BasicValidation
@@ -397,23 +424,23 @@ export interface CheckboxOption {
   value: string;
 }
 
-export interface CheckboxProps {
+export interface CheckboxProps extends BaseComponentProps {
   questionText?: string;
   options: CheckboxOption[];
   defaultValues?: string[];
   layout?: 'vertical' | 'horizontal';
 }
 
-export interface CheckboxValidation {
-  required: boolean;
-}
+// export interface CheckboxValidation {
+//   required: boolean;
+// }
 
 export const createCheckboxComponent = (
   instanceId: string,
   metadata: ComponentMetadata,
   props: CheckboxProps,
-  validation: CheckboxValidation
-): FormComponent<'Checkbox', CheckboxProps, CheckboxValidation> => ({
+  validation: BasicValidation
+): FormComponent<'Checkbox', CheckboxProps, BasicValidation> => ({
   id: ComponentIDs.Checkbox,
   instanceId,
   metadata,
@@ -432,23 +459,23 @@ export interface DropdownOption {
   value: string;
 }
 
-export interface DropdownProps {
+export interface DropdownProps extends BaseComponentProps {
   questionText?: string;
   placeholder?: string;
   options: DropdownOption[];
   defaultValue?: string;
 }
 
-export interface DropdownValidation {
-  requred: boolean;
-}
+// export interface DropdownValidation {
+//   requred: boolean;
+// }
 
 export const createDropdownComponent = (
   instanceId: string,
   metadata: ComponentMetadata,
   props: DropdownProps,
-  validation: DropdownValidation
-): FormComponent<'Dropdown', DropdownProps, DropdownValidation> => ({
+  validation: BasicValidation
+): FormComponent<'Dropdown', DropdownProps, BasicValidation> => ({
   id: ComponentIDs.Dropdown,
   instanceId,
   metadata,
@@ -467,23 +494,23 @@ export interface RadioOption {
   value: string;
 }
 
-export interface RadioProps {
+export interface RadioProps extends BaseComponentProps {
   questionText?: string;
   options: RadioOption[];
   defaultValue?: string;
   layout?: 'vertical' | 'horizontal';
 }
 
-export interface RadioValidation {
-  required: boolean;
-}
+// export interface RadioValidation {
+//   required: boolean;
+// }
 
 export const createRadioComponent = (
   instanceId: string,
   metadata: ComponentMetadata,
   props: RadioProps,
-  validation: RadioValidation
-): FormComponent<'Radio', RadioProps, RadioValidation> => ({
+  validation: BasicValidation
+): FormComponent<'Radio', RadioProps, BasicValidation> => ({
   id: ComponentIDs.Radio,
   instanceId,
   metadata,
@@ -507,7 +534,7 @@ interface GridRow {
 }
 
 // ── Single Choice Grid ──
-export interface SingleChoiceGridProps {
+export interface SingleChoiceGridProps extends BaseComponentProps {
   questionText: string;
   rows: GridRow[];
   columns: GridOption[];
@@ -528,13 +555,14 @@ export const createSingleChoiceGridComponent = (
         { id: crypto.randomUUID(), label: 'Col 1', value: 'col-1' },
         { id: crypto.randomUUID(), label: 'Col 2', value: 'col-2' },
       ],
+      hidden: false,
       ...props,
     },
     { required: false } as BasicValidation
   );
 
 // ── Multi Choice Grid ──
-export interface MultiChoiceGridProps {
+export interface MultiChoiceGridProps extends BaseComponentProps {
   questionText: string;
   rows: GridRow[];
   columns: GridOption[];
@@ -555,13 +583,14 @@ export const createMultiChoiceGridComponent = (
         { id: crypto.randomUUID(), label: 'Col 1', value: 'col-1' },
         { id: crypto.randomUUID(), label: 'Col 2', value: 'col-2' },
       ],
+      hidden: false,
       ...props,
     },
     { required: false } as BasicValidation
   );
 
 // ── Matrix / Table ──
-export interface MatrixTableProps {
+export interface MatrixTableProps extends BaseComponentProps {
   questionText: string;
   rows: GridRow[];
   columns: GridOption[];
@@ -581,6 +610,7 @@ export const createMatrixTableComponent = (
       rows: [{ id: crypto.randomUUID(), label: 'Row 1' }],
       columns: [{ id: crypto.randomUUID(), label: 'Col 1', value: 'col-1' }],
       inputType: 'text' as const,
+      hidden: false,
       ...props,
     },
     { required: false } as BasicValidation
@@ -591,7 +621,7 @@ export const createMatrixTableComponent = (
 // ========================================================================================
 
 // ── Rating Scale ──
-export interface RatingScaleProps {
+export interface RatingScaleProps extends BaseComponentProps {
   questionText: string;
   maxRating: number;
   icon: 'star' | 'heart' | 'circle';
@@ -609,13 +639,14 @@ export const createRatingScaleComponent = (
       questionText: '<p>Rate this</p>',
       maxRating: 5,
       icon: 'star' as const,
+      hidden: false,
       ...props,
     },
     { required: false } as BasicValidation
   );
 
 // ── Linear Scale ──
-export interface LinearScaleProps {
+export interface LinearScaleProps extends BaseComponentProps {
   questionText: string;
   min: number;
   max: number;
@@ -637,13 +668,14 @@ export const createLinearScaleComponent = (
       max: 10,
       minLabel: 'Low',
       maxLabel: 'High',
+      hidden: false,
       ...props,
     },
     { required: false } as BasicValidation
   );
 
 // ── Slider ──
-export interface SliderProps {
+export interface SliderProps extends BaseComponentProps {
   questionText: string;
   min: number;
   max: number;
@@ -665,6 +697,7 @@ export const createSliderComponent = (
       max: 100,
       step: 1,
       defaultValue: 50,
+      hidden: false,
       ...props,
     },
     { required: false } as BasicValidation
@@ -675,7 +708,7 @@ export const createSliderComponent = (
 // ========================================================================================
 
 // ── Address Block ──
-export interface AddressBlockProps {
+export interface AddressBlockProps extends BaseComponentProps {
   questionText: string;
   showLine2: boolean;
   showState: boolean;
@@ -697,13 +730,14 @@ export const createAddressBlockComponent = (
       showState: true,
       showZip: true,
       showCountry: true,
+      hidden: false,
       ...props,
     },
     { required: false } as BasicValidation
   );
 
 // ── Name Block ──
-export interface NameBlockProps {
+export interface NameBlockProps extends BaseComponentProps {
   questionText: string;
   showMiddleName: boolean;
   showPrefix: boolean;
@@ -723,6 +757,7 @@ export const createNameBlockComponent = (
       showMiddleName: false,
       showPrefix: false,
       showSuffix: false,
+      hidden: false,
       ...props,
     },
     { required: false } as BasicValidation
@@ -733,7 +768,7 @@ export const createNameBlockComponent = (
 // ========================================================================================
 
 // ── Color Picker ──
-export interface ColorPickerProps {
+export interface ColorPickerProps extends BaseComponentProps {
   questionText: string;
   defaultColor: string;
 }
@@ -746,12 +781,17 @@ export const createColorPickerComponent = (
     ComponentIDs.ColorPicker,
     instanceId,
     metadata,
-    { questionText: '<p>Pick a color</p>', defaultColor: '#4f46e5', ...props },
+    {
+      questionText: '<p>Pick a color</p>',
+      defaultColor: '#4f46e5',
+      hidden: false,
+      ...props,
+    },
     { required: false } as BasicValidation
   );
 
 // ── Signature ──
-export interface SignatureProps {
+export interface SignatureProps extends BaseComponentProps {
   questionText: string;
   penColor: string;
   lineWidth: number;
@@ -769,13 +809,14 @@ export const createSignatureComponent = (
       questionText: '<p>Sign here</p>',
       penColor: '#000000',
       lineWidth: 2,
+      hidden: false,
       ...props,
     },
     { required: false } as BasicValidation
   );
 
 // ── Location ──
-export interface LocationProps {
+export interface LocationProps extends BaseComponentProps {
   questionText: string;
   placeholder: string;
   useCurrentLocation: boolean;
@@ -793,6 +834,7 @@ export const createLocationComponent = (
       questionText: '<p>Select your location</p>',
       placeholder: 'Search for a place...',
       useCurrentLocation: false,
+      hidden: false,
       ...props,
     },
     { required: false } as BasicValidation
@@ -803,7 +845,7 @@ export const createLocationComponent = (
 // ========================================================================================
 
 // ── Toggle ──
-export interface ToggleProps {
+export interface ToggleProps extends BaseComponentProps {
   questionText: string;
   label: string;
   defaultValue: boolean;
@@ -821,13 +863,14 @@ export const createToggleComponent = (
       questionText: '<p>Toggle option</p>',
       label: 'Enable',
       defaultValue: false,
+      hidden: false,
       ...props,
     },
     { required: false } as BasicValidation
   );
 
 // ── Rich Text Input ──
-export interface RichTextInputProps {
+export interface RichTextInputProps extends BaseComponentProps {
   questionText: string;
   placeholder: string;
   defaultValue: string;
@@ -845,13 +888,14 @@ export const createRichTextInputComponent = (
       questionText: '<p>Enter formatted text</p>',
       placeholder: 'Type here...',
       defaultValue: '',
+      hidden: false,
       ...props,
     },
     { required: false } as BasicValidation
   );
 
 // ── Captcha ──
-export interface CaptchaProps {
+export interface CaptchaProps extends BaseComponentProps {
   questionText: string;
   type: 'recaptcha' | 'hcaptcha' | 'simple';
 }
@@ -867,6 +911,7 @@ export const createCaptchaComponent = (
     {
       questionText: '<p>Verify you are human</p>',
       type: 'simple' as const,
+      hidden: false,
       ...props,
     },
     { proxy: 0 } as NoValidation

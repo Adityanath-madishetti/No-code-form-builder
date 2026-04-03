@@ -21,7 +21,6 @@ import type {
   LineDividerProps,
   ColumnLayoutProps,
   InputProps,
-  InputValidation,
   MultiLineInputProps,
   EmailProps,
   PhoneProps,
@@ -52,13 +51,13 @@ import type {
   NumericValidation,
   CheckboxProps,
   CheckboxOption,
-  CheckboxValidation,
+  // CheckboxValidation,
   DropdownProps,
   DropdownOption,
-  DropdownValidation,
+  // DropdownValidation,
   RadioProps,
   RadioOption,
-  RadioValidation,
+  // RadioValidation,
 } from './allComponents';
 
 // ── Shared question text ──
@@ -220,7 +219,7 @@ export function InputComponentRenderer({
   instanceId,
   props,
   validation,
-}: RendererProps<InputProps, InputValidation>) {
+}: RendererProps<InputProps, TextValidation>) {
   return (
     <Card>
       <Q html={props.questionText} />
@@ -242,7 +241,7 @@ export function InputComponentPropsRenderer({
   instanceId,
   props,
   validation,
-}: RendererProps<InputProps, InputValidation>) {
+}: RendererProps<InputProps, TextValidation>) {
   const u = useFormStore((s) => s.updateComponentProps);
   const uv = useFormStore((s) => s.updateComponentValidation);
   return (
@@ -746,7 +745,7 @@ export function ImageUploadRenderer({
 export function CheckboxComponentRenderer({
   props,
   instanceId,
-}: RendererProps<CheckboxProps, CheckboxValidation>) {
+}: RendererProps<CheckboxProps, BasicValidation>) {
   const isHorizontal = props.layout === 'horizontal';
   return (
     <Card>
@@ -781,7 +780,7 @@ export function CheckboxComponentRenderer({
 export function CheckboxComponentPropsRenderer({
   props,
   instanceId,
-}: RendererProps<CheckboxProps, CheckboxValidation>) {
+}: RendererProps<CheckboxProps, BasicValidation>) {
   const u = useFormStore((s) => s.updateComponentProps);
 
   const handleAddOption = () => {
@@ -909,7 +908,7 @@ export function CheckboxComponentPropsRenderer({
 export function RadioComponentRenderer({
   props,
   instanceId,
-}: RendererProps<RadioProps, RadioValidation>) {
+}: RendererProps<RadioProps, BasicValidation>) {
   const isHorizontal = props.layout === 'horizontal';
   return (
     <Card>
@@ -942,7 +941,7 @@ export function RadioComponentRenderer({
 export function RadioComponentPropsRenderer({
   props,
   instanceId,
-}: RendererProps<RadioProps, RadioValidation>) {
+}: RendererProps<RadioProps, BasicValidation>) {
   const u = useFormStore((s) => s.updateComponentProps);
 
   const handleAddOption = () => {
@@ -1074,7 +1073,7 @@ export function RadioComponentPropsRenderer({
 
 export function DropdownComponentRenderer({
   props,
-}: RendererProps<DropdownProps, DropdownValidation>) {
+}: RendererProps<DropdownProps, BasicValidation>) {
   return (
     <Card>
       <Q html={props.questionText} />
@@ -1095,7 +1094,7 @@ export function DropdownComponentRenderer({
 export function DropdownComponentPropsRenderer({
   props,
   instanceId,
-}: RendererProps<DropdownProps, DropdownValidation>) {
+}: RendererProps<DropdownProps, BasicValidation>) {
   const u = useFormStore((s) => s.updateComponentProps);
 
   const handleAddOption = () => {

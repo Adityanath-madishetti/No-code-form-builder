@@ -211,8 +211,8 @@ export interface FormThemeBackground {
   imageUrl?: string;
   pattern?: 'dots' | 'grid' | 'diagonal' | 'waves' | 'noise';
   blur?: boolean;
-  overlayOpacity?: number;  // 0–100
-  fixed?: boolean;          // fixed vs scroll
+  overlayOpacity?: number; // 0–100
+  fixed?: boolean; // fixed vs scroll
 }
 
 export interface FormThemeLayout {

@@ -85,7 +85,7 @@ function widthStyle(layout?: FormThemeLayout): React.CSSProperties {
  * Merges a page-level theme override with the global theme.
  * Page overrides win; nested objects are shallow-merged.
  */
-export function mergeThemes(
+function mergeThemes(
   global: FormTheme | null,
   pageOverride?: Partial<FormTheme>
 ): FormTheme | null {
@@ -130,7 +130,10 @@ export function FormThemeProvider({
   const color = theme?.color || formThemeColors.Default;
   const mode = theme?.mode || formThemeModes.Light;
 
-  const bgStyle = useMemo(() => backgroundStyles(theme?.background), [theme?.background]);
+  const bgStyle = useMemo(
+    () => backgroundStyles(theme?.background),
+    [theme?.background]
+  );
   const wStyle = useMemo(() => widthStyle(theme?.layout), [theme?.layout]);
   const patCls = patternClass(theme?.background);
   const layoutCls = layoutClasses(theme?.layout);
@@ -159,7 +162,7 @@ export function FormThemeProvider({
     if (theme?.primaryColor) vars['--form-primary'] = theme.primaryColor;
     if (theme?.textColor) vars['--form-text'] = theme.textColor;
     return vars as React.CSSProperties;
-  }, [theme?.primaryColor, theme?.textColor]);
+  }, [theme]);
 
   return (
     <div

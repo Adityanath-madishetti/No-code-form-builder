@@ -122,13 +122,9 @@ import type {
   ColumnLayoutProps,
   MultiLineInputProps,
   InputProps,
-  InputValidation,
   CheckboxProps,
-  CheckboxValidation,
   DropdownProps,
-  DropdownValidation,
   RadioProps,
-  RadioValidation,
   EmailProps,
   PhoneProps,
   NumberProps,
@@ -193,10 +189,10 @@ export type ComponentPropsMap = {
 
 export type ComponentValidationMap = {
   [ComponentIDs.TextBox]: TextBoxValidation;
-  [ComponentIDs.SingleLineInput]: InputValidation;
-  [ComponentIDs.Radio]: RadioValidation;
-  [ComponentIDs.Checkbox]: CheckboxValidation;
-  [ComponentIDs.Dropdown]: DropdownValidation;
+  [ComponentIDs.SingleLineInput]: TextValidation;
+  [ComponentIDs.Radio]: BasicValidation;
+  [ComponentIDs.Checkbox]: BasicValidation;
+  [ComponentIDs.Dropdown]: BasicValidation;
   [ComponentIDs.Header]: NoValidation;
   [ComponentIDs.LineDivider]: NoValidation;
   [ComponentIDs.ColumnLayout]: NoValidation;
@@ -334,7 +330,7 @@ const registry: Registry = {
       createTextBoxComponent(
         instanceId,
         { label: 'Text Box' },
-        { text: '' },
+        { text: '', hidden: false },
         { proxy: 0 }
       ),
     deserialize: (json) =>
@@ -364,6 +360,7 @@ const registry: Registry = {
           questionText: 'Write the answer...',
           placeholder: '',
           defaultValue: '',
+          hidden: false,
         },
         { required: false, minLength: 0 }
       ),
@@ -396,6 +393,7 @@ const registry: Registry = {
           options: [
             { id: crypto.randomUUID(), label: 'Option 1', value: 'option-1' },
           ],
+          hidden: false,
         },
         { required: false }
       ),
@@ -430,6 +428,7 @@ const registry: Registry = {
             { id: crypto.randomUUID(), label: 'Option 1', value: 'option-1' },
             { id: crypto.randomUUID(), label: 'Option 2', value: 'option-2' },
           ],
+          hidden: false,
         },
         { required: false }
       ),
@@ -463,8 +462,9 @@ const registry: Registry = {
             { id: crypto.randomUUID(), label: 'Option 1', value: 'option-1' },
             { id: crypto.randomUUID(), label: 'Option 2', value: 'option-2' },
           ],
+          hidden: false,
         },
-        { requred: false }
+        { required: false }
       ),
     deserialize: (json) =>
       createDropdownComponent(

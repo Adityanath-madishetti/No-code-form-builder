@@ -6,7 +6,7 @@
 import { useFormStore } from '@/form/store/formStore';
 import { useShallow } from 'zustand/react/shallow';
 import { getComponentPropsRenderer } from '@/form/registry/componentRegistry';
-import { Settings2 } from 'lucide-react';
+import { Settings2, EyeOff } from 'lucide-react';
 
 function supportsOptionShuffle(props: unknown): boolean {
   if (!props || typeof props !== 'object') return false;
@@ -18,6 +18,11 @@ function supportsOptionShuffle(props: unknown): boolean {
   return optionLike;
 }
 
+function supportsHidden(props: unknown): boolean {
+  if (!props || typeof props !== 'object') return false;
+  return 'hidden' in (props as object);
+}
+
 export function ComponentPropertiesPanel() {
   const activeComponentId = useFormStore((s) => s.activeComponentId);
   const activePageId = useFormStore((s) => s.activePageId);
@@ -26,6 +31,7 @@ export function ComponentPropertiesPanel() {
       activeComponentId ? s.components[activeComponentId] : null
     )
   );
+  const updateComponentProps = useFormStore((s) => s.updateComponentProps);
 
   // Nothing selected
   if (!component && !activePageId) {
@@ -52,9 +58,12 @@ export function ComponentPropertiesPanel() {
   if (!component) return null;
 
   const SettingsRenderer = getComponentPropsRenderer(component.id);
-  const updateComponentProps = useFormStore((s) => s.updateComponentProps);
   const optionShuffleEnabled =
-    ((component.props as Record<string, unknown>)?.shuffleOptions as
+    ((component.props as unknown as Record<string, unknown>)?.shuffleOptions as
+      | boolean
+      | undefined) === true;
+  const hiddenByDefault =
+    ((component.props as unknown as Record<string, unknown>)?.hidden as
       | boolean
       | undefined) === true;
 
@@ -62,7 +71,7 @@ export function ComponentPropertiesPanel() {
     <div className="flex flex-col gap-4 p-4">
       {/* Component type badge */}
       <div className="flex items-center gap-2 border-b border-border pb-3">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
+        <span className="text-[10px] font-bold tracking-widest text-muted-foreground/50 uppercase">
           {component.metadata.label}
         </span>
       </div>
@@ -72,7 +81,10 @@ export function ComponentPropertiesPanel() {
         <label className="text-xs font-medium text-muted-foreground">
           Label
         </label>
-        <LabelEditor instanceId={component.instanceId} label={component.metadata.label} />
+        <LabelEditor
+          instanceId={component.instanceId}
+          label={component.metadata.label}
+        />
       </div>
 
       {/* Component settings renderer */}
@@ -105,9 +117,34 @@ export function ComponentPropertiesPanel() {
         </div>
       )}
 
+      {supportsHidden(component.props) && (
+        <div className="border-t border-border pt-3">
+          <label className="flex cursor-pointer items-center justify-between text-xs text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <EyeOff className="h-3 w-3" />
+              Hidden by default
+            </span>
+            <input
+              type="checkbox"
+              checked={hiddenByDefault}
+              onChange={(e) =>
+                updateComponentProps(component.instanceId, {
+                  hidden: e.target.checked,
+                })
+              }
+            />
+          </label>
+          {hiddenByDefault && (
+            <p className="mt-1 text-[10px] text-muted-foreground/50">
+              This component starts hidden. Use Logic rules to show it.
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Instance ID (debug) */}
       <div className="mt-auto border-t border-border pt-3">
-        <p className="text-[10px] font-mono text-muted-foreground/30 break-all">
+        <p className="font-mono text-[10px] break-all text-muted-foreground/30">
           {component.instanceId}
         </p>
       </div>
@@ -115,7 +152,13 @@ export function ComponentPropertiesPanel() {
   );
 }
 
-function LabelEditor({ instanceId, label }: { instanceId: string; label: string }) {
+function LabelEditor({
+  instanceId,
+  label,
+}: {
+  instanceId: string;
+  label: string;
+}) {
   const updateLabel = useFormStore((s) => s.updateComponentMetadata);
   return (
     <input
@@ -136,12 +179,14 @@ function PageProperties({ pageId }: { pageId: string }) {
   return (
     <>
       <div className="flex items-center gap-2 border-b border-border pb-3">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
+        <span className="text-[10px] font-bold tracking-widest text-muted-foreground/50 uppercase">
           Page Properties
         </span>
       </div>
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-muted-foreground">Title</label>
+        <label className="text-xs font-medium text-muted-foreground">
+          Title
+        </label>
         <input
           value={page.title || ''}
           onChange={(e) => updatePageTitle(pageId, e.target.value)}
@@ -150,13 +195,15 @@ function PageProperties({ pageId }: { pageId: string }) {
         />
       </div>
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-muted-foreground">Description</label>
+        <label className="text-xs font-medium text-muted-foreground">
+          Description
+        </label>
         <textarea
           value={page.description || ''}
           onChange={(e) => updatePageDesc(pageId, e.target.value)}
           placeholder="Page description"
           rows={3}
-          className="w-full border border-border bg-background px-2 py-1.5 text-sm outline-none focus:border-primary resize-y"
+          className="w-full resize-y border border-border bg-background px-2 py-1.5 text-sm outline-none focus:border-primary"
         />
       </div>
     </>
