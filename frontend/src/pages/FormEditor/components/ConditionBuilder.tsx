@@ -75,14 +75,15 @@ function LeafRow({
   onChange: (c: Condition) => void;
   onRemove?: () => void;
 }) {
-  const needsValue = condition.operator !== 'is_empty' && condition.operator !== 'is_not_empty';
+  const needsValue =
+    condition.operator !== 'is_empty' && condition.operator !== 'is_not_empty';
 
   return (
     <div className="flex items-center gap-1.5 rounded-md border border-border bg-muted/30 px-2 py-1.5">
       {/* Field selector */}
       <select
-        value={condition.fieldId}
-        onChange={(e) => onChange({ ...condition, fieldId: e.target.value })}
+        value={condition.instanceId}
+        onChange={(e) => onChange({ ...condition, instanceId: e.target.value })}
         className="h-7 min-w-0 flex-1 rounded border border-input bg-background px-1.5 text-xs"
       >
         <option value="">Select field…</option>
@@ -96,7 +97,9 @@ function LeafRow({
       {/* Operator selector */}
       <select
         value={condition.operator}
-        onChange={(e) => onChange({ ...condition, operator: e.target.value as ComparisonOp })}
+        onChange={(e) =>
+          onChange({ ...condition, operator: e.target.value as ComparisonOp })
+        }
         className="h-7 min-w-0 rounded border border-input bg-background px-1.5 text-xs"
       >
         {COMPARISON_OPS.map((op) => (
@@ -121,7 +124,7 @@ function LeafRow({
       {onRemove && (
         <button
           onClick={onRemove}
-          className="shrink-0 text-muted-foreground hover:text-destructive transition-colors"
+          className="shrink-0 text-muted-foreground transition-colors hover:text-destructive"
           title="Remove condition"
         >
           <Trash2 className="h-3 w-3" />
@@ -177,7 +180,10 @@ function GroupBlock({
   const addGroup = useCallback(() => {
     onChange({
       ...group,
-      conditions: [...group.conditions, createConditionGroup(group.operator === 'AND' ? 'OR' : 'AND')],
+      conditions: [
+        ...group.conditions,
+        createConditionGroup(group.operator === 'AND' ? 'OR' : 'AND'),
+      ],
     });
   }, [group, onChange]);
 
@@ -186,7 +192,8 @@ function GroupBlock({
     onChange({ ...group, operator: newOp });
   }, [group, onChange]);
 
-  const borderColor = depth % 2 === 0 ? 'border-primary/30' : 'border-amber-400/30';
+  const borderColor =
+    depth % 2 === 0 ? 'border-primary/30' : 'border-amber-400/30';
   const bgColor = depth % 2 === 0 ? 'bg-primary/5' : 'bg-amber-400/5';
 
   return (
@@ -195,7 +202,7 @@ function GroupBlock({
       <div className="mb-1.5 flex items-center gap-1.5">
         <button
           onClick={toggleOp}
-          className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider transition-colors ${
+          className={`rounded px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase transition-colors ${
             group.operator === 'AND'
               ? 'bg-primary/20 text-primary'
               : 'bg-amber-400/20 text-amber-600'
@@ -209,7 +216,7 @@ function GroupBlock({
         {onRemove && (
           <button
             onClick={onRemove}
-            className="text-muted-foreground hover:text-destructive transition-colors"
+            className="text-muted-foreground transition-colors hover:text-destructive"
             title="Remove group"
           >
             <Trash2 className="h-3 w-3" />

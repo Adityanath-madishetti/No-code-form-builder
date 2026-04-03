@@ -6,6 +6,7 @@ import {
   Zap,
   GitBranch,
   Sparkles,
+  FolderOpen
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -15,7 +16,8 @@ export type SidebarPanelId =
   | 'theme'
   | 'logic'
   | 'workflow'
-  | 'ai';
+  | 'ai'
+  | 'groups';
 
 const NAV_ITEMS: {
   id: SidebarPanelId;
@@ -25,6 +27,7 @@ const NAV_ITEMS: {
     { id: 'components', label: 'Components', icon: LayoutGrid },
     { id: 'templates', label: 'Templates', icon: Layers },
     { id: 'theme', label: 'Theme', icon: Palette },
+    { id: 'groups', label: 'Groups', icon: FolderOpen },
     { id: 'logic', label: 'Logic', icon: Zap },
     { id: 'workflow', label: 'Workflow', icon: GitBranch },
     { id: 'ai', label: 'AI Assistant', icon: Sparkles },

@@ -146,13 +146,100 @@ const formVersionPayloadSchema = {
                         type: "object",
                         properties: {
                             ruleId: { type: "string" },
-                            type: {
+                            name: { type: "string" },
+                            enabled: { type: "boolean" },
+                            ruleType: {
                                 type: "string",
-                                enum: ["visibility", "skip", "calculation", "require"],
+                                enum: ["field", "validation", "navigation"],
                             },
-                            target: { type: "string" },
+                            updatedAt: { type: "string" },
+                            condition: {
+                                anyOf: [{ type: "object" }, { type: "null" }],
+                            },
+                            thenActions: {
+                                type: "array",
+                                items: {
+                                    type: "object",
+                                    properties: {
+                                        id: { type: "string" },
+                                        type: {
+                                            type: "string",
+                                            enum: [
+                                                "SHOW",
+                                                "HIDE",
+                                                "ENABLE",
+                                                "DISABLE",
+                                                "SET_VALUE",
+                                                "SKIP_PAGE",
+                                            ],
+                                        },
+                                        targetId: { type: "string" },
+                                        value: {},
+                                    },
+                                    required: ["id", "type", "targetId"],
+                                },
+                            },
+                            elseActions: {
+                                type: "array",
+                                items: {
+                                    type: "object",
+                                    properties: {
+                                        id: { type: "string" },
+                                        type: {
+                                            type: "string",
+                                            enum: [
+                                                "SHOW",
+                                                "HIDE",
+                                                "ENABLE",
+                                                "DISABLE",
+                                                "SET_VALUE",
+                                                "SKIP_PAGE",
+                                            ],
+                                        },
+                                        targetId: { type: "string" },
+                                        value: {},
+                                    },
+                                    required: ["id", "type", "targetId"],
+                                },
+                            },
                         },
-                        required: ["ruleId", "target"],
+                        required: ["ruleId", "condition"],
+                    },
+                },
+                formulas: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        properties: {
+                            ruleId: { type: "string" },
+                            name: { type: "string" },
+                            enabled: { type: "boolean" },
+                            targetId: { type: "string" },
+                            expression: { type: "string" },
+                            referencedFields: {
+                                type: "array",
+                                items: { type: "string" },
+                            },
+                            updatedAt: { type: "string" },
+                        },
+                        required: ["ruleId", "targetId", "expression"],
+                    },
+                },
+                componentShuffleStacks: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        properties: {
+                            stackId: { type: "string" },
+                            name: { type: "string" },
+                            pageId: { type: "string" },
+                            componentIds: {
+                                type: "array",
+                                items: { type: "string" },
+                            },
+                            enabled: { type: "boolean" },
+                        },
+                        required: ["stackId", "name", "pageId", "componentIds", "enabled"],
                     },
                 },
             },

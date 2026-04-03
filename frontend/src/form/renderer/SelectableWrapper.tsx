@@ -2,14 +2,13 @@
 import { useState } from 'react';
 import { useFormStore } from '@/form/store/formStore';
 import type { PageID } from '@/form/components/base';
-import { TEMP_PAGE_PLACEHOLDER_ID } from '@/form/utils/DndUtils';
+// import { TEMP_PAGE_PLACEHOLDER_ID } from '@/form/utils/DndUtils';
 
 import {
   ArrowDown,
   ArrowUp,
   ClipboardCopy,
   Copy,
-  GripVertical,
   Move,
   Settings,
   Trash2,
@@ -481,16 +480,16 @@ export const SelectablePage = ({
       }`}
     >
       {/* Drag handle — top center */}
-      <div
+      {/* <div
         className="absolute -top-4 left-1/2 z-20 -translate-x-1/2 cursor-grab border border-border/50 bg-background/95 px-1 py-0.5 opacity-0 shadow-lg backdrop-blur-sm transition-opacity group-hover:opacity-100"
         data-dnd-kit-drag-handle
         title="Drag to reorder page"
       >
         <GripVertical className="h-3 w-3 rotate-90 text-muted-foreground/60" />
-      </div>
+      </div> */}
 
       {/* Delete page */}
-      {pageId !== TEMP_PAGE_PLACEHOLDER_ID && (
+      {/* {pageId !== TEMP_PAGE_PLACEHOLDER_ID && (
         <div className="absolute top-1 -right-9 z-20 opacity-0 transition-opacity group-hover:opacity-100">
           <button
             onClick={(e) => {
@@ -504,7 +503,21 @@ export const SelectablePage = ({
             <Trash2 className="h-3 w-3" />
           </button>
         </div>
-      )}
+      )} */}
+
+      <div className="absolute top-1 -right-9 z-20">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            removePage(pageId);
+          }}
+          className="flex h-5 w-5 cursor-pointer items-center justify-center border border-border/50 bg-background/95 text-muted-foreground/60 shadow-lg backdrop-blur-sm transition-colors hover:bg-destructive/10 hover:text-destructive"
+          aria-label="Remove page"
+          title="Remove page"
+        >
+          <Trash2 className="h-3 w-3" />
+        </button>
+      </div>
 
       {children}
     </div>

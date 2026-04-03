@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { api } from '@/lib/api';
+import { API_BASE, api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
-import { Loader2, ArrowLeft, Inbox, RefreshCw } from 'lucide-react';
+import { Loader2, ArrowLeft, Inbox, RefreshCw, Download } from 'lucide-react';
 
 interface SubmissionResponse {
   componentId: string;
@@ -75,7 +75,7 @@ function mapErrorMessage(errorMessage: string): string {
     return 'Please log in to review submissions.';
   }
   if (/access denied/i.test(errorMessage)) {
-    return 'You do not have reviewer access to this form.';
+    return 'You do not have access to review submissions for this form.';
   }
   if (/form not found|submission not found/i.test(errorMessage)) {
     return 'This form or submission no longer exists.';
@@ -103,6 +103,7 @@ export default function FormReview() {
     null
   );
   const [detailError, setDetailError] = useState('');
+  const [exporting, setExporting] = useState(false);
 
   const loadSubmissions = useCallback(
     async (page: number, keepSelection = false) => {
@@ -177,6 +178,41 @@ export default function FormReview() {
     return `${pagination.total} submissions`;
   }, [pagination.total]);
 
+  const handleExportCsv = useCallback(async () => {
+    if (!formId) return;
+    setExporting(true);
+    setError('');
+
+    try {
+      const token = localStorage.getItem('auth_token');
+      const res = await fetch(`${API_BASE}/api/forms/${formId}/submissions/export.csv`, {
+        method: 'GET',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        const message =
+          (body as { error?: string }).error || `Export failed (${res.status})`;
+        throw new Error(message);
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `form-${formId}-submissions.csv`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(mapErrorMessage((err as Error).message || ''));
+    } finally {
+      setExporting(false);
+    }
+  }, [formId]);
+
   return (
     <div className="flex min-h-screen flex-col bg-neutral-50 dark:bg-neutral-950">
       <header className="flex items-center justify-between border-b border-border bg-background px-6 py-4">
@@ -193,19 +229,34 @@ export default function FormReview() {
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-8">
         <div className="mb-4 flex items-center justify-between">
           <p className="text-sm text-muted-foreground">{submissionCountLabel}</p>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => loadSubmissions(pagination.page, true)}
-            disabled={loading}
-          >
-            {loading ? (
-              <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-            ) : (
-              <RefreshCw className="mr-1.5 h-4 w-4" />
-            )}
-            Refresh
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportCsv}
+              disabled={exporting || loading}
+            >
+              {exporting ? (
+                <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="mr-1.5 h-4 w-4" />
+              )}
+              Export CSV
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => loadSubmissions(pagination.page, true)}
+              disabled={loading}
+            >
+              {loading ? (
+                <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="mr-1.5 h-4 w-4" />
+              )}
+              Refresh
+            </Button>
+          </div>
         </div>
 
         {loading ? (

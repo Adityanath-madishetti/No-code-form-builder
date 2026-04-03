@@ -86,9 +86,11 @@ const createFormPage = (id: PageID): FormPage => ({
 import type {
   DRAG_CATALOG_COMPONENT_TYPE,
   DRAG_CATALOG_PAGE_TYPE,
+  DRAG_CATALOG_GROUP_TYPE,
   DRAG_COMPONENT_TYPE,
   DRAG_PAGE_TYPE,
 } from '../utils/DndUtils';
+import type { Group } from './groupStore';
 import { DEFAULT_FORM_THEME } from '../theme/formTheme';
 // import {
 //   TEMP_COMPONENT_PLACEHOLDER_ID,
@@ -130,9 +132,15 @@ export interface FormPageDragData {
   pageId: PageID;
 }
 
+export interface CatalogGroupDragData {
+  type: DRAG_CATALOG_GROUP_TYPE;
+  group: Group;
+}
+
 export type FormDragData =
   | CatalogComponentDragData
   | CatalogPageDragData
+  | CatalogGroupDragData
   | FormComponentDragData
   | FormPageDragData;
 
@@ -167,6 +175,8 @@ interface FormUIState {
 
   catalogRefreshKey: number;
   collapsedComponents: Record<InstanceID, boolean>;
+
+  selectedComponentIds: InstanceID[];
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -240,6 +250,11 @@ interface FormSchemaActions {
     pageId: PageID,
     clipboardText: string
   ) => InstanceID | undefined;
+
+  updatePageThemeOverrides: (
+    pageId: PageID,
+    overrides: Partial<FormTheme> | undefined
+  ) => void;
 }
 
 interface FormUIActions {
@@ -250,6 +265,10 @@ interface FormUIActions {
   setActiveSidePanelTab: (tab: string) => void;
 
   refreshCatalog: () => void;
+
+  addSelectedComponent: (instanceId: InstanceID) => void;
+  removeSelectedComponent: (instanceId: InstanceID) => void;
+  clearSelectedComponents: () => void;
 }
 
 export type FormStore = FormSchemaState &
@@ -360,6 +379,8 @@ export const useFormStore = create<FormStore>()(
     showPropertiesPanel: false,
     catalogRefreshKey: 0,
     collapsedComponents: {},
+
+    selectedComponentIds: [],
 
     initForm: (id, name, metadata) => {
       clearFormUndoHistory();
@@ -682,6 +703,36 @@ export const useFormStore = create<FormStore>()(
     togglePropertiesPanel: () =>
       set((state) => {
         state.showPropertiesPanel = !state.showPropertiesPanel;
+      }),
+
+    addSelectedComponent: (instanceId) =>
+      set((state) => ({
+        selectedComponentIds: [...state.selectedComponentIds, instanceId],
+      })),
+
+    removeSelectedComponent: (instanceId) =>
+      set((state) => ({
+        selectedComponentIds: state.selectedComponentIds.filter(
+          (id) => id !== instanceId
+        ),
+      })),
+
+    clearSelectedComponents: () => set({ selectedComponentIds: [] }),
+
+    updatePageThemeOverrides: (pageId, overrides) =>
+      set((state) => {
+        if (!state.pages[pageId]) return;
+        if (overrides === undefined) {
+          delete state.pages[pageId].themeOverrides;
+        } else {
+          state.pages[pageId].themeOverrides = {
+            ...state.pages[pageId].themeOverrides,
+            ...overrides,
+          };
+        }
+        if (state.form) {
+          state.form.metadata.updatedAt = new Date().toISOString();
+        }
       }),
 
     openPropertiesPanel: () =>

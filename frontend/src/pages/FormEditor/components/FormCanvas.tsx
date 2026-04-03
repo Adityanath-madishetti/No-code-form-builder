@@ -9,6 +9,7 @@ import {
   DRAG_CATALOG_COMPONENT_ID,
   DRAG_COMPONENT_ID,
   DRAG_PAGE_ID,
+  DRAG_CATALOG_GROUP_ID,
 } from '@/form/utils/DndUtils';
 import { LayoutGrid } from 'lucide-react';
 
@@ -19,7 +20,11 @@ interface FormCanvasProps {
 function EmptyPageDrop({ pageId }: { pageId: string }) {
   const { ref, isDropTarget: isOver } = useDroppable({
     id: `content-drop-${pageId}`,
-    accept: [DRAG_COMPONENT_ID, DRAG_CATALOG_COMPONENT_ID],
+    accept: [
+      DRAG_COMPONENT_ID,
+      DRAG_CATALOG_COMPONENT_ID,
+      DRAG_CATALOG_GROUP_ID,
+    ],
     data: { type: DRAG_PAGE_ID, pageId },
   });
 

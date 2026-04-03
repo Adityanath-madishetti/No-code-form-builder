@@ -8,6 +8,7 @@ import {
     normalizeVersionForResponse,
     resolveAccessPayload,
 } from "../utils/formPermissions.js";
+import { normalizeLogicPayload } from "../services/logicEngine.js";
 
 async function getFormWithLatest(formId) {
     const [form, latestVersion] = await Promise.all([
@@ -65,6 +66,10 @@ async function applyVersionUpdates({ formId, versionNum, uid, user, payload }) {
             throw err;
         }
         updates.access = access;
+    }
+
+    if (updates.logic !== undefined) {
+        updates.logic = normalizeLogicPayload(updates.logic || {});
     }
 
     if (updates.meta && updates.meta.createdBy === undefined) {
@@ -174,6 +179,7 @@ export const createVersion = async (req, res, next) => {
         };
         cloned.settings = normalizeSettings(cloned.settings || {});
         cloned.access = normalizeAccess(cloned.access || {});
+        cloned.logic = normalizeLogicPayload(cloned.logic || {});
 
         cloned.versionHistory = [
             ...(cloned.versionHistory || []),

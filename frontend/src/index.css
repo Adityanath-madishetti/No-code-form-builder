@@ -5,6 +5,7 @@
 @import '@fontsource-variable/geist';
 
 @import './styles/form-theme.css';
+@import './styles/theming-page.css';
 
 @custom-variant dark (&:is(.dark *));
 

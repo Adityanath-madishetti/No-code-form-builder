@@ -8,6 +8,16 @@ import { useShallow } from 'zustand/react/shallow';
 import { getComponentPropsRenderer } from '@/form/registry/componentRegistry';
 import { Settings2 } from 'lucide-react';
 
+function supportsOptionShuffle(props: unknown): boolean {
+  if (!props || typeof props !== 'object') return false;
+  const anyProps = props as Record<string, unknown>;
+  const optionLike =
+    Array.isArray(anyProps.options) ||
+    Array.isArray(anyProps.columns) ||
+    Array.isArray(anyProps.rows);
+  return optionLike;
+}
+
 export function ComponentPropertiesPanel() {
   const activeComponentId = useFormStore((s) => s.activeComponentId);
   const activePageId = useFormStore((s) => s.activePageId);
@@ -42,6 +52,11 @@ export function ComponentPropertiesPanel() {
   if (!component) return null;
 
   const SettingsRenderer = getComponentPropsRenderer(component.id);
+  const updateComponentProps = useFormStore((s) => s.updateComponentProps);
+  const optionShuffleEnabled =
+    ((component.props as Record<string, unknown>)?.shuffleOptions as
+      | boolean
+      | undefined) === true;
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -70,6 +85,23 @@ export function ComponentPropertiesPanel() {
             props={component.props}
             validation={component.validation}
           />
+        </div>
+      )}
+
+      {supportsOptionShuffle(component.props) && (
+        <div className="border-t border-border pt-3">
+          <label className="flex items-center justify-between text-xs text-muted-foreground">
+            Option Shuffling
+            <input
+              type="checkbox"
+              checked={optionShuffleEnabled}
+              onChange={(e) =>
+                updateComponentProps(component.instanceId, {
+                  shuffleOptions: e.target.checked,
+                })
+              }
+            />
+          </label>
         </div>
       )}
 

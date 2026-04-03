@@ -1,4 +1,5 @@
 import User from "../models/User.js";
+import { normalizeLogicPayload } from "../services/logicEngine.js";
 
 const VISIBILITY_VALUES = new Set(["public", "private", "link-only"]);
 const COLLECT_EMAIL_MODE_VALUES = new Set(["none", "optional", "required"]);
@@ -134,7 +135,7 @@ export function canEditForm(form, version, user) {
 }
 
 export function canReviewSubmissions(form, version, user) {
-    return isOwner(form, user) || isReviewer(version, user);
+    return isOwner(form, user) || isEditor(version, user) || isReviewer(version, user);
 }
 
 export function canFillForm(form, version, user) {
@@ -263,6 +264,7 @@ export function normalizeVersionForResponse(versionDoc) {
 
     plain.settings = normalizeSettings(plain.settings || {});
     plain.access = normalizeAccess(plain.access || {});
+    plain.logic = normalizeLogicPayload(plain.logic || {});
 
     return plain;
 }

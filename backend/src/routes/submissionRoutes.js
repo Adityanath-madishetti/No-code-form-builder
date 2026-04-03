@@ -3,6 +3,7 @@ import { verifyToken, optionalAuth } from "../middleware/auth.js";
 import {
     submitForm,
     listSubmissions,
+    exportSubmissionsCsv,
     getSubmission,
     getMyFormSubmissions,
     updateMySubmission,
@@ -16,6 +17,7 @@ router.post("/", optionalAuth, submitForm);
 
 // Viewing submissions requires authentication (owner/reviewer policy enforced in controller)
 router.get("/", verifyToken, listSubmissions);
+router.get("/export.csv", verifyToken, exportSubmissionsCsv);
 router.get("/mine", verifyToken, getMyFormSubmissions);
 router.patch("/:submissionId/mine", verifyToken, updateMySubmission);
 router.get("/:submissionId", verifyToken, getSubmission);

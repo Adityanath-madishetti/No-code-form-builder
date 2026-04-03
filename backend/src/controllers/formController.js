@@ -77,34 +77,14 @@ export const createForm = async (req, res, next) => {
 
 /**
  * GET /api/forms
- * List forms owned by or editable by the logged-in user.
+ * List forms owned by the logged-in user.
  */
 export const listForms = async (req, res, next) => {
     try {
         const uid = req.user.uid;
-
-        const editableFormIds = await FormVersion.aggregate([
-            { $sort: { version: -1 } },
-            {
-                $group: {
-                    _id: "$formId",
-                    latestAccess: { $first: "$access" },
-                },
-            },
-            { $match: { "latestAccess.editors.uid": uid } },
-            { $project: { _id: 0, formId: "$_id" } },
-        ]);
-
         const forms = await Form.find({
             isDeleted: false,
-            $or: [
-                { createdBy: uid },
-                {
-                    formId: {
-                        $in: editableFormIds.map((row) => row.formId),
-                    },
-                },
-            ],
+            createdBy: uid,
         }).sort({ updatedAt: -1 });
 
         res.status(200).json({ forms });
@@ -115,16 +95,19 @@ export const listForms = async (req, res, next) => {
 
 /**
  * GET /api/forms/shared
- * List forms shared with the logged-in user as reviewer.
+ * List forms shared with the logged-in user as editor or reviewer.
  */
 export const listSharedForms = async (req, res, next) => {
     try {
         const uid = req.user.uid;
         const email = normalizeEmail(req.user.email);
-
-        const reviewerMatches = [{ "latestAccess.reviewers.uid": uid }];
+        const matchClauses = [
+            { "latestAccess.editors.uid": uid },
+            { "latestAccess.reviewers.uid": uid },
+        ];
         if (email) {
-            reviewerMatches.push({ "latestAccess.reviewers.email": email });
+            matchClauses.push({ "latestAccess.editors.email": email });
+            matchClauses.push({ "latestAccess.reviewers.email": email });
         }
 
         const sharedFormRows = await FormVersion.aggregate([
@@ -135,11 +118,29 @@ export const listSharedForms = async (req, res, next) => {
                     latestAccess: { $first: "$access" },
                 },
             },
-            { $match: { $or: reviewerMatches } },
-            { $project: { _id: 0, formId: "$_id" } },
+            { $match: { $or: matchClauses } },
+            { $project: { _id: 0, formId: "$_id", latestAccess: 1 } },
         ]);
 
-        const sharedFormIds = sharedFormRows.map((row) => row.formId);
+        const hasIdentity = (list = []) =>
+            Array.isArray(list) &&
+            list.some((entry) => {
+                const entryUid = typeof entry?.uid === "string" ? entry.uid : "";
+                const entryEmail = normalizeEmail(entry?.email);
+                return (entryUid && entryUid === uid) || (email && entryEmail === email);
+            });
+
+        const roleMap = new Map();
+        for (const row of sharedFormRows) {
+            const roles = [];
+            if (hasIdentity(row.latestAccess?.editors)) roles.push("editor");
+            if (hasIdentity(row.latestAccess?.reviewers)) roles.push("reviewer");
+            if (roles.length) {
+                roleMap.set(row.formId, roles);
+            }
+        }
+
+        const sharedFormIds = [...roleMap.keys()];
         if (sharedFormIds.length === 0) {
             return res.status(200).json({ forms: [] });
         }
@@ -148,6 +149,7 @@ export const listSharedForms = async (req, res, next) => {
             Form.find({
                 formId: { $in: sharedFormIds },
                 isDeleted: false,
+                createdBy: { $ne: uid },
             }).sort({ updatedAt: -1 }),
             Submission.aggregate([
                 { $match: { formId: { $in: sharedFormIds } } },
@@ -164,16 +166,26 @@ export const listSharedForms = async (req, res, next) => {
             submissionCounts.map((entry) => [entry._id, entry.count])
         );
 
-        const sharedForms = forms.map((form) => ({
-            formId: form.formId,
-            title: form.title,
-            currentVersion: form.currentVersion,
-            isActive: form.isActive,
-            updatedAt: form.updatedAt,
-            createdAt: form.createdAt,
-            sharedRole: "reviewer",
-            submissionCount: countMap.get(form.formId) || 0,
-        }));
+        const sharedForms = forms
+            .map((form) => {
+                const sharedRoles = roleMap.get(form.formId) || [];
+                if (!sharedRoles.length) return null;
+
+                return {
+                    formId: form.formId,
+                    title: form.title,
+                    currentVersion: form.currentVersion,
+                    isActive: form.isActive,
+                    updatedAt: form.updatedAt,
+                    createdAt: form.createdAt,
+                    sharedRole: sharedRoles.includes("editor")
+                        ? "editor"
+                        : "reviewer",
+                    sharedRoles,
+                    submissionCount: countMap.get(form.formId) || 0,
+                };
+            })
+            .filter(Boolean);
 
         res.status(200).json({ forms: sharedForms });
     } catch (err) {

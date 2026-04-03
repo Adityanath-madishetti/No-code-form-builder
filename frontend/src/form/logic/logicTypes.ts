@@ -48,7 +48,7 @@ export type LogicalOp = 'AND' | 'OR';
 export interface ConditionLeaf {
   type: 'leaf';
   id: string;
-  fieldId: string;            // instanceId of the source component
+  instanceId: string; // instanceId of the source component
   operator: ComparisonOp;
   value: unknown;
 }
@@ -96,9 +96,12 @@ export const ACTION_TYPE_COLORS: Record<ActionType, string> = {
 export interface RuleAction {
   id: string;
   type: ActionType;
-  targetId: string;           // componentId or pageId
-  value?: unknown;            // for SET_VALUE
+  targetId: string; // componentId or pageId
+  value?: unknown; // for SET_VALUE
 }
+
+export const RULE_TYPES = ['field', 'validation', 'navigation'] as const;
+export type RuleType = (typeof RULE_TYPES)[number];
 
 // ── Logic Rule ──
 
@@ -106,6 +109,8 @@ export interface LogicRule {
   ruleId: string;
   name: string;
   enabled: boolean;
+  ruleType: RuleType;
+  updatedAt: string;
   condition: Condition;
   thenActions: RuleAction[];
   elseActions: RuleAction[];
@@ -117,9 +122,18 @@ export interface FormulaRule {
   ruleId: string;
   name: string;
   enabled: boolean;
-  targetId: string;           // component to set computed value on
-  expression: string;         // e.g. "{field1} + {field2} * 2"
+  targetId: string; // component to set computed value on
+  expression: string; // e.g. "{field1} + {field2} * 2"
   referencedFields: string[];
+  updatedAt: string;
+}
+
+export interface ComponentShuffleStack {
+  stackId: string;
+  name: string;
+  pageId: string;
+  componentIds: string[];
+  enabled: boolean;
 }
 
 // ── Dependency Graph ──
@@ -143,13 +157,15 @@ export function createConditionLeaf(fieldId = ''): ConditionLeaf {
   return {
     type: 'leaf',
     id: crypto.randomUUID(),
-    fieldId,
+    instanceId: fieldId,
     operator: 'equals',
     value: '',
   };
 }
 
-export function createConditionGroup(operator: LogicalOp = 'AND'): ConditionGroup {
+export function createConditionGroup(
+  operator: LogicalOp = 'AND'
+): ConditionGroup {
   return {
     type: 'group',
     id: crypto.randomUUID(),
@@ -166,11 +182,17 @@ export function createRuleAction(type: ActionType = 'SHOW'): RuleAction {
   };
 }
 
-export function createLogicRule(name = 'New Rule'): LogicRule {
+export function createLogicRule(
+  name = 'New Rule',
+  ruleType: RuleType = 'field'
+): LogicRule {
+  const now = new Date().toISOString();
   return {
     ruleId: crypto.randomUUID(),
     name,
     enabled: true,
+    ruleType,
+    updatedAt: now,
     condition: createConditionGroup('AND'),
     thenActions: [createRuleAction('SHOW')],
     elseActions: [],
@@ -178,6 +200,7 @@ export function createLogicRule(name = 'New Rule'): LogicRule {
 }
 
 export function createFormulaRule(name = 'New Formula'): FormulaRule {
+  const now = new Date().toISOString();
   return {
     ruleId: crypto.randomUUID(),
     name,
@@ -185,5 +208,16 @@ export function createFormulaRule(name = 'New Formula'): FormulaRule {
     targetId: '',
     expression: '',
     referencedFields: [],
+    updatedAt: now,
+  };
+}
+
+export function createComponentShuffleStack(): ComponentShuffleStack {
+  return {
+    stackId: crypto.randomUUID(),
+    name: 'New Stack',
+    pageId: '',
+    componentIds: [],
+    enabled: true,
   };
 }

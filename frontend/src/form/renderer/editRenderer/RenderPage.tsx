@@ -11,6 +11,7 @@ import {
   DRAG_CATALOG_COMPONENT_ID,
   DRAG_COMPONENT_ID,
   DRAG_PAGE_ID,
+  DRAG_CATALOG_GROUP_ID,
 } from '@/form/utils/DndUtils';
 import { RenderComponent } from './RenderComponent';
 
@@ -33,7 +34,7 @@ export const RenderPage = ({
 
   const { ref: contentDropRef } = useDroppable({
     id: `content-drop-${pageId}`,
-    accept: [DRAG_COMPONENT_ID, DRAG_CATALOG_COMPONENT_ID],
+    accept: [DRAG_COMPONENT_ID, DRAG_CATALOG_COMPONENT_ID, DRAG_CATALOG_GROUP_ID],
     data: { type: DRAG_PAGE_ID, pageId: pageId },
   });
 

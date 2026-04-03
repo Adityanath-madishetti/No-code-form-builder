@@ -6,13 +6,30 @@
  */
 
 import Form from "../models/Form.js";
+import FormVersion from "../models/FormVersion.js";
 import Submission from "../models/Submission.js";
 import { createError } from "../middleware/errorHandler.js";
+import { canEditForm } from "../utils/formPermissions.js";
 import {
     validateWorkflow,
     executeTransition,
     getAvailableTransitions,
 } from "../services/workflowEngine.js";
+
+async function assertCanManageWorkflow(formId, user) {
+    const [form, latestVersion] = await Promise.all([
+        Form.findOne({ formId, isDeleted: false }),
+        FormVersion.findOne({ formId }).sort({ version: -1 }),
+    ]);
+
+    if (!form) throw createError(404, "Form not found");
+    if (!latestVersion) throw createError(404, "Form version not found");
+    if (!canEditForm(form, latestVersion, user)) {
+        throw createError(403, "Access denied");
+    }
+
+    return form;
+}
 
 /**
  * PUT /api/forms/:formId/workflow
@@ -21,10 +38,7 @@ import {
 export const setWorkflow = async (req, res, next) => {
     try {
         const { formId } = req.params;
-
-        const form = await Form.findOne({ formId, isDeleted: false });
-        if (!form) throw createError(404, "Form not found");
-        if (form.createdBy !== req.user.uid) throw createError(403, "Access denied");
+        const form = await assertCanManageWorkflow(formId, req.user);
 
         const workflowData = req.body;
 
@@ -78,10 +92,7 @@ export const setWorkflow = async (req, res, next) => {
 export const getWorkflow = async (req, res, next) => {
     try {
         const { formId } = req.params;
-
-        const form = await Form.findOne({ formId, isDeleted: false });
-        if (!form) throw createError(404, "Form not found");
-        if (form.createdBy !== req.user.uid) throw createError(403, "Access denied");
+        const form = await assertCanManageWorkflow(formId, req.user);
 
         res.status(200).json({
             workflow: form.workflow || { enabled: false, states: [], initialState: "", transitions: [] },

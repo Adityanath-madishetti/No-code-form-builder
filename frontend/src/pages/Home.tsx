@@ -2,9 +2,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { api } from '@/lib/api';
+import { API_BASE, api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
-import { Plus, FileText, LogOut, Loader2, Inbox, Eye, Keyboard } from 'lucide-react';
+import { Plus, FileText, LogOut, Loader2, Inbox, Eye, Download, Keyboard } from 'lucide-react';
 
 interface FormHeader {
   formId: string;
@@ -16,7 +16,8 @@ interface FormHeader {
 }
 
 interface SharedFormHeader extends FormHeader {
-  sharedRole: 'reviewer';
+  sharedRole: 'editor' | 'reviewer';
+  sharedRoles: Array<'editor' | 'reviewer'>;
   submissionCount: number;
 }
 
@@ -27,6 +28,10 @@ interface MySubmission {
   version: number;
   status: string;
   submittedAt: string;
+  pages?: Array<{
+    pageNo: number;
+    responses: Array<{ componentId: string; response: unknown }>;
+  }>;
 }
 
 export default function Home() {
@@ -34,7 +39,15 @@ export default function Home() {
   const navigate = useNavigate();
   const [forms, setForms] = useState<FormHeader[]>([]);
   const [sharedForms, setSharedForms] = useState<SharedFormHeader[]>([]);
+  const [activeSharedFormId, setActiveSharedFormId] = useState<string | null>(
+    null
+  );
   const [submissions, setSubmissions] = useState<MySubmission[]>([]);
+  const [selectedSubmissionId, setSelectedSubmissionId] = useState<string | null>(
+    null
+  );
+  const [exportingSubmissionCsv, setExportingSubmissionCsv] = useState(false);
+  const [submissionDetailError, setSubmissionDetailError] = useState('');
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
 
@@ -92,6 +105,77 @@ export default function Home() {
     rejected: 'bg-red-500',
     under_review: 'bg-amber-500',
     draft: 'bg-neutral-400',
+  };
+
+  const selectedSubmission =
+    submissions.find((submission) => submission.submissionId === selectedSubmissionId) ||
+    null;
+
+  const formatResponseValue = (value: unknown) => {
+    if (value === null || value === undefined) return 'No response';
+    if (typeof value === 'string') return value || 'No response';
+    if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+    if (Array.isArray(value)) {
+      return value.length ? value.map((entry) => String(entry)).join(', ') : 'No response';
+    }
+    try {
+      return JSON.stringify(value, null, 2);
+    } catch {
+      return String(value);
+    }
+  };
+
+  const handleExportSubmissionCsv = async () => {
+    if (!selectedSubmission) return;
+    setExportingSubmissionCsv(true);
+    setSubmissionDetailError('');
+
+    try {
+      const token = localStorage.getItem('auth_token');
+      const res = await fetch(
+        `${API_BASE}/api/forms/${selectedSubmission.formId}/submissions/export.csv`,
+        {
+          method: 'GET',
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        }
+      );
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        const message =
+          (body as { error?: string }).error || `Export failed (${res.status})`;
+        throw new Error(message);
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `form-${selectedSubmission.formId}-submissions.csv`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setSubmissionDetailError((err as Error).message || 'Export failed');
+    } finally {
+      setExportingSubmissionCsv(false);
+    }
+  };
+
+  const getSharedRoleLabel = (form: SharedFormHeader) => {
+    const roles = form.sharedRoles?.length ? form.sharedRoles : [form.sharedRole];
+    const hasEditor = roles.includes('editor');
+    const hasReviewer = roles.includes('reviewer');
+
+    if (hasEditor && hasReviewer) return 'Editor + Reviewer';
+    if (hasEditor) return 'Editor';
+    return 'Reviewer';
+  };
+
+  const canSharedUserEditForm = (form: SharedFormHeader) => {
+    const roles = form.sharedRoles?.length ? form.sharedRoles : [form.sharedRole];
+    return roles.includes('editor');
   };
 
   return (
@@ -183,7 +267,7 @@ export default function Home() {
             Forms Shared With You ({sharedForms.length})
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Forms assigned to you as reviewer.
+            Forms assigned to you as editor or reviewer.
           </p>
         </div>
 
@@ -201,28 +285,65 @@ export default function Home() {
                 key={form.formId}
                 className="rounded-lg border border-border bg-background p-4 shadow-sm"
               >
-                <div className="flex w-full items-start justify-between">
-                  <h3 className="text-sm font-medium">{form.title}</h3>
-                  <span className="ml-2 shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-                    Reviewer
-                  </span>
-                </div>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  Updated {formatDate(form.updatedAt)}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {form.submissionCount} submission
-                  {form.submissionCount === 1 ? '' : 's'}
-                </p>
-                <Button
-                  className="mt-3 w-full"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => navigate(`/reviews/${form.formId}`)}
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() =>
+                    setActiveSharedFormId((prev) =>
+                      prev === form.formId ? null : form.formId
+                    )
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setActiveSharedFormId((prev) =>
+                        prev === form.formId ? null : form.formId
+                      );
+                    }
+                  }}
+                  className="cursor-pointer"
                 >
-                  <Eye className="mr-1.5 h-3.5 w-3.5" />
-                  View Submissions
-                </Button>
+                  <div className="flex w-full items-start justify-between">
+                    <h3 className="text-sm font-medium">{form.title}</h3>
+                    <span className="ml-2 shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                      {getSharedRoleLabel(form)}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Updated {formatDate(form.updatedAt)}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {form.submissionCount} submission
+                    {form.submissionCount === 1 ? '' : 's'}
+                  </p>
+                  <p className="mt-2 text-[11px] text-muted-foreground">
+                    Click to view actions
+                  </p>
+                </div>
+
+                {activeSharedFormId === form.formId && (
+                  <div className="mt-3 space-y-2 border-t border-border pt-3">
+                    {canSharedUserEditForm(form) && (
+                      <Button
+                        className="w-full"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => navigate(`/form-builder/${form.formId}`)}
+                      >
+                        Edit Form
+                      </Button>
+                    )}
+                    <Button
+                      className="w-full"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => navigate(`/reviews/${form.formId}`)}
+                    >
+                      <Eye className="mr-1.5 h-3.5 w-3.5" />
+                      View Submissions
+                    </Button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -255,7 +376,13 @@ export default function Home() {
               </thead>
               <tbody>
                 {submissions.map((sub) => (
-                  <tr key={sub.submissionId} className="border-b border-border last:border-0">
+                  <tr
+                    key={sub.submissionId}
+                    className={`cursor-pointer border-b border-border last:border-0 hover:bg-muted/20 ${
+                      selectedSubmissionId === sub.submissionId ? 'bg-muted/30' : ''
+                    }`}
+                    onClick={() => setSelectedSubmissionId(sub.submissionId)}
+                  >
                     <td className="px-4 py-3 font-medium">{sub.formTitle}</td>
                     <td className="px-4 py-3 text-muted-foreground">
                       {formatDate(sub.submittedAt)}
@@ -277,6 +404,66 @@ export default function Home() {
               </tbody>
             </table>
           </div>
+        )}
+
+        {selectedSubmission && (
+          <section className="mt-6 rounded-lg border border-border bg-background p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-semibold">Submission Details</h3>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {selectedSubmission.formTitle} • {formatDate(selectedSubmission.submittedAt)}
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleExportSubmissionCsv}
+                disabled={exportingSubmissionCsv}
+              >
+                {exportingSubmissionCsv ? (
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Download className="mr-1.5 h-3.5 w-3.5" />
+                )}
+                Export CSV
+              </Button>
+            </div>
+
+            {submissionDetailError && (
+              <p className="mt-2 text-xs text-destructive">{submissionDetailError}</p>
+            )}
+
+            <div className="mt-4 space-y-3">
+              {(selectedSubmission.pages || []).length === 0 ? (
+                <p className="text-xs text-muted-foreground">No detailed responses available.</p>
+              ) : (
+                (selectedSubmission.pages || []).map((page) => (
+                  <div key={page.pageNo} className="rounded border border-border p-3">
+                    <p className="mb-2 text-xs font-medium text-muted-foreground">
+                      Page {page.pageNo}
+                    </p>
+                    {(page.responses || []).length === 0 ? (
+                      <p className="text-xs text-muted-foreground">No responses.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {page.responses.map((item) => (
+                          <div key={`${page.pageNo}-${item.componentId}`}>
+                            <p className="text-xs font-medium text-muted-foreground">
+                              {item.componentId}
+                            </p>
+                            <pre className="mt-1 overflow-auto whitespace-pre-wrap break-words rounded bg-muted/30 p-2 text-xs">
+                              {formatResponseValue(item.response)}
+                            </pre>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
         )}
       </main>
     </div>

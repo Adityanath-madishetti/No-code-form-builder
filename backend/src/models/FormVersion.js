@@ -214,6 +214,17 @@ const LogicRuleSchema = new Schema(
             default: true,
         },
 
+        ruleType: {
+            type: String,
+            enum: ["field", "validation", "navigation"],
+            default: "field",
+        },
+
+        updatedAt: {
+            type: Date,
+            default: Date.now,
+        },
+
         // Nested condition tree (uses Mixed for recursive AND/OR groups)
         condition: {
             type: Schema.Types.Mixed,
@@ -255,6 +266,37 @@ const FormulaRuleSchema = new Schema(
         },
 
         referencedFields: [String],
+
+        updatedAt: {
+            type: Date,
+            default: Date.now,
+        },
+    },
+    { _id: false }
+);
+
+const ComponentShuffleStackSchema = new Schema(
+    {
+        stackId: {
+            type: String,
+            required: true,
+        },
+        name: {
+            type: String,
+            default: "New Stack",
+        },
+        pageId: {
+            type: String,
+            default: "",
+        },
+        componentIds: {
+            type: [String],
+            default: [],
+        },
+        enabled: {
+            type: Boolean,
+            default: true,
+        },
     },
     { _id: false }
 );
@@ -499,6 +541,7 @@ const FormVersionSchema = new Schema(
         logic: {
             rules: [LogicRuleSchema],
             formulas: [FormulaRuleSchema],
+            componentShuffleStacks: [ComponentShuffleStackSchema],
         },
 
         workflow: {

@@ -9,7 +9,11 @@ import type {
   FormSettings,
   SubmissionPolicy,
 } from '@/form/components/base';
-import type { LogicRule, FormulaRule } from '@/form/logic/logicTypes';
+import type {
+  LogicRule,
+  FormulaRule,
+  ComponentShuffleStack,
+} from '@/form/logic/logicTypes';
 import type { Workflow } from '@/form/workflow/workflowTypes';
 import type { AnyFormComponent } from '@/form/registry/componentRegistry';
 import { deserializeComponent } from '@/form/registry/componentRegistry';
@@ -112,6 +116,7 @@ interface BackendFormVersion {
   logic?: {
     rules?: LogicRule[];
     formulas?: FormulaRule[];
+    componentShuffleStacks?: ComponentShuffleStack[];
   };
 }
 
@@ -184,6 +189,7 @@ export async function loadFormVersion(formId: string): Promise<{
   version: number;
   logicRules: LogicRule[];
   logicFormulas: FormulaRule[];
+  logicShuffleStacks: ComponentShuffleStack[];
 }> {
   const res = await api.get<{ version: BackendFormVersion }>(
     `/api/forms/${formId}/versions/latest`
@@ -245,6 +251,7 @@ export async function loadFormVersion(formId: string): Promise<{
     version: v.version,
     logicRules: v.logic?.rules ?? [],
     logicFormulas: v.logic?.formulas ?? [],
+    logicShuffleStacks: v.logic?.componentShuffleStacks ?? [],
   };
 }
 
@@ -256,7 +263,8 @@ export async function saveFormVersion(
   storeComponents: Record<string, AnyFormComponent>,
   createdBy: string = 'unknown',
   logicRules: LogicRule[] = [],
-  logicFormulas: FormulaRule[] = []
+  logicFormulas: FormulaRule[] = [],
+  logicShuffleStacks: ComponentShuffleStack[] = []
 ): Promise<void> {
   const orderedPageIds = storeForm.pages;
   const pages: BackendPage[] = orderedPageIds.map((pageId, idx) => {
@@ -341,6 +349,7 @@ export async function saveFormVersion(
     logic: {
       rules: logicRules,
       formulas: logicFormulas,
+      componentShuffleStacks: logicShuffleStacks,
     },
   });
 

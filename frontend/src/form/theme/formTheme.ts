@@ -36,9 +36,48 @@ export const formThemeModes = {
 export type formThemeMode =
   (typeof formThemeModes)[keyof typeof formThemeModes];
 
-export const DEFAULT_FORM_THEME = {
-  color: formThemeColors.Red,
+export const DEFAULT_FORM_THEME: {
+  color: formThemeColor;
+  mode: formThemeMode;
+  headingFont: { family: formFontName };
+  bodyFont: { family: formFontName };
+  background: {
+    type: 'solid';
+    solidColor: string;
+    blur: boolean;
+    overlayOpacity: number;
+    fixed: boolean;
+  };
+  layout: {
+    formWidth: '600px' | '800px' | 'full';
+    cardStyle: 'flat' | 'elevated' | 'glassmorphism';
+    spacing: 'compact' | 'comfortable' | 'spacious';
+  };
+  componentProps: {
+    shadow: 'none' | 'sm' | 'md' | 'lg';
+    borderRadius: 'none' | 'sm' | 'md' | 'lg' | 'full';
+    borderWidth: '0' | '1' | '2';
+  };
+} = {
+  color: formThemeColors.Default,
   mode: formThemeModes.Light,
   headingFont: { family: formFontNames.Inter },
   bodyFont: { family: formFontNames.Inter },
-} as const;
+  background: {
+    type: 'solid',
+    solidColor: '#ffffff',
+    blur: false,
+    overlayOpacity: 0,
+    fixed: false,
+  },
+  layout: {
+    formWidth: '800px',
+    cardStyle: 'elevated',
+    spacing: 'comfortable',
+  },
+  componentProps: {
+    shadow: 'sm',
+    borderRadius: 'md',
+    borderWidth: '1',
+  },
+};

@@ -1,73 +1,32 @@
-// src/pages/FormFill/FormPreview.tsx
-/**
- * Preview mode — same rendering as FormFill but with a banner and no submit.
- */
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
-import { getComponentRenderer } from '@/form/registry/componentRegistry';
-import type { ComponentID } from '@/form/components/base';
 import { Button } from '@/components/ui/button';
-import { Loader2, ArrowLeft, Eye } from 'lucide-react';
-
-import { ComponentIDs } from '@/form/components/base';
-
-interface BackendComponent {
-  componentId: string;
-  componentType: string;
-  label: string;
-  props: Record<string, unknown>;
-  validation: Record<string, unknown>;
-  order: number;
-}
-
-interface BackendPage {
-  pageId: string;
-  pageNo: number;
-  title: string;
-  description?: string;
-  components: BackendComponent[];
-}
+import { Loader2, ArrowLeft, Eye, ArrowRight } from 'lucide-react';
+import { FillFieldRenderer } from './FillFieldRenderer';
+import {
+  evaluateRuntimeLogic,
+  getComponentOrderForPage,
+  type RuntimeLogicPayload,
+  type RuntimePage,
+} from './runtimeLogic';
 
 interface VersionData {
   formId: string;
   version: number;
   meta: { name: string; description: string };
-  pages: BackendPage[];
+  pages: RuntimePage[];
+  logic?: RuntimeLogicPayload;
 }
 
-// 1st record from formApi.ts
-const backendToFrontend: Record<string, string> = {
-  heading: ComponentIDs.Header,
-  'single-line-text': ComponentIDs.SingleLineInput,
-  radio: ComponentIDs.Radio,
-  checkbox: ComponentIDs.Checkbox,
-  dropdown: ComponentIDs.Dropdown,
-  'multi-line-text': ComponentIDs.MultiLineInput,
-  'single-choice-grid': ComponentIDs.SingleChoiceGrid,
-  'multi-choice-grid': ComponentIDs.MultiChoiceGrid,
-  'matrix-table': ComponentIDs.MatrixTable,
-  rating: ComponentIDs.RatingScale,
-  'linear-scale': ComponentIDs.LinearScale,
-  slider: ComponentIDs.Slider,
-  'file-upload': ComponentIDs.FileUpload,
-  'image-upload': ComponentIDs.ImageUpload,
-  email: ComponentIDs.Email,
-  phone: ComponentIDs.Phone,
-  number: ComponentIDs.Number,
-  decimal: ComponentIDs.Decimal,
-  url: ComponentIDs.URL,
-  date: ComponentIDs.Date,
-  time: ComponentIDs.Time,
-  'address-block': ComponentIDs.AddressBlock,
-  'name-block': ComponentIDs.NameBlock,
-  'color-picker': ComponentIDs.ColorPicker,
-  signature: ComponentIDs.Signature,
-  // payment: ComponentIDs.Payment,
-  captcha: ComponentIDs.Captcha,
-  'page-break': ComponentIDs.LineDivider,
-  custom: ComponentIDs.ColumnLayout,
-};
+function getOrCreatePreviewSeed(formId: string): string {
+  const key = `form-preview-seed:${formId}`;
+  const existing = window.localStorage.getItem(key);
+  if (existing) return existing;
+  const next = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  window.localStorage.setItem(key, next);
+  return next;
+}
 
 export default function FormPreview() {
   const { formId } = useParams<{ formId: string }>();
@@ -75,10 +34,10 @@ export default function FormPreview() {
   const [version, setVersion] = useState<VersionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [pageIndex, setPageIndex] = useState(0);
 
   useEffect(() => {
     if (!formId) return;
-    // Preview loads the latest version (could be draft) via the owner endpoint
     api
       .get<{ version: VersionData }>(`/api/forms/${formId}/versions/latest`)
       .then((res) => setVersion(res.version))
@@ -92,6 +51,22 @@ export default function FormPreview() {
       : 'Preview — Form Builder';
   }, [version]);
 
+  const seed = useMemo(() => (formId ? getOrCreatePreviewSeed(formId) : ''), [formId]);
+  const runtime = useMemo(
+    () =>
+      evaluateRuntimeLogic(version?.logic, version?.pages || [], {}),
+    [version]
+  );
+  const currentPage = version?.pages[pageIndex];
+  const components = useMemo(() => {
+    if (!version || !currentPage) return [];
+    return getComponentOrderForPage(
+      currentPage,
+      version.logic?.componentShuffleStacks,
+      seed
+    ).filter((component) => runtime.visibility[component.componentId] !== false);
+  }, [currentPage, runtime.visibility, seed, version]);
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -100,7 +75,7 @@ export default function FormPreview() {
     );
   }
 
-  if (error || !version) {
+  if (error || !version || !currentPage) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-3">
         <p className="text-sm text-destructive">{error || 'Form not found'}</p>
@@ -113,10 +88,9 @@ export default function FormPreview() {
 
   return (
     <div className="flex min-h-screen flex-col bg-neutral-50 dark:bg-neutral-950">
-      {/* Preview banner */}
       <div className="flex items-center gap-2 bg-amber-500 px-4 py-2 text-sm font-medium text-white">
         <Eye className="h-4 w-4" />
-        Preview Mode — This is how your form will look to respondents.
+        Preview Mode — read-only runtime behavior.
         <Button
           variant="ghost"
           size="sm"
@@ -128,7 +102,6 @@ export default function FormPreview() {
         </Button>
       </div>
 
-      {/* Header */}
       <header className="border-b border-border bg-background px-6 py-4">
         <h1 className="text-xl font-semibold">{version.meta.name}</h1>
         {version.meta.description && (
@@ -138,53 +111,57 @@ export default function FormPreview() {
         )}
       </header>
 
-      {/* Form body (read-only) */}
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-8">
-        {version.pages.map((page) => (
-          <div key={page.pageId} className="mb-8">
-            {page.title && page.title !== `Page ${page.pageNo}` && (
-              <h2 className="mb-4 text-lg font-medium">{page.title}</h2>
-            )}
-            <div className="space-y-6">
-              {page.components.map((comp) => {
-                const feId =
-                  backendToFrontend[comp.componentType] || comp.componentType;
-                const Renderer = getComponentRenderer(feId as ComponentID);
+        <div className="mb-4 flex items-center justify-between text-xs text-muted-foreground">
+          <span>
+            Page {pageIndex + 1} / {version.pages.length}
+          </span>
+          <span>{currentPage.title || `Page ${currentPage.pageNo}`}</span>
+        </div>
 
-                if (!Renderer) {
-                  return (
-                    <div
-                      key={comp.componentId}
-                      className="rounded border border-dashed border-border p-3 text-xs text-muted-foreground"
-                    >
-                      Unsupported: {comp.componentType}
-                    </div>
-                  );
-                }
-
-                return (
-                  <div
-                    key={comp.componentId}
-                    // className="rounded-lg border border-border bg-background p-4"
-                  >
-                    <Renderer
-                      instanceId={comp.componentId}
-                      metadata={{ label: comp.label }}
-                      props={comp.props as never}
-                      validation={comp.validation as never}
-                    />
-                  </div>
-                );
-              })}
-            </div>
+        <section className="rounded-lg border border-border bg-background p-4">
+          <div className="space-y-5">
+            {components.map((component) => (
+              <div key={component.componentId} className="space-y-2">
+                {component.componentType !== 'heading' && (
+                  <label className="text-sm font-medium">{component.label}</label>
+                )}
+                <FillFieldRenderer
+                  component={component}
+                  value={runtime.values[component.componentId]}
+                  disabled
+                  shuffleSeed={seed}
+                  onChange={() => undefined}
+                />
+              </div>
+            ))}
           </div>
-        ))}
+        </section>
 
-        {/* Disabled submit (preview only) */}
-        <div className="flex justify-end pt-4">
-          <Button disabled>Submit (disabled in preview)</Button>
+        <div className="mt-6 flex items-center justify-between">
+          <Button
+            variant="outline"
+            disabled={pageIndex === 0}
+            onClick={() => setPageIndex((prev) => Math.max(0, prev - 1))}
+          >
+            <ArrowLeft className="mr-1.5 h-4 w-4" />
+            Back
+          </Button>
+          <Button
+            variant="outline"
+            disabled={pageIndex >= version.pages.length - 1}
+            onClick={() =>
+              setPageIndex((prev) =>
+                Math.min(version.pages.length - 1, prev + 1)
+              )
+            }
+          >
+            Next
+            <ArrowRight className="ml-1.5 h-4 w-4" />
+          </Button>
         </div>
       </main>
     </div>
   );
 }
+

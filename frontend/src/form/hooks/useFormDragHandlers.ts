@@ -5,6 +5,7 @@ import {
   TEMP_PAGE_PLACEHOLDER_ID,
   DRAG_CATALOG_COMPONENT_ID,
   DRAG_CATALOG_PAGE_ID,
+  DRAG_CATALOG_GROUP_ID,
   DRAG_COMPONENT_ID,
   DRAG_PAGE_ID,
 } from '@/form/utils/DndUtils';
@@ -12,7 +13,18 @@ import type { ComponentID, ComponentMetadata } from '@/form/components/base';
 import type { AnyFormComponent } from '@/form/registry/componentRegistry';
 
 export function useFormDragHandlers() {
-  const store = useFormStore();
+  const setActiveDragData = useFormStore((s) => s.setActiveDragData);
+  const pages = useFormStore((s) => s.pages);
+  const components = useFormStore((s) => s.components);
+  const addComponent = useFormStore((s) => s.addComponent);
+  const moveComponent = useFormStore((s) => s.moveComponent);
+  const addPage = useFormStore((s) => s.addPage);
+  const reorderPages = useFormStore((s) => s.reorderPages);
+  const form = useFormStore((s) => s.form);
+  const removePage = useFormStore((s) => s.removePage);
+  const removeComponent = useFormStore((s) => s.removeComponent);
+  const setActiveComponent = useFormStore((s) => s.setActiveComponent);
+  const refreshCatalog = useFormStore((s) => s.refreshCatalog);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onDragStart = (event: any) => {
@@ -22,7 +34,7 @@ export function useFormDragHandlers() {
       rawEvent: event,
     });
 
-    store.setActiveDragData(dragData);
+    setActiveDragData(dragData);
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -46,14 +58,19 @@ export function useFormDragHandlers() {
     // ==========================================
     // CREATE COMPONENT GAPS
     // ==========================================
-    if (sourceData?.type === DRAG_CATALOG_COMPONENT_ID) {
-      console.log('[DND-Over] Handling catalog component gap creation...');
+    if (
+      sourceData?.type === DRAG_CATALOG_COMPONENT_ID ||
+      sourceData?.type === DRAG_CATALOG_GROUP_ID
+    ) {
+      console.log(
+        '[DND-Over] Handling catalog component/group gap creation...'
+      );
       let targetPageId = null;
       let targetIndex = -1;
 
       if (targetData?.type === DRAG_COMPONENT_ID) {
         targetPageId = targetData.pageId;
-        targetIndex = store.pages[targetPageId].children.indexOf(
+        targetIndex = pages[targetPageId].children.indexOf(
           targetData.instanceId
         );
         console.log(
@@ -61,24 +78,24 @@ export function useFormDragHandlers() {
         );
       } else if (targetData?.type === DRAG_PAGE_ID) {
         targetPageId = targetData.pageId;
-        targetIndex = store.pages[targetPageId].children.length;
+        targetIndex = pages[targetPageId].children.length;
         console.log(
           `[DND-Over] Target is a Page. PageId: ${targetPageId}, TargetIndex (End of page): ${targetIndex}`
         );
       }
 
       if (targetPageId) {
-        if (!store.components[TEMP_COMPONENT_PLACEHOLDER_ID]) {
+        if (!components[TEMP_COMPONENT_PLACEHOLDER_ID]) {
           const injectIndex =
             targetIndex !== -1
               ? targetIndex
-              : store.pages[targetPageId].children.length;
+              : pages[targetPageId].children.length;
           console.log(
             `[DND-Over] Injecting NEW component gap placeholder at index ${injectIndex} on page ${targetPageId}`
           );
 
           // Inject the Gap
-          store.addComponent(
+          addComponent(
             targetPageId,
             {
               id: 'Placeholder' as ComponentID,
@@ -93,7 +110,7 @@ export function useFormDragHandlers() {
           );
         } else {
           // Move the Gap smoothly
-          const currentPage = Object.values(store.pages).find((p) =>
+          const currentPage = Object.values(pages).find((p) =>
             p.children.includes(TEMP_COMPONENT_PLACEHOLDER_ID)
           );
 
@@ -104,7 +121,7 @@ export function useFormDragHandlers() {
             const finalIndex =
               targetIndex !== -1
                 ? targetIndex
-                : store.pages[targetPageId].children.length;
+                : pages[targetPageId].children.length;
 
             if (
               currentPage.id !== targetPageId ||
@@ -113,7 +130,7 @@ export function useFormDragHandlers() {
               console.log(
                 `[DND-Over] Moving EXISTING component gap from Page ${currentPage.id}[${currentIndex}] to Page ${targetPageId}[${finalIndex}]`
               );
-              store.moveComponent(
+              moveComponent(
                 currentPage.id,
                 currentIndex,
                 targetPageId,
@@ -146,27 +163,25 @@ export function useFormDragHandlers() {
       ) {
         if (targetData.pageId === TEMP_PAGE_PLACEHOLDER_ID) {
           console.groupEnd();
-          return; 
+          return;
         }
-        targetIndex = store.form!.pages.indexOf(targetData.pageId);
+        targetIndex = form!.pages.indexOf(targetData.pageId);
         console.log(`[DND-Over] Target resolved to index: ${targetIndex}`);
       }
 
       if (targetIndex !== -1) {
-        if (!store.pages[TEMP_PAGE_PLACEHOLDER_ID]) {
+        if (!pages[TEMP_PAGE_PLACEHOLDER_ID]) {
           console.log(
             `[DND-Over] Injecting NEW page gap placeholder at index ${targetIndex}`
           );
-          store.addPage(targetIndex, TEMP_PAGE_PLACEHOLDER_ID);
+          addPage(targetIndex, TEMP_PAGE_PLACEHOLDER_ID);
         } else {
-          const currentIndex = store.form!.pages.indexOf(
-            TEMP_PAGE_PLACEHOLDER_ID
-          );
+          const currentIndex = form!.pages.indexOf(TEMP_PAGE_PLACEHOLDER_ID);
           if (currentIndex !== -1 && currentIndex !== targetIndex) {
             console.log(
               `[DND-Over] Moving EXISTING page gap from index ${currentIndex} to index ${targetIndex}`
             );
-            store.reorderPages(currentIndex, targetIndex);
+            reorderPages(currentIndex, targetIndex);
           } else {
             console.log(
               '[DND-Over] Page gap is already in the correct position.'
@@ -182,7 +197,7 @@ export function useFormDragHandlers() {
     if (sourceData?.type === DRAG_COMPONENT_ID) {
       console.log('[DND-Over] Handling native existing component movement...');
       const instanceId = sourceData.instanceId;
-      const currentPage = Object.values(store.pages).find((p) =>
+      const currentPage = Object.values(pages).find((p) =>
         p.children.includes(instanceId)
       );
 
@@ -202,12 +217,12 @@ export function useFormDragHandlers() {
 
       if (targetData?.type === DRAG_COMPONENT_ID) {
         targetPageId = targetData.pageId;
-        targetIndex = store.pages[targetPageId].children.indexOf(
+        targetIndex = pages[targetPageId].children.indexOf(
           targetData.instanceId
         );
       } else if (targetData?.type === DRAG_PAGE_ID) {
         targetPageId = targetData.pageId;
-        targetIndex = store.pages[targetPageId].children.length;
+        targetIndex = pages[targetPageId].children.length;
       }
 
       console.log(
@@ -218,17 +233,12 @@ export function useFormDragHandlers() {
         const finalIndex =
           targetIndex !== -1
             ? targetIndex
-            : store.pages[targetPageId].children.length;
+            : pages[targetPageId].children.length;
         console.log(
           `[DND-Over] Moving component ${instanceId} across pages: Page ${currentPageId} -> Page ${targetPageId} at index ${finalIndex}`
         );
 
-        store.moveComponent(
-          currentPageId,
-          currentIndex,
-          targetPageId,
-          finalIndex
-        );
+        moveComponent(currentPageId, currentIndex, targetPageId, finalIndex);
       } else {
         console.log(
           '[DND-Over] Component is staying on the same page during over phase. Handling in onDragEnd if dropped.'
@@ -242,7 +252,7 @@ export function useFormDragHandlers() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onDragEnd = (event: any) => {
     console.group('[DND-End] Drag operation ended');
-    store.setActiveDragData(null);
+    setActiveDragData(null);
 
     const { operation, canceled } = event;
     const { source, target } = operation;
@@ -256,13 +266,13 @@ export function useFormDragHandlers() {
       console.log(
         '[DND-End] Drag canceled or no valid target drop. Executing cleanup phase.'
       );
-      if (store.components[TEMP_COMPONENT_PLACEHOLDER_ID]) {
+      if (components[TEMP_COMPONENT_PLACEHOLDER_ID]) {
         console.log('[DND-End] Cleanup: Removing component gap placeholder.');
-        store.removeComponent(TEMP_COMPONENT_PLACEHOLDER_ID);
+        removeComponent(TEMP_COMPONENT_PLACEHOLDER_ID);
       }
-      if (store.pages[TEMP_PAGE_PLACEHOLDER_ID]) {
+      if (pages[TEMP_PAGE_PLACEHOLDER_ID]) {
         console.log('[DND-End] Cleanup: Removing page gap placeholder.');
-        store.removePage(TEMP_PAGE_PLACEHOLDER_ID);
+        removePage(TEMP_PAGE_PLACEHOLDER_ID);
       }
       console.groupEnd();
       return;
@@ -286,8 +296,8 @@ export function useFormDragHandlers() {
 
     // DROP COMPONENT: Swap the Gap for the Real Component
     if (sourceData.type === DRAG_CATALOG_COMPONENT_ID) {
-      if (store.components[TEMP_COMPONENT_PLACEHOLDER_ID]) {
-        const currentPage = Object.values(store.pages).find((p) =>
+      if (components[TEMP_COMPONENT_PLACEHOLDER_ID]) {
+        const currentPage = Object.values(pages).find((p) =>
           p.children.includes(TEMP_COMPONENT_PLACEHOLDER_ID)
         );
 
@@ -299,15 +309,61 @@ export function useFormDragHandlers() {
             `[DND-End] Dropping Catalog Component. Swapping placeholder on Page ${currentPage.id} at index ${finalIndex} with real component.`
           );
 
-          store.removeComponent(TEMP_COMPONENT_PLACEHOLDER_ID);
+          removeComponent(TEMP_COMPONENT_PLACEHOLDER_ID);
 
           const realId = `instance-${crypto.randomUUID()}`;
           const realComponent = sourceData.entry.create(realId);
 
           console.log(`[DND-End] Generated new component ID: ${realId}`);
-          store.addComponent(currentPage.id, realComponent, finalIndex);
-          store.setActiveComponent(realId);
-          store.refreshCatalog();
+          addComponent(currentPage.id, realComponent, finalIndex);
+          setActiveComponent(realId);
+          refreshCatalog();
+        } else {
+          console.warn(
+            '[DND-End] Component placeholder exists but page parent could not be found!'
+          );
+        }
+      } else {
+        console.warn(
+          '[DND-End] Expected a component placeholder to swap, but none was found in store.'
+        );
+      }
+      console.groupEnd();
+      return;
+    }
+
+    // DROP GROUP: Swap the Gap for the Group Components
+    if (sourceData.type === DRAG_CATALOG_GROUP_ID) {
+      if (components[TEMP_COMPONENT_PLACEHOLDER_ID]) {
+        const currentPage = Object.values(pages).find((p) =>
+          p.children.includes(TEMP_COMPONENT_PLACEHOLDER_ID)
+        );
+
+        if (currentPage) {
+          const finalIndex = currentPage.children.indexOf(
+            TEMP_COMPONENT_PLACEHOLDER_ID
+          );
+          console.log(
+            `[DND-End] Dropping Catalog Group. Swapping placeholder on Page ${currentPage.id} at index ${finalIndex} with group components.`
+          );
+
+          removeComponent(TEMP_COMPONENT_PLACEHOLDER_ID);
+
+          const group = sourceData.group;
+          const insertedComponentIds: string[] = [];
+
+          group.components.forEach((c: AnyFormComponent, i: number) => {
+            const realId = `${c.id}-${crypto.randomUUID()}`;
+            const clonedComponent = JSON.parse(JSON.stringify(c));
+            clonedComponent.instanceId = realId;
+            addComponent(currentPage.id, clonedComponent, finalIndex + i);
+            insertedComponentIds.push(realId);
+          });
+
+          if (insertedComponentIds.length > 0) {
+            setActiveComponent(insertedComponentIds[0]);
+          }
+          refreshCatalog();
         } else {
           console.warn(
             '[DND-End] Component placeholder exists but page parent could not be found!'
@@ -324,19 +380,19 @@ export function useFormDragHandlers() {
 
     // DROP PAGE: Swap the Gap for the Real Page
     if (sourceData.type === DRAG_CATALOG_PAGE_ID) {
-      if (store.pages[TEMP_PAGE_PLACEHOLDER_ID]) {
-        const finalIndex = store.form!.pages.indexOf(TEMP_PAGE_PLACEHOLDER_ID);
+      if (pages[TEMP_PAGE_PLACEHOLDER_ID]) {
+        const finalIndex = form!.pages.indexOf(TEMP_PAGE_PLACEHOLDER_ID);
         console.log(
           `[DND-End] Dropping Catalog Page. Swapping placeholder at index ${finalIndex} with real page.`
         );
 
-        store.removePage(TEMP_PAGE_PLACEHOLDER_ID);
-        const realId = store.addPage(finalIndex);
+        removePage(TEMP_PAGE_PLACEHOLDER_ID);
+        const realId = addPage(finalIndex);
         console.log(
           `[DND-End] Successfully created new page with ID: ${realId}`
         );
 
-        store.refreshCatalog();
+        refreshCatalog();
       } else {
         console.warn(
           '[DND-End] Expected a page placeholder to swap, but none was found in store.'
@@ -348,7 +404,6 @@ export function useFormDragHandlers() {
 
     // FINALIZE EXISTING PAGES/COMPONENTS
     if (sourceData.type === DRAG_PAGE_ID && targetData.type === DRAG_PAGE_ID) {
-      const form = store.form;
       if (!form) {
         console.error('[DND-End] Form state missing during page reorder!');
         console.groupEnd();
@@ -363,7 +418,7 @@ export function useFormDragHandlers() {
       );
 
       if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex) {
-        store.reorderPages(fromIndex, toIndex);
+        reorderPages(fromIndex, toIndex);
         console.log('[DND-End] Page reorder complete.');
       } else {
         console.log(
@@ -376,7 +431,7 @@ export function useFormDragHandlers() {
 
     if (sourceData.type === DRAG_COMPONENT_ID) {
       const instanceId = sourceData.instanceId;
-      const currentPage = Object.values(store.pages).find((p) =>
+      const currentPage = Object.values(pages).find((p) =>
         p.children.includes(instanceId)
       );
 
@@ -396,12 +451,12 @@ export function useFormDragHandlers() {
 
       if (targetData.type === DRAG_COMPONENT_ID) {
         targetPageId = targetData.pageId;
-        targetIndex = store.pages[targetPageId].children.indexOf(
+        targetIndex = pages[targetPageId].children.indexOf(
           targetData.instanceId
         );
       } else if (targetData.type === DRAG_PAGE_ID) {
         targetPageId = targetData.pageId;
-        targetIndex = store.pages[targetPageId].children.length;
+        targetIndex = pages[targetPageId].children.length;
       }
 
       console.log(
@@ -414,12 +469,7 @@ export function useFormDragHandlers() {
         targetIndex !== -1
       ) {
         console.log(`[DND-End] Executing same-page component move.`);
-        store.moveComponent(
-          currentPageId,
-          currentIndex,
-          currentPageId,
-          targetIndex
-        );
+        moveComponent(currentPageId, currentIndex, currentPageId, targetIndex);
       } else {
         console.log(
           `[DND-End] Component move skipped (Conditions not met: Either different page, same index, or invalid target index).`

@@ -1,0 +1,305 @@
+/* ====================================================================
+   Theming Page Styles
+   ==================================================================== */
+
+/* ── Pattern backgrounds ── */
+.form-bg-pattern-dots {
+  background-image: radial-gradient(circle, currentColor 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+.form-bg-pattern-grid {
+  background-image:
+    linear-gradient(to right, currentColor 1px, transparent 1px),
+    linear-gradient(to bottom, currentColor 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: rgba(128, 128, 128, 0.12);
+}
+.form-bg-pattern-diagonal {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    currentColor 10px,
+    currentColor 11px
+  );
+  color: rgba(128, 128, 128, 0.1);
+}
+.form-bg-pattern-waves {
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 10 Q25 0 50 10 Q75 20 100 10' fill='none' stroke='%23ccc' stroke-width='0.5'/%3E%3C/svg%3E");
+  background-size: 100px 20px;
+}
+.form-bg-pattern-noise {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+}
+
+/* ── Card styles ── */
+.form-card-flat .form-card,
+.form-card-flat [data-form-card] {
+  box-shadow: none;
+  border: 1px solid var(--border, rgba(0,0,0,0.08));
+}
+.form-card-elevated .form-card,
+.form-card-elevated [data-form-card] {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.form-card-glass .form-card,
+.form-card-glass [data-form-card] {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+}
+.dark .form-card-glass .form-card,
+.dark .form-card-glass [data-form-card] {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* ── Spacing ── */
+.form-spacing-compact { --form-gap: 0.5rem; }
+.form-spacing-comfortable { --form-gap: 1rem; }
+.form-spacing-spacious { --form-gap: 1.75rem; }
+
+/* ── Component shadow presets ── */
+.form-shadow-sm { --form-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+.form-shadow-md { --form-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+.form-shadow-lg { --form-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+
+/* ── Component border-radius presets ── */
+.form-radius-sm { --form-radius: 0.25rem; }
+.form-radius-md { --form-radius: 0.5rem; }
+.form-radius-lg { --form-radius: 0.75rem; }
+.form-radius-full { --form-radius: 9999px; }
+
+/* ── Component border-width ── */
+.form-border-1 { --form-border-width: 1px; }
+.form-border-2 { --form-border-width: 2px; }
+
+/* ── Width container ── */
+.form-width-container {
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+}
+
+/* ====================================================================
+   Theming Page Editor UI
+   ==================================================================== */
+
+.theme-editor {
+  display: flex;
+  height: 100%;
+  overflow: hidden;
+}
+
+.theme-editor-controls {
+  width: 380px;
+  min-width: 340px;
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  background: var(--background);
+}
+
+.theme-editor-preview {
+  flex: 1;
+  overflow-y: auto;
+  position: relative;
+}
+
+/* ── Color swatch grid ── */
+.theme-color-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+
+.theme-color-swatch {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.15s ease;
+  overflow: hidden;
+}
+.theme-color-swatch:hover {
+  transform: scale(1.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+.theme-color-swatch.active {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary);
+}
+
+/* ── Section ── */
+.theme-section {
+  border-bottom: 1px solid var(--border);
+}
+.theme-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  user-select: none;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--foreground);
+  transition: background 0.1s;
+}
+.theme-section-header:hover {
+  background: var(--muted);
+}
+.theme-section-body {
+  padding: 0 1rem 1rem;
+}
+
+/* ── Pattern preview boxes ── */
+.theme-pattern-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.5rem;
+}
+.theme-pattern-item {
+  aspect-ratio: 1;
+  border-radius: 0.5rem;
+  border: 2px solid transparent;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.15s ease;
+}
+.theme-pattern-item:hover {
+  transform: scale(1.05);
+}
+.theme-pattern-item.active {
+  border-color: var(--primary);
+}
+
+/* ── Range slider ── */
+.theme-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border);
+  outline: none;
+}
+.theme-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--primary);
+  cursor: pointer;
+  border: 2px solid var(--background);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+/* ── Segmented control ── */
+.theme-segmented {
+  display: inline-flex;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--muted);
+}
+.theme-segmented-btn {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--muted-foreground);
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.theme-segmented-btn:hover {
+  color: var(--foreground);
+}
+.theme-segmented-btn.active {
+  background: var(--background);
+  color: var(--foreground);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+/* ── Visual option cards ── */
+.theme-option-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+.theme-option-card {
+  padding: 0.625rem 0.5rem;
+  border-radius: 0.5rem;
+  border: 2px solid var(--border);
+  background: var(--background);
+  cursor: pointer;
+  text-align: center;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  transition: all 0.15s ease;
+}
+.theme-option-card:hover {
+  border-color: var(--muted-foreground);
+  color: var(--foreground);
+}
+.theme-option-card.active {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--accent);
+}
+
+/* ── Gradient angle wheel ── */
+.theme-angle-ring {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  position: relative;
+  cursor: pointer;
+}
+.theme-angle-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2px;
+  height: 40%;
+  background: var(--primary);
+  transform-origin: bottom center;
+  border-radius: 1px;
+}
+
+/* ── Tabs ── */
+.theme-tab-bar {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  gap: 0;
+}
+.theme-tab-btn {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  color: var(--muted-foreground);
+  transition: all 0.15s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.theme-tab-btn:hover {
+  color: var(--foreground);
+}
+.theme-tab-btn.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}

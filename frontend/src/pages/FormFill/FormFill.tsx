@@ -1,29 +1,18 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { api } from '@/lib/api';
-import { getComponentRenderer } from '@/form/registry/componentRegistry';
-import type { ComponentID } from '@/form/components/base';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Loader2, Send, Pencil, LogIn } from 'lucide-react';
-import { ComponentIDs } from '@/form/components/base';
-
-interface BackendComponent {
-  componentId: string;
-  componentType: string;
-  label: string;
-  props: Record<string, unknown>;
-  validation: Record<string, unknown>;
-  order: number;
-}
-
-interface BackendPage {
-  pageId: string;
-  pageNo: number;
-  title: string;
-  description?: string;
-  components: BackendComponent[];
-}
+import { Loader2, Send, Pencil, LogIn, ArrowLeft, ArrowRight } from 'lucide-react';
+import { FillFieldRenderer } from './FillFieldRenderer';
+import {
+  evaluateRuntimeLogic,
+  getComponentOrderForPage,
+  hasRequiredValidation,
+  isResponseEmpty,
+  type RuntimeLogicPayload,
+  type RuntimePage,
+} from './runtimeLogic';
 
 interface VersionSettings {
   collectEmailMode: 'none' | 'optional' | 'required';
@@ -43,7 +32,8 @@ interface PublicFormData {
     version: number;
     meta: { name: string; description: string };
     settings: VersionSettings;
-    pages: BackendPage[];
+    pages: RuntimePage[];
+    logic?: RuntimeLogicPayload;
   };
 }
 
@@ -64,38 +54,6 @@ const DEFAULT_VERSION_SETTINGS: VersionSettings = {
   canViewOwnSubmission: false,
 };
 
-const backendToFrontend: Record<string, string> = {
-  heading: ComponentIDs.Header,
-  'single-line-text': ComponentIDs.SingleLineInput,
-  radio: ComponentIDs.Radio,
-  checkbox: ComponentIDs.Checkbox,
-  dropdown: ComponentIDs.Dropdown,
-  'multi-line-text': ComponentIDs.MultiLineInput,
-  'single-choice-grid': ComponentIDs.SingleChoiceGrid,
-  'multi-choice-grid': ComponentIDs.MultiChoiceGrid,
-  'matrix-table': ComponentIDs.MatrixTable,
-  rating: ComponentIDs.RatingScale,
-  'linear-scale': ComponentIDs.LinearScale,
-  slider: ComponentIDs.Slider,
-  'file-upload': ComponentIDs.FileUpload,
-  'image-upload': ComponentIDs.ImageUpload,
-  email: ComponentIDs.Email,
-  phone: ComponentIDs.Phone,
-  number: ComponentIDs.Number,
-  decimal: ComponentIDs.Decimal,
-  url: ComponentIDs.URL,
-  date: ComponentIDs.Date,
-  time: ComponentIDs.Time,
-  'address-block': ComponentIDs.AddressBlock,
-  'name-block': ComponentIDs.NameBlock,
-  'color-picker': ComponentIDs.ColorPicker,
-  signature: ComponentIDs.Signature,
-  // payment: ComponentIDs.Payment,
-  captcha: ComponentIDs.Captcha,
-  'page-break': ComponentIDs.LineDivider,
-  custom: ComponentIDs.ColumnLayout,
-};
-
 function flattenResponses(
   pages: SubmissionEntry['pages']
 ): Record<string, unknown> {
@@ -108,6 +66,15 @@ function flattenResponses(
   return out;
 }
 
+function getOrCreateSeed(formId: string): string {
+  const key = `form-fill-seed:${formId}`;
+  const existing = window.localStorage.getItem(key);
+  if (existing) return existing;
+  const next = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  window.localStorage.setItem(key, next);
+  return next;
+}
+
 export default function FormFill() {
   const { formId } = useParams<{ formId: string }>();
   const navigate = useNavigate();
@@ -118,7 +85,9 @@ export default function FormFill() {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [responses, setResponses] = useState<Record<string, unknown>>({});
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [email, setEmail] = useState('');
+  const [pageIndex, setPageIndex] = useState(0);
 
   const [mineLoading, setMineLoading] = useState(false);
   const [mySubmissions, setMySubmissions] = useState<SubmissionEntry[]>([]);
@@ -162,15 +131,30 @@ export default function FormFill() {
     () => data?.version.settings || DEFAULT_VERSION_SETTINGS,
     [data?.version.settings]
   );
+
+  const sessionSeed = useMemo(() => (formId ? getOrCreateSeed(formId) : ''), [formId]);
+
+  const runtime = useMemo(() => {
+    if (!data) {
+      return {
+        values: {},
+        visibility: {},
+        enabled: {},
+        validationErrors: {},
+        nextPageId: null,
+      };
+    }
+    return evaluateRuntimeLogic(data.version.logic, data.version.pages, responses);
+  }, [data, responses]);
+
   const canEditSubmission =
-    settings?.submissionPolicy === 'edit_only' ||
-    settings?.submissionPolicy === 'edit_and_resubmit';
-
+    settings.submissionPolicy === 'edit_only' ||
+    settings.submissionPolicy === 'edit_and_resubmit';
   const canResubmit =
-    settings?.submissionPolicy === 'resubmit_only' ||
-    settings?.submissionPolicy === 'edit_and_resubmit';
-
+    settings.submissionPolicy === 'resubmit_only' ||
+    settings.submissionPolicy === 'edit_and_resubmit';
   const hasExisting = mySubmissions.length > 0;
+
   const submitDisabledByPolicy = useMemo(() => {
     if (!settings) return false;
     if (!user) return false;
@@ -182,17 +166,64 @@ export default function FormFill() {
     return false;
   }, [settings, user, hasExisting, editingSubmissionId]);
 
-  // const handleResponseChange = useCallback(
-  //   (componentId: string, value: unknown) => {
-  //     setResponses((prev) => ({ ...prev, [componentId]: value }));
-  //   },
-  //   []
-  // );
+  const currentPage = data?.version.pages[pageIndex] || null;
+  const orderedCurrentComponents = useMemo(() => {
+    if (!currentPage || !data) return [];
+    return getComponentOrderForPage(
+      currentPage,
+      data.version.logic?.componentShuffleStacks,
+      sessionSeed
+    ).filter((component) => runtime.visibility[component.componentId] !== false);
+  }, [currentPage, data, runtime.visibility, sessionSeed]);
+
+  const validatePages = useCallback(
+    (scope: 'current' | 'all') => {
+      if (!data) return { ok: true, errors: {} as Record<string, string>, firstPage: 0 };
+      const errors: Record<string, string> = {};
+      const pagesToCheck =
+        scope === 'all'
+          ? data.version.pages
+          : data.version.pages[pageIndex]
+            ? [data.version.pages[pageIndex]]
+            : [];
+      let firstInvalidPage = pageIndex;
+
+      for (const page of pagesToCheck) {
+        for (const component of page.components) {
+          const componentId = component.componentId;
+          if (component.componentType === 'heading') continue;
+          if (runtime.visibility[componentId] === false) continue;
+          if (runtime.enabled[componentId] === false) continue;
+
+          const required =
+            hasRequiredValidation(component) ||
+            (component.required as boolean | undefined) === true;
+          if (required && isResponseEmpty(runtime.values[componentId])) {
+            errors[componentId] = `${component.label || 'Field'} is required`;
+            firstInvalidPage = Math.min(firstInvalidPage, page.pageNo - 1);
+          }
+          if (runtime.validationErrors[componentId]) {
+            errors[componentId] = runtime.validationErrors[componentId];
+            firstInvalidPage = Math.min(firstInvalidPage, page.pageNo - 1);
+          }
+        }
+      }
+
+      return {
+        ok: Object.keys(errors).length === 0,
+        errors,
+        firstPage: firstInvalidPage,
+      };
+    },
+    [data, pageIndex, runtime]
+  );
 
   const startEditingSubmission = (submission: SubmissionEntry) => {
     setEditingSubmissionId(submission.submissionId);
     setResponses(flattenResponses(submission.pages));
     setEmail(submission.email || user?.email || '');
+    setPageIndex(0);
+    setFieldErrors({});
   };
 
   const buildSubmissionPages = useCallback(() => {
@@ -200,22 +231,37 @@ export default function FormFill() {
     return data.version.pages.map((page) => ({
       pageNo: page.pageNo,
       responses: page.components
-        .filter((c) => c.componentType !== 'heading')
-        .map((c) => ({
-          componentId: c.componentId,
-          response: responses[c.componentId] ?? null,
+        .filter((component) => component.componentType !== 'heading')
+        .filter((component) => runtime.visibility[component.componentId] !== false)
+        .filter((component) => runtime.enabled[component.componentId] !== false)
+        .filter((component) => runtime.values[component.componentId] !== undefined)
+        .map((component) => ({
+          componentId: component.componentId,
+          response: runtime.values[component.componentId],
         })),
     }));
-  }, [data, responses]);
+  }, [data, runtime]);
 
   const handleSubmit = useCallback(async () => {
     if (!formId || !data) return;
-    setSubmitting(true);
     setError('');
 
+    if (settings.collectEmailMode === 'required' && !email.trim()) {
+      setError('Email is required for this form.');
+      return;
+    }
+
+    const allValidation = validatePages('all');
+    if (!allValidation.ok) {
+      setFieldErrors(allValidation.errors);
+      setPageIndex(allValidation.firstPage);
+      return;
+    }
+
+    setSubmitting(true);
     try {
       const payload = {
-        email: settings?.collectEmailMode === 'none' ? undefined : email,
+        email: settings.collectEmailMode === 'none' ? undefined : email,
         pages: buildSubmissionPages(),
       };
 
@@ -237,12 +283,43 @@ export default function FormFill() {
   }, [
     formId,
     data,
-    settings?.collectEmailMode,
+    settings.collectEmailMode,
     email,
+    validatePages,
     buildSubmissionPages,
     editingSubmissionId,
     navigate,
   ]);
+
+  const handleNext = () => {
+    if (!data || !currentPage) return;
+    const validation = validatePages('current');
+    if (!validation.ok) {
+      setFieldErrors(validation.errors);
+      return;
+    }
+    setFieldErrors({});
+
+    let nextIndex = pageIndex + 1;
+    if (runtime.nextPageId) {
+      const target = data.version.pages.findIndex(
+        (page) => page.pageId === runtime.nextPageId
+      );
+      if (target !== -1 && target !== pageIndex && target > pageIndex) {
+        nextIndex = target;
+      }
+    }
+
+    if (nextIndex >= data.version.pages.length) {
+      void handleSubmit();
+      return;
+    }
+    setPageIndex(nextIndex);
+  };
+
+  const handleBack = () => {
+    setPageIndex((prev) => Math.max(0, prev - 1));
+  };
 
   if (loading) {
     return (
@@ -252,9 +329,8 @@ export default function FormFill() {
     );
   }
 
-  if (error || !data) {
+  if (error && !data) {
     const requiresLogin = /authentication required/i.test(error);
-
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-3 px-4 text-center">
         <p className="text-sm text-destructive">{error || 'Form not found'}</p>
@@ -270,6 +346,14 @@ export default function FormFill() {
             Back
           </Button>
         )}
+      </div>
+    );
+  }
+
+  if (!data || !currentPage) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
+        Form not found.
       </div>
     );
   }
@@ -290,13 +374,9 @@ export default function FormFill() {
           <section className="mb-8 rounded-lg border border-border bg-background p-4">
             <h2 className="text-sm font-semibold">Your Submissions</h2>
             {mineLoading ? (
-              <div className="mt-2 text-xs text-muted-foreground">
-                Loading...
-              </div>
+              <div className="mt-2 text-xs text-muted-foreground">Loading...</div>
             ) : mySubmissions.length === 0 ? (
-              <div className="mt-2 text-xs text-muted-foreground">
-                No submissions yet.
-              </div>
+              <div className="mt-2 text-xs text-muted-foreground">No submissions yet.</div>
             ) : (
               <div className="mt-3 space-y-2">
                 {mySubmissions.map((submission) => (
@@ -331,65 +411,50 @@ export default function FormFill() {
           </div>
         )}
 
-        {data.version.pages.map((page) => (
-          <div key={page.pageId} className="mb-8">
-            {page.title && page.title !== `Page ${page.pageNo}` && (
-              <h2 className="mb-4 text-lg font-medium">{page.title}</h2>
-            )}
-            <div className="space-y-6">
-              {page.components.map((comp) => {
-                const feId =
-                  backendToFrontend[comp.componentType] || comp.componentType;
-                const Renderer = getComponentRenderer(feId as ComponentID);
+        <div className="mb-4 flex items-center justify-between text-xs text-muted-foreground">
+          <span>
+            Page {pageIndex + 1} / {data.version.pages.length}
+          </span>
+          <span>{currentPage.title || `Page ${currentPage.pageNo}`}</span>
+        </div>
 
-                if (!Renderer) {
-                  return (
-                    <div
-                      key={comp.componentId}
-                      className="rounded border border-dashed border-border p-3 text-xs text-muted-foreground"
-                    >
-                      Unsupported component: {comp.componentType}
-                    </div>
-                  );
-                }
-
-                return (
-                  <div
-                    key={comp.componentId}
-                    // className="rounded-lg border border-border bg-background p-4"
-                  >
-                    <Renderer
-                      instanceId={comp.componentId}
-                      metadata={{ label: comp.label }}
-                      props={comp.props as never}
-                      validation={comp.validation as never}
-                    />
-                    {/* TODO: fix this to use handleResponseChange  */}
-                    {/* {comp.componentType !== 'heading' && (
-                      <div className="mt-2">
-                        <input
-                          type="text"
-                          placeholder="Your answer..."
-                          className="w-full rounded border border-input bg-background px-3 py-2 text-sm"
-                          value={(responses[comp.componentId] as string) || ''}
-                          onChange={(e) =>
-                            handleResponseChange(
-                              comp.componentId,
-                              e.target.value
-                            )
-                          }
-                        />
-                      </div>
-                    )} */}
-                  </div>
-                );
-              })}
-            </div>
+        <section className="rounded-lg border border-border bg-background p-4">
+          <div className="space-y-5">
+            {orderedCurrentComponents.map((component) => (
+              <div key={component.componentId} className="space-y-2">
+                {component.componentType !== 'heading' && (
+                  <label className="text-sm font-medium">
+                    {component.label}
+                    {(hasRequiredValidation(component) || component.required) &&
+                      runtime.visibility[component.componentId] !== false &&
+                      runtime.enabled[component.componentId] !== false && (
+                        <span className="ml-1 text-destructive">*</span>
+                      )}
+                  </label>
+                )}
+                <FillFieldRenderer
+                  component={component}
+                  value={runtime.values[component.componentId]}
+                  disabled={runtime.enabled[component.componentId] === false}
+                  error={
+                    fieldErrors[component.componentId] ||
+                    runtime.validationErrors[component.componentId]
+                  }
+                  shuffleSeed={sessionSeed}
+                  onChange={(nextValue) => {
+                    setResponses((prev) => ({
+                      ...prev,
+                      [component.componentId]: nextValue,
+                    }));
+                  }}
+                />
+              </div>
+            ))}
           </div>
-        ))}
+        </section>
 
         {settings.collectEmailMode !== 'none' && (
-          <div className="mb-5 rounded-lg border border-border bg-background p-4">
+          <div className="mt-5 rounded-lg border border-border bg-background p-4">
             <label className="mb-1 block text-sm font-medium">
               Email
               {settings.collectEmailMode === 'required' ? ' *' : ''}
@@ -405,34 +470,57 @@ export default function FormFill() {
           </div>
         )}
 
-        <div className="flex items-center justify-end gap-2 pt-4">
-          {editingSubmissionId && canResubmit && (
+        {error && <p className="mt-4 text-sm text-destructive">{error}</p>}
+
+        <div className="mt-6 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
             <Button
               variant="outline"
-              onClick={() => {
-                setEditingSubmissionId(null);
-                setResponses({});
-                setEmail(user?.email || '');
-              }}
+              onClick={handleBack}
+              disabled={pageIndex === 0 || submitting}
             >
-              Switch to New Submission
+              <ArrowLeft className="mr-1.5 h-4 w-4" />
+              Back
+            </Button>
+            {editingSubmissionId && canResubmit && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setEditingSubmissionId(null);
+                  setResponses({});
+                  setEmail(user?.email || '');
+                  setPageIndex(0);
+                }}
+              >
+                Switch to New Submission
+              </Button>
+            )}
+          </div>
+
+          {pageIndex < data.version.pages.length - 1 ? (
+            <Button
+              onClick={handleNext}
+              disabled={submitting || (submitDisabledByPolicy && !editingSubmissionId)}
+            >
+              Next
+              <ArrowRight className="ml-1.5 h-4 w-4" />
+            </Button>
+          ) : (
+            <Button
+              onClick={handleSubmit}
+              disabled={submitting || (submitDisabledByPolicy && !editingSubmissionId)}
+            >
+              {submitting ? (
+                <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="mr-1.5 h-4 w-4" />
+              )}
+              {editingSubmissionId ? 'Update Submission' : 'Submit'}
             </Button>
           )}
-          <Button
-            onClick={handleSubmit}
-            disabled={
-              submitting || (submitDisabledByPolicy && !editingSubmissionId)
-            }
-          >
-            {submitting ? (
-              <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-            ) : (
-              <Send className="mr-1.5 h-4 w-4" />
-            )}
-            {editingSubmissionId ? 'Update Submission' : 'Submit'}
-          </Button>
         </div>
       </main>
     </div>
   );
 }
+

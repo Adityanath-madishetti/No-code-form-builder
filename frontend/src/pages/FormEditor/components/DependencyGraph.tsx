@@ -11,11 +11,15 @@ import { ACTION_TYPE_LABELS, ACTION_TYPE_COLORS } from '@/form/logic/logicTypes'
 
 export function DependencyGraph() {
   const rules = useLogicStore((s) => s.rules);
+  const formulas = useLogicStore((s) => s.formulas);
   const components = useFormStore((s) => s.components);
   const pages = useFormStore((s) => s.pages);
   const formPages = useFormStore((s) => s.form?.pages ?? []);
 
-  const edges = useMemo(() => getDependencyEdges(rules), [rules]);
+  const edges = useMemo(
+    () => getDependencyEdges(rules, formulas),
+    [rules, formulas]
+  );
 
   const getLabel = (id: string): string => {
     if (components[id]) return components[id].metadata.label || components[id].id;
@@ -23,6 +27,45 @@ export function DependencyGraph() {
     if (pageIdx >= 0) return pages[id]?.title || `Page ${pageIdx + 1}`;
     return id.slice(0, 8) + '…';
   };
+
+  const { executionOrder, hasCycle } = useMemo(() => {
+    const nodes = new Set<string>();
+    const incoming = new Map<string, number>();
+    const outgoing = new Map<string, string[]>();
+
+    for (const edge of edges) {
+      nodes.add(edge.sourceFieldId);
+      nodes.add(edge.targetId);
+      incoming.set(edge.sourceFieldId, incoming.get(edge.sourceFieldId) || 0);
+      incoming.set(edge.targetId, (incoming.get(edge.targetId) || 0) + 1);
+      const out = outgoing.get(edge.sourceFieldId) || [];
+      out.push(edge.targetId);
+      outgoing.set(edge.sourceFieldId, out);
+    }
+
+    const queue = [...nodes].filter((id) => (incoming.get(id) || 0) === 0);
+    const order: string[] = [];
+    const localIncoming = new Map(incoming);
+
+    while (queue.length > 0) {
+      const current = queue.shift();
+      if (!current) continue;
+      order.push(current);
+      for (const next of outgoing.get(current) || []) {
+        const nextIncoming = (localIncoming.get(next) || 0) - 1;
+        localIncoming.set(next, nextIncoming);
+        if (nextIncoming === 0) {
+          queue.push(next);
+        }
+      }
+    }
+
+    const cycle = order.length !== nodes.size;
+    return {
+      executionOrder: order,
+      hasCycle: cycle,
+    };
+  }, [edges]);
 
   if (edges.length === 0) {
     return (
@@ -51,6 +94,21 @@ export function DependencyGraph() {
       </h4>
 
       <div className="space-y-1.5">
+        {executionOrder.length > 0 && (
+          <div className="rounded border border-border bg-background px-2 py-1">
+            <p className="text-[10px] font-semibold text-muted-foreground">
+              Execution Order
+            </p>
+            <p className="mt-0.5 text-[10px]">
+              {executionOrder.map((id) => getLabel(id)).join(' -> ')}
+            </p>
+            {hasCycle && (
+              <p className="mt-0.5 text-[10px] text-destructive">
+                Cycle detected. Review formula/rule dependencies.
+              </p>
+            )}
+          </div>
+        )}
         {edges.map((edge, i) => {
           const ruleName = rules.find((r) => r.ruleId === edge.ruleId)?.name || 'Unknown';
           return (
