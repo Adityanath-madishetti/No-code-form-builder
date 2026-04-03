@@ -151,7 +151,7 @@ export function LogicPanel() {
         <Button
           variant="outline"
           size="sm"
-          className="h-7 text-xs"
+          className="h-6 text-[11px]"
           onClick={() => addRule(`New ${RULE_LABELS[newRuleType]} Rule`, newRuleType)}
         >
           <Zap className="mr-1 h-3 w-3" />
@@ -160,7 +160,7 @@ export function LogicPanel() {
         <Button
           variant="outline"
           size="sm"
-          className="h-7 text-xs"
+          className="h-6 text-[11px]"
           onClick={() => addFormula()}
         >
           <Calculator className="mr-1 h-3 w-3" />
@@ -168,11 +168,11 @@ export function LogicPanel() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-3 gap-1">
+      <div className="grid grid-cols-4 gap-1">
         <select
           value={newRuleType}
           onChange={(e) => setNewRuleType(e.target.value as RuleType)}
-          className="col-span-1 h-7 rounded border border-input bg-background px-1.5 text-[11px]"
+          className="col-span-1 h-5 border border-input bg-background px-1 text-[10px]"
         >
           {RULE_TYPES.map((type) => (
             <option key={type} value={type}>
@@ -180,24 +180,24 @@ export function LogicPanel() {
             </option>
           ))}
         </select>
-        <div className="col-span-2 flex items-center gap-1 rounded border border-input bg-background px-1.5">
-          <Search className="h-3 w-3 text-muted-foreground" />
+        <div className="col-span-3 flex items-center gap-1 border border-input bg-background px-1.5">
+          <Search className="h-2.5 w-2.5 text-muted-foreground" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search rule name..."
-            className="h-6 w-full bg-transparent text-[11px] outline-none"
+            className="h-5 w-full bg-transparent text-[10px] outline-none"
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-1">
-        <label className="flex items-center gap-1 rounded border border-input bg-background px-1.5">
-          <Filter className="h-3 w-3 text-muted-foreground" />
+      <div className="flex items-center justify-start gap-1">
+        <label className="flex w-[120px] items-center gap-1 border border-input bg-background px-1">
+          <Filter className="h-2.5 w-2.5 text-muted-foreground" />
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value as RuleFilter)}
-            className="h-7 w-full bg-transparent text-[11px] outline-none"
+            className="h-5 w-full bg-transparent text-[10px] outline-none"
           >
             <option value="all">All Types</option>
             <option value="field">Field Rules</option>
@@ -209,7 +209,7 @@ export function LogicPanel() {
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value as RuleSort)}
-          className="h-7 rounded border border-input bg-background px-1.5 text-[11px]"
+          className="h-5 w-[128px] border border-input bg-background px-1 text-[10px]"
         >
           <option value="updated_desc">Last Updated (newest)</option>
           <option value="updated_asc">Last Updated (oldest)</option>

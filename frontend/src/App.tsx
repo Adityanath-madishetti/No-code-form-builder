@@ -9,6 +9,11 @@ import FormPreview from "./pages/FormFill/FormPreview";
 import FormSuccess from "./pages/FormFill/FormSuccess";
 import FormReview from "./pages/FormReview/FormReview";
 import KeyboardShortcutsPage from "./pages/KeyboardShortcutsPage";
+import UserSettingsPage from "./pages/UserSettingsPage";
+import ActivityPage from "./pages/ActivityPage";
+import NotificationSettingsPage from "./pages/NotificationSettingsPage";
+import AccountPage from "./pages/AccountPage";
+import EditorThemeTemplatesPage from "./pages/EditorThemeTemplatesPage";
 
 const router = createBrowserRouter([
   {
@@ -34,6 +39,26 @@ const router = createBrowserRouter([
       {
         path: "keyboard-shortcuts",
         element: <KeyboardShortcutsPage />,
+      },
+      {
+        path: "settings",
+        element: <UserSettingsPage />,
+      },
+      {
+        path: "settings/account",
+        element: <AccountPage />,
+      },
+      {
+        path: "settings/editor-theme-templates",
+        element: <EditorThemeTemplatesPage />,
+      },
+      {
+        path: "settings/activity",
+        element: <ActivityPage />,
+      },
+      {
+        path: "settings/notifications",
+        element: <NotificationSettingsPage />,
       },
       {
         path: "form-builder/:formId",

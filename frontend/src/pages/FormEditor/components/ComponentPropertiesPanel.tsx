@@ -34,7 +34,6 @@ export function ComponentPropertiesPanel() {
       activeComponentId ? s.components[activeComponentId] : null
     )
   );
-  const updateComponentProps = useFormStore((s) => s.updateComponentProps);
 
   // Nothing selected
   if (!component && !activePageId) {

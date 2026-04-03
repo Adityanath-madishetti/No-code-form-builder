@@ -69,12 +69,15 @@ export default function KeyboardShortcutsPage() {
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
       <header className="border-b border-border bg-background px-6 py-3">
-        <div className="mx-auto flex max-w-3xl items-center gap-4">
+        <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-2">
           <Button variant="ghost" size="sm" asChild>
             <Link to="/">
               <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
               Dashboard
             </Link>
+          </Button>
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/settings">Settings</Link>
           </Button>
           <h1 className="text-lg font-semibold">Keyboard shortcuts</h1>
         </div>

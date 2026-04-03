@@ -176,6 +176,7 @@ export const listSharedForms = async (req, res, next) => {
                     title: form.title,
                     currentVersion: form.currentVersion,
                     isActive: form.isActive,
+                    createdBy: form.createdBy,
                     updatedAt: form.updatedAt,
                     createdAt: form.createdAt,
                     sharedRole: sharedRoles.includes("editor")
