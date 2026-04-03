@@ -292,7 +292,7 @@ export async function saveFormVersion(
             (comp.validation as unknown as Record<string, unknown>)
               ?.required === true,
           group: 'input',
-          props: comp.props as Record<string, unknown>,
+          props: comp.props as unknown as Record<string, unknown>,
           validation: comp.validation as unknown as Record<string, unknown>,
           order,
         };

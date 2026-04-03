@@ -323,6 +323,11 @@ export const formSelectors = {
   componentById: (instanceId: InstanceID) => (s: FormStore) =>
     s.components[instanceId] ?? null,
   pageById: (pageId: PageID) => (s: FormStore) => s.pages[pageId] ?? null,
+
+  selectedComponents: (s: FormStore) =>
+    s.selectedComponentIds
+      .map((id) => s.components[id])
+      .filter((c): c is AnyFormComponent => c !== undefined),
 };
 
 // ------------------------------------------------------------------------------------------------

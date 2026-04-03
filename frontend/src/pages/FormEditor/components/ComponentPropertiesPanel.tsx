@@ -18,10 +18,10 @@ function supportsOptionShuffle(props: unknown): boolean {
   return optionLike;
 }
 
-function supportsHidden(props: unknown): boolean {
-  if (!props || typeof props !== 'object') return false;
-  return 'hidden' in (props as object);
-}
+// function supportsHidden(props: unknown): boolean {
+//   if (!props || typeof props !== 'object') return false;
+//   return 'hidden' in (props as object);
+// }
 
 export function ComponentPropertiesPanel() {
   const activeComponentId = useFormStore((s) => s.activeComponentId);
@@ -117,7 +117,7 @@ export function ComponentPropertiesPanel() {
         </div>
       )}
 
-      {supportsHidden(component.props) && (
+      {/* {supportsHidden(component.props) && (
         <div className="border-t border-border pt-3">
           <label className="flex cursor-pointer items-center justify-between text-xs text-muted-foreground">
             <span className="flex items-center gap-1.5">
@@ -140,7 +140,30 @@ export function ComponentPropertiesPanel() {
             </p>
           )}
         </div>
-      )}
+      )} */}
+
+      <div className="border-t border-border pt-3">
+        <label className="flex cursor-pointer items-center justify-between text-xs text-muted-foreground">
+          <span className="flex items-center gap-1.5">
+            <EyeOff className="h-3 w-3" />
+            Hidden by default
+          </span>
+          <input
+            type="checkbox"
+            checked={hiddenByDefault}
+            onChange={(e) =>
+              updateComponentProps(component.instanceId, {
+                hidden: e.target.checked,
+              })
+            }
+          />
+        </label>
+        {hiddenByDefault && (
+          <p className="mt-1 text-[10px] text-muted-foreground/50">
+            This component starts hidden. Use Logic rules to show it.
+          </p>
+        )}
+      </div>
 
       {/* Instance ID (debug) */}
       <div className="mt-auto border-t border-border pt-3">
