@@ -39,7 +39,7 @@ export function ComponentPropertiesPanel() {
   const SettingsRenderer = useMemo(() => {
     if (!component) return null;
     return getComponentPropsRenderer(component.id);
-  }, [component?.id]);
+  }, [component]);
 
   // Nothing selected
   if (!component && !activePageId) {
