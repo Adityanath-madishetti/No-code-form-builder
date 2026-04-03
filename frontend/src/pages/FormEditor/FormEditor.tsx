@@ -396,7 +396,7 @@ export default function FormEditor() {
                   }`}
                 >
                   <Settings2 className="h-3 w-3" />
-                  Form Properties
+                  Settings
                 </button>
                 <button
                   onClick={() => setEditorView('canvas')}
@@ -407,7 +407,21 @@ export default function FormEditor() {
                   }`}
                 >
                   <LayoutGrid className="h-3 w-3" />
-                  Form
+                  Builder
+                </button>
+                <button
+                  onClick={() => {
+                    setActivePanel(null);
+                    setEditorView('theming');
+                  }}
+                  className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors ${
+                    editorView === 'theming'
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  }`}
+                >
+                  <Palette className="h-3 w-3" />
+                  Themes
                 </button>
                 <button
                   onClick={() => setEditorView('logic')}
@@ -432,21 +446,7 @@ export default function FormEditor() {
                   }`}
                 >
                   <GitBranch className="h-3 w-3" />
-                  Workflow
-                </button>
-                <button
-                  onClick={() => {
-                    setActivePanel(null);
-                    setEditorView('theming');
-                  }}
-                  className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors ${
-                    editorView === 'theming'
-                      ? 'bg-primary text-primary-foreground shadow-sm'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                  }`}
-                >
-                  <Palette className="h-3 w-3" />
-                  Theme
+                  Workflows
                 </button>
               </div>
 
