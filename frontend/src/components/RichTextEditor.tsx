@@ -534,7 +534,7 @@ export const RichTextEditor = ({
         if (target.closest('a')) {
           event.preventDefault();
           // We return false so ProseMirror still moves the text cursor into the link for editing
-          return false; 
+          return false;
         }
         return false;
       },
@@ -543,7 +543,7 @@ export const RichTextEditor = ({
         w-full rounded-md border border-input bg-card 
         px-4 py-3 text-sm placeholder:text-muted-foreground 
         focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 
-        min-h-[100px] cursor-text
+        min-h-[100px] cursor-text rounded-none
         ${sharedProseClasses}
         `
           .replace(/\s+/g, ' ')

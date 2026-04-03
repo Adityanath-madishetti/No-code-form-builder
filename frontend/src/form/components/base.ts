@@ -53,25 +53,25 @@
  * Acts as the canonical source of truth for component type IDs.
  */
 export const ComponentIDs = {
-  // ── Existing ──
-  TextBox: 'Textbox',
-  SingleLineInput: 'Input',
-  Radio: 'Radio',
-  Checkbox: 'Checkbox',
-  Dropdown: 'Dropdown',
-
   // ── Layout ──
+  TextBox: 'Textbox',
   Header: 'Header',
   LineDivider: 'LineDivider',
   ColumnLayout: 'ColumnLayout',
 
   // ── Text Inputs ──
+  SingleLineInput: 'Input',
   MultiLineInput: 'MultiLineInput',
   Email: 'Email',
   Phone: 'Phone',
   Number: 'Number',
   Decimal: 'Decimal',
   URL: 'URL',
+
+  // ── Selection ──
+  Radio: 'Radio',
+  Checkbox: 'Checkbox',
+  Dropdown: 'Dropdown',
 
   // ── Date & Time ──
   Date: 'Date',
@@ -272,4 +272,42 @@ export interface Form {
   access: FormAccess;
   settings: FormSettings;
   pages: PageID[];
+}
+
+//------------------------------------------------------------------------------------------------
+// Component Props and Validation
+//------------------------------------------------------------------------------------------------
+
+export interface BasicValidation {
+  required: boolean;
+}
+
+export interface TextValidation extends BasicValidation {
+  minLength?: number;
+  maxLength?: number;
+  pattern?: string;
+}
+
+export interface NumericValidation extends BasicValidation {
+  min?: number;
+  max?: number;
+}
+
+export interface NoValidation {
+  proxy: number; // placeholder
+}
+
+// ── Shared props base ──
+export interface BaseComponentProps {
+  hidden: boolean; // Hidden by default = false
+}
+
+export function createComponent<T extends ComponentID, P, V>(
+  id: T,
+  instanceId: string,
+  metadata: ComponentMetadata,
+  props: P,
+  validation: V
+): FormComponent<T, P, V> {
+  return { id, instanceId, metadata, children: [], props, validation };
 }

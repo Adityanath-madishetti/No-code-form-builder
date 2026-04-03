@@ -5,84 +5,16 @@
  * Renderers are handled separately via the generic PlaceholderRenderer.
  */
 
-import type { ComponentMetadata, FormComponent, ComponentID } from './base';
-import { ComponentIDs } from './base';
-
-// ── Generic create helper ──
-function createComponent<T extends ComponentID, P, V>(
-  id: T,
-  instanceId: string,
-  metadata: ComponentMetadata,
-  props: P,
-  validation: V
-): FormComponent<T, P, V> {
-  return { id, instanceId, metadata, children: [], props, validation };
-}
+import type { ComponentMetadata } from './base';
+import { ComponentIDs, createComponent } from './base';
 
 // ── Shared validation types ──
-export interface BasicValidation {
-  required: boolean;
-}
 
-export interface TextValidation extends BasicValidation {
-  minLength?: number;
-  maxLength?: number;
-  pattern?: string;
-}
-
-export interface NumericValidation extends BasicValidation {
-  min?: number;
-  max?: number;
-}
-
-export interface NoValidation {
-  proxy: number; // placeholder
-}
-
-// ── Shared props base ──
-export interface BaseComponentProps {
-  hidden: boolean; // Hidden by default = false
-}
+import type { BaseComponentProps, BasicValidation, NoValidation } from './base';
 
 // ========================================================================================
 //  LAYOUT COMPONENTS
 // ========================================================================================
-
-// ── Header ──
-export interface HeaderProps extends BaseComponentProps {
-  text: string;
-  level: 'h1' | 'h2' | 'h3' | 'h4';
-}
-export const createHeaderComponent = (
-  instanceId: string,
-  metadata: ComponentMetadata,
-  props?: Partial<HeaderProps>
-) =>
-  createComponent(
-    ComponentIDs.Header,
-    instanceId,
-    metadata,
-    { text: 'Heading', level: 'h2' as const, hidden: false, ...props },
-    { proxy: 0 } as NoValidation
-  );
-
-// ── Line Divider ──
-export interface LineDividerProps extends BaseComponentProps {
-  style: 'solid' | 'dashed' | 'dotted';
-  thickness: number;
-}
-export const createLineDividerComponent = (
-  instanceId: string,
-  metadata: ComponentMetadata,
-  props?: Partial<LineDividerProps>
-) =>
-  createComponent(
-    ComponentIDs.LineDivider,
-    instanceId,
-    metadata,
-    { style: 'solid' as const, thickness: 1, hidden: false, ...props },
-    { proxy: 0 } as NoValidation
-  );
 
 // ── Column Layout ──
 export interface ColumnLayoutProps extends BaseComponentProps {
@@ -107,254 +39,26 @@ export const createColumnLayoutComponent = (
 // ========================================================================================
 
 // ── Single-line Text (Input) ──
-export interface InputProps extends BaseComponentProps {
-  type?: string;
-  questionText?: string;
-  placeholder?: string;
-  defaultValue?: string;
-}
-
-// export interface InputValidation {
-//   required: boolean;
-//   minLength: number;
-//   maxLength?: number;
-// }
-
-export const createInputComponent = (
-  instanceId: string,
-  metadata: ComponentMetadata,
-  props: InputProps,
-  validation: TextValidation
-): FormComponent<'Input', InputProps, TextValidation> => ({
-  id: ComponentIDs.SingleLineInput,
-  instanceId,
-  metadata,
-  children: [],
-  props,
-  validation,
-});
 
 // ── Multi-line Text ──
-export interface MultiLineInputProps extends BaseComponentProps {
-  questionText: string;
-  placeholder: string;
-  defaultValue: string;
-  rows: number;
-}
-export const createMultiLineInputComponent = (
-  instanceId: string,
-  metadata: ComponentMetadata,
-  props?: Partial<MultiLineInputProps>
-) =>
-  createComponent(
-    ComponentIDs.MultiLineInput,
-    instanceId,
-    metadata,
-    {
-      questionText: '<p>Enter your response</p>',
-      placeholder: '',
-      defaultValue: '',
-      rows: 4,
-      hidden: false,
-      ...props,
-    },
-    { required: false, minLength: 0 } as TextValidation
-  );
 
 // ── Email ──
-export interface EmailProps extends BaseComponentProps {
-  questionText: string;
-  placeholder: string;
-  defaultValue: string;
-}
-export const createEmailComponent = (
-  instanceId: string,
-  metadata: ComponentMetadata,
-  props?: Partial<EmailProps>
-) =>
-  createComponent(
-    ComponentIDs.Email,
-    instanceId,
-    metadata,
-    {
-      questionText: '<p>Email address</p>',
-      placeholder: 'user@example.com',
-      defaultValue: '',
-      hidden: false,
-      ...props,
-    },
-    {
-      required: false,
-      pattern: '^[^@]+@[^@]+\\.[^@]+$',
-    } as TextValidation
-  );
 
 // ── Phone ──
-export interface PhoneProps extends BaseComponentProps {
-  questionText: string;
-  placeholder: string;
-  defaultValue: string;
-  countryCode: string;
-}
-export const createPhoneComponent = (
-  instanceId: string,
-  metadata: ComponentMetadata,
-  props?: Partial<PhoneProps>
-) =>
-  createComponent(
-    ComponentIDs.Phone,
-    instanceId,
-    metadata,
-    {
-      questionText: '<p>Phone number</p>',
-      placeholder: '+1 (555) 000-0000',
-      defaultValue: '',
-      countryCode: '+1',
-      hidden: false,
-      ...props,
-    },
-    { required: false } as TextValidation
-  );
 
 // ── Number ──
-export interface NumberProps extends BaseComponentProps {
-  questionText: string;
-  placeholder: string;
-  defaultValue: string;
-}
-export const createNumberComponent = (
-  instanceId: string,
-  metadata: ComponentMetadata,
-  props?: Partial<NumberProps>
-) =>
-  createComponent(
-    ComponentIDs.Number,
-    instanceId,
-    metadata,
-    {
-      questionText: '<p>Enter a number</p>',
-      placeholder: '0',
-      defaultValue: '',
-      hidden: false,
-      ...props,
-    },
-    {
-      required: false,
-      hidden: false,
-      min: undefined,
-      max: undefined,
-    } as NumericValidation
-  );
 
 // ── Decimal ──
-export interface DecimalProps extends BaseComponentProps {
-  questionText: string;
-  placeholder: string;
-  defaultValue: string;
-  precision: number;
-}
-export const createDecimalComponent = (
-  instanceId: string,
-  metadata: ComponentMetadata,
-  props?: Partial<DecimalProps>
-) =>
-  createComponent(
-    ComponentIDs.Decimal,
-    instanceId,
-    metadata,
-    {
-      questionText: '<p>Enter a decimal value</p>',
-      placeholder: '0.00',
-      defaultValue: '',
-      precision: 2,
-      hidden: false,
-      ...props,
-    },
-    {
-      required: false,
-      min: undefined,
-      max: undefined,
-    } as NumericValidation
-  );
 
 // ── URL ──
-export interface URLProps extends BaseComponentProps {
-  questionText: string;
-  placeholder: string;
-  defaultValue: string;
-}
-export const createURLComponent = (
-  instanceId: string,
-  metadata: ComponentMetadata,
-  props?: Partial<URLProps>
-) =>
-  createComponent(
-    ComponentIDs.URL,
-    instanceId,
-    metadata,
-    {
-      questionText: '<p>Enter a URL</p>',
-      placeholder: 'https://example.com',
-      defaultValue: '',
-      hidden: false,
-      ...props,
-    },
-    { required: false, pattern: '^https?://' } as TextValidation
-  );
 
 // ========================================================================================
 //  DATE & TIME
 // ========================================================================================
 
 // ── Date ──
-export interface DateProps extends BaseComponentProps {
-  questionText: string;
-  placeholder: string;
-  includeTime: boolean;
-}
-export const createDateComponent = (
-  instanceId: string,
-  metadata: ComponentMetadata,
-  props?: Partial<DateProps>
-) =>
-  createComponent(
-    ComponentIDs.Date,
-    instanceId,
-    metadata,
-    {
-      questionText: '<p>Select a date</p>',
-      placeholder: 'YYYY-MM-DD',
-      includeTime: false,
-      hidden: false,
-      ...props,
-    },
-    { required: false } as BasicValidation
-  );
 
 // ── Time ──
-export interface TimeProps extends BaseComponentProps {
-  questionText: string;
-  placeholder: string;
-  format24h: boolean;
-}
-export const createTimeComponent = (
-  instanceId: string,
-  metadata: ComponentMetadata,
-  props?: Partial<TimeProps>
-) =>
-  createComponent(
-    ComponentIDs.Time,
-    instanceId,
-    metadata,
-    {
-      questionText: '<p>Select a time</p>',
-      placeholder: 'HH:MM',
-      format24h: false,
-      hidden: false,
-      ...props,
-    },
-    { required: false } as BasicValidation
-  );
 
 // ========================================================================================
 //  FILE / MEDIA
@@ -418,106 +122,13 @@ export const createImageUploadComponent = (
 //  CHECKBOX
 // ========================================================================================
 
-export interface CheckboxOption {
-  id: string;
-  label: string;
-  value: string;
-}
-
-export interface CheckboxProps extends BaseComponentProps {
-  questionText?: string;
-  options: CheckboxOption[];
-  defaultValues?: string[];
-  layout?: 'vertical' | 'horizontal';
-}
-
-// export interface CheckboxValidation {
-//   required: boolean;
-// }
-
-export const createCheckboxComponent = (
-  instanceId: string,
-  metadata: ComponentMetadata,
-  props: CheckboxProps,
-  validation: BasicValidation
-): FormComponent<'Checkbox', CheckboxProps, BasicValidation> => ({
-  id: ComponentIDs.Checkbox,
-  instanceId,
-  metadata,
-  children: [],
-  props,
-  validation,
-});
-
 // ========================================================================================
 //  DROPDOWN
 // ========================================================================================
 
-export interface DropdownOption {
-  id: string;
-  label: string;
-  value: string;
-}
-
-export interface DropdownProps extends BaseComponentProps {
-  questionText?: string;
-  placeholder?: string;
-  options: DropdownOption[];
-  defaultValue?: string;
-}
-
-// export interface DropdownValidation {
-//   requred: boolean;
-// }
-
-export const createDropdownComponent = (
-  instanceId: string,
-  metadata: ComponentMetadata,
-  props: DropdownProps,
-  validation: BasicValidation
-): FormComponent<'Dropdown', DropdownProps, BasicValidation> => ({
-  id: ComponentIDs.Dropdown,
-  instanceId,
-  metadata,
-  children: [],
-  props,
-  validation,
-});
-
 // ========================================================================================
 //  RADIO
 // ========================================================================================
-
-export interface RadioOption {
-  id: string;
-  label: string;
-  value: string;
-}
-
-export interface RadioProps extends BaseComponentProps {
-  questionText?: string;
-  options: RadioOption[];
-  defaultValue?: string;
-  layout?: 'vertical' | 'horizontal';
-}
-
-// export interface RadioValidation {
-//   required: boolean;
-// }
-
-export const createRadioComponent = (
-  instanceId: string,
-  metadata: ComponentMetadata,
-  props: RadioProps,
-  validation: BasicValidation
-): FormComponent<'Radio', RadioProps, BasicValidation> => ({
-  id: ComponentIDs.Radio,
-  instanceId,
-  metadata,
-  children: [],
-  props,
-  validation,
-});
 
 // ========================================================================================
 //  SELECTION / GRIDS

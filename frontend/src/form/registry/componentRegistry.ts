@@ -11,48 +11,132 @@ import { ComponentIDs } from '../components/base';
 import type { ComponentID, RendererProps } from '../components/base';
 import type { FormComponent, SerializedComponent } from '../components/base';
 
-// ── Existing renderers (the 5 original components) ──
-import { createTextBoxComponent } from '../components/textBox';
-import type { TextBoxProps, TextBoxValidation } from '../components/textBox';
-import {
-  TextBoxComponentPropsRenderer,
-  TextBoxComponentRenderer,
-} from '../components/TextBoxRenderer';
-
-// ── Generic renderer for settings (still placeholder) ──
 import { PlaceholderSettingsRenderer } from '../components/PlaceholderRenderer';
 
-// ── New component renderers ──
+import type {
+  BasicValidation,
+  TextValidation,
+  NumericValidation,
+  NoValidation,
+} from '../components/base';
+
+// ------------------------------------------------------------------------------------------------
+//
+//
+// ------------------------------------------------------------------------------------------------
 import {
+  type TextBoxProps,
+  type TextBoxValidation,
+  createTextBoxComponent,
+  TextBoxComponentRenderer,
+  TextBoxComponentPropsRenderer,
+} from '../components/comps/TextBox';
+
+import {
+  type HeaderProps,
+  createHeaderComponent,
   HeaderRenderer,
   HeaderPropsRenderer,
+} from '../components/comps/Header';
+
+import {
+  type LineDividerProps,
+  createLineDividerComponent,
   LineDividerRenderer,
   LineDividerPropsRenderer,
-  ColumnLayoutRenderer,
-  InputComponentRenderer,
-  InputComponentPropsRenderer,
-  CheckboxComponentRenderer,
-  CheckboxComponentPropsRenderer,
-  DropdownComponentRenderer,
-  DropdownComponentPropsRenderer,
-  RadioComponentRenderer,
-  RadioComponentPropsRenderer,
+} from '../components/comps/LineDivider';
+
+import {
+  type SingleLineInputProps,
+  createSingleLineInputComponent,
+  SingleLineInputRenderer,
+  SingleLineInputPropsRenderer,
+} from '../components/comps/SingleLineInput';
+
+import {
+  type MultiLineInputProps,
+  createMultiLineInputComponent,
   MultiLineInputRenderer,
   MultiLineInputPropsRenderer,
+} from '../components/comps/MultiLineInput';
+
+import {
+  type EmailProps,
+  createEmailComponent,
   EmailRenderer,
   EmailPropsRenderer,
+} from '../components/comps/Email';
+
+import {
+  type PhoneProps,
+  createPhoneComponent,
   PhoneRenderer,
   PhonePropsRenderer,
+} from '../components/comps/Phone';
+
+import {
+  type NumberProps,
+  createNumberComponent,
   NumberRenderer,
   NumberPropsRenderer,
+} from '../components/comps/Number';
+
+import {
+  type DecimalProps,
+  createDecimalComponent,
   DecimalRenderer,
   DecimalPropsRenderer,
+} from '../components/comps/Decimal';
+
+import {
+  type URLProps,
+  createURLComponent,
   URLRenderer,
   URLPropsRenderer,
+} from '../components/comps/URL';
+
+import {
+  type DateProps,
+  createDateComponent,
   DateRenderer,
   DatePropsRenderer,
+} from '../components/comps/Date';
+
+import {
+  type TimeProps,
+  createTimeComponent,
   TimeRenderer,
   TimePropsRenderer,
+} from '../components/comps/Time';
+
+import {
+  type CheckboxProps,
+  createCheckboxComponent,
+  CheckboxComponentRenderer,
+  CheckboxComponentPropsRenderer,
+} from '../components/comps/Checkbox';
+
+import {
+  type DropdownProps,
+  createDropdownComponent,
+  DropdownComponentRenderer,
+  DropdownComponentPropsRenderer,
+} from '../components/comps/Dropdown';
+
+import {
+  type RadioProps,
+  createRadioComponent,
+  RadioComponentRenderer,
+  RadioComponentPropsRenderer,
+} from '../components/comps/Radio';
+
+// ------------------------------------------------------------------------------------------------
+//
+//
+// ------------------------------------------------------------------------------------------------
+
+import {
+  ColumnLayoutRenderer,
   FileUploadRenderer,
   ImageUploadRenderer,
   SingleChoiceGridRenderer,
@@ -79,21 +163,7 @@ import {
 
 // ── New component factories ──
 import {
-  createHeaderComponent,
-  createLineDividerComponent,
   createColumnLayoutComponent,
-  createMultiLineInputComponent,
-  createInputComponent,
-  createCheckboxComponent,
-  createDropdownComponent,
-  createRadioComponent,
-  createEmailComponent,
-  createPhoneComponent,
-  createNumberComponent,
-  createDecimalComponent,
-  createURLComponent,
-  createDateComponent,
-  createTimeComponent,
   createFileUploadComponent,
   createImageUploadComponent,
   createSingleChoiceGridComponent,
@@ -113,25 +183,7 @@ import {
 } from '../components/allComponents';
 
 import type {
-  BasicValidation,
-  TextValidation,
-  NumericValidation,
-  NoValidation,
-  HeaderProps,
-  LineDividerProps,
   ColumnLayoutProps,
-  MultiLineInputProps,
-  InputProps,
-  CheckboxProps,
-  DropdownProps,
-  RadioProps,
-  EmailProps,
-  PhoneProps,
-  NumberProps,
-  DecimalProps,
-  URLProps,
-  DateProps,
-  TimeProps,
   FileUploadProps,
   ImageUploadProps,
   SingleChoiceGridProps,
@@ -154,7 +206,7 @@ import type {
 
 export type ComponentPropsMap = {
   [ComponentIDs.TextBox]: TextBoxProps;
-  [ComponentIDs.SingleLineInput]: InputProps;
+  [ComponentIDs.SingleLineInput]: SingleLineInputProps;
   [ComponentIDs.Radio]: RadioProps;
   [ComponentIDs.Checkbox]: CheckboxProps;
   [ComponentIDs.Dropdown]: DropdownProps;
@@ -349,11 +401,11 @@ const registry: Registry = {
       category: 'Text Inputs',
     },
     renderers: {
-      main: InputComponentRenderer,
-      settings: InputComponentPropsRenderer,
+      main: SingleLineInputRenderer,
+      settings: SingleLineInputPropsRenderer,
     },
     create: (instanceId) =>
-      createInputComponent(
+      createSingleLineInputComponent(
         instanceId,
         { label: 'Input Field' },
         {
@@ -365,7 +417,7 @@ const registry: Registry = {
         { required: false, minLength: 0 }
       ),
     deserialize: (json) =>
-      createInputComponent(
+      createSingleLineInputComponent(
         json.instanceId,
         json.metadata,
         json.props,
@@ -819,6 +871,7 @@ export interface CatalogEntry {
 const ENABLED_CATALOG_IDS: Set<string> = new Set([
   // Layout
   ComponentIDs.Header,
+  ComponentIDs.TextBox,
   ComponentIDs.LineDivider,
   // ComponentIDs.ColumnLayout,
 
