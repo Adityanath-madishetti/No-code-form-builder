@@ -3,6 +3,8 @@
  * Right-side properties panel that shows settings for the selected component.
  * Auto-shows when a component is selected.
  */
+/* eslint-disable react-hooks/static-components */
+
 import { useFormStore } from '@/form/store/formStore';
 import { useShallow } from 'zustand/react/shallow';
 import { getComponentPropsRenderer } from '@/form/registry/componentRegistry';
@@ -21,6 +23,7 @@ function supportsOptionShuffle(props: unknown): boolean {
 export function ComponentPropertiesPanel() {
   const activeComponentId = useFormStore((s) => s.activeComponentId);
   const activePageId = useFormStore((s) => s.activePageId);
+  const updateComponentProps = useFormStore((s) => s.updateComponentProps);
   const component = useFormStore(
     useShallow((s) =>
       activeComponentId ? s.components[activeComponentId] : null
@@ -52,7 +55,6 @@ export function ComponentPropertiesPanel() {
   if (!component) return null;
 
   const SettingsRenderer = getComponentPropsRenderer(component.id);
-  const updateComponentProps = useFormStore((s) => s.updateComponentProps);
   const optionShuffleEnabled =
     ((component.props as Record<string, unknown>)?.shuffleOptions as
       | boolean
@@ -78,7 +80,6 @@ export function ComponentPropertiesPanel() {
       {/* Component settings renderer */}
       {SettingsRenderer && (
         <div className="border-t border-border pt-3">
-          {/* eslint-disable-next-line react-hooks/static-components */}
           <SettingsRenderer
             instanceId={component.instanceId}
             metadata={component.metadata}

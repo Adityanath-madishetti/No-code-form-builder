@@ -2,7 +2,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedLayout from "./components/layout/ProtectedLayout";
 import Login from "./pages/Login/page";
-import Home from "./pages/Home";
+import Dashboard from "./pages/Dashboard";
 import FormEditor from "./pages/FormEditor/FormEditor";
 import FormFill from "./pages/FormFill/FormFill";
 import FormPreview from "./pages/FormFill/FormPreview";
@@ -29,7 +29,7 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Home />,
+        element: <Dashboard />,
       },
       {
         path: "keyboard-shortcuts",

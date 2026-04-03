@@ -85,6 +85,7 @@ function widthStyle(layout?: FormThemeLayout): React.CSSProperties {
  * Merges a page-level theme override with the global theme.
  * Page overrides win; nested objects are shallow-merged.
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function mergeThemes(
   global: FormTheme | null,
   pageOverride?: Partial<FormTheme>
@@ -159,7 +160,7 @@ export function FormThemeProvider({
     if (theme?.primaryColor) vars['--form-primary'] = theme.primaryColor;
     if (theme?.textColor) vars['--form-text'] = theme.textColor;
     return vars as React.CSSProperties;
-  }, [theme?.primaryColor, theme?.textColor]);
+  }, [theme]);
 
   return (
     <div
