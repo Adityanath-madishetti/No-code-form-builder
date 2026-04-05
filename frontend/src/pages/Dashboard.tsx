@@ -502,10 +502,9 @@ export default function Dashboard() {
               </div>
             ) : null}
 
-            {/* All panels rendered in same grid cell; inactive = invisible but still contributing height */}
-            <div className="grid [&>*]:[grid-area:1/1]">
-              {!loading && (
-                <div className={bottomView !== 'myForms' ? 'invisible pointer-events-none' : undefined}>
+            <div>
+              {!loading && bottomView === 'myForms' && (
+                <div>
                   <>
                     <div className="mb-5 flex min-h-[1.75rem] items-center gap-1.5">
                       <div className="relative min-w-0 flex-1 max-w-xl">
@@ -738,8 +737,8 @@ export default function Dashboard() {
                 </div>
               )}
 
-              {!loading && (
-                <div className={bottomView !== 'sharedForms' ? 'invisible pointer-events-none' : undefined}>
+              {!loading && bottomView === 'sharedForms' && (
+                <div>
                   <>
                     <div className="mb-5 flex min-h-[1.75rem] items-center gap-1.5">
                       <div className="relative min-w-0 flex-1 max-w-xl">
@@ -993,8 +992,8 @@ export default function Dashboard() {
                 </div>
               )}
 
-              {!loading && (
-                <div className={bottomView !== 'mySubmissions' ? 'invisible pointer-events-none' : undefined}>
+              {!loading && bottomView === 'mySubmissions' && (
+                <div>
                   <>
                     <div className="mb-5 flex min-h-[1.75rem] items-center gap-1.5">
                       <div className="relative min-w-0 flex-1 max-w-xl">
