@@ -15,7 +15,9 @@ import { useFormStore } from '@/form/store/formStore';
 
 interface WorkspacesProps {
   editorView: 'canvas' | 'logic' | 'workflow' | 'formProperties' | 'theming';
-  setEditorView: (view: 'canvas' | 'logic' | 'workflow' | 'formProperties' | 'theming') => void;
+  setEditorView: (
+    view: 'canvas' | 'logic' | 'workflow' | 'formProperties' | 'theming'
+  ) => void;
   setActivePanel: (panel: null) => void;
   logicActiveRuleId: string | null;
   logicActiveFormulaId: string | null;
@@ -64,7 +66,7 @@ export function Workspaces({
           <LayoutGrid className="h-3 w-3" />
           Canvas
         </button>
-        <button
+        {/* <button
           onClick={() => {
             setActivePanel(null);
             setEditorView('theming');
@@ -77,7 +79,7 @@ export function Workspaces({
         >
           <Palette className="h-3 w-3" />
           Themes
-        </button>
+        </button> */}
         <button
           onClick={() => setEditorView('logic')}
           className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors ${
@@ -92,7 +94,7 @@ export function Workspaces({
             <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
           )}
         </button>
-        <button
+        {/* <button
           onClick={() => setEditorView('workflow')}
           className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors ${
             editorView === 'workflow'
@@ -102,7 +104,7 @@ export function Workspaces({
         >
           <GitBranch className="h-3 w-3" />
           Workflow
-        </button>
+        </button> */}
         <button
           onClick={() => setEditorView('formProperties')}
           className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors ${
@@ -117,14 +119,14 @@ export function Workspaces({
       </div>
 
       <div
-        className="flex items-center gap-1 will-change-transform"
-        style={{
-          transform: `translateX(-${
-            (showProperties ? (rightWidth as number) : 0) +
-            (showDebug ? (debugWidth as number) : 0)
-          }px)`,
-          transition: 'transform 100ms ease-out',
-        }}
+        className="flex items-center gap-1"
+        // style={{
+        //   transform: `translateX(-${
+        //     (showProperties ? (rightWidth as number) : 0) +
+        //     (showDebug ? (debugWidth as number) : 0)
+        //   }px)`,
+        //   transition: 'transform 100ms ease-out',
+        // }}
       >
         {/* Dark / Light toggle */}
         <button
@@ -139,16 +141,13 @@ export function Workspaces({
               ? 'Switch to Light Mode'
               : 'Switch to Dark Mode'
           }
-          className="group flex h-7 items-center gap-0 rounded-sm border border-border bg-background px-1.5 text-muted-foreground shadow-sm transition-all duration-300 hover:gap-1 hover:bg-muted hover:px-2 hover:text-foreground"
+          className="group flex h-7 items-center gap-0 rounded-sm border border-border bg-background px-1.5 text-muted-foreground shadow-sm transition-all duration-300 hover:gap-1 hover:bg-muted hover:text-foreground"
         >
           {document.documentElement.classList.contains('dark') ? (
             <Sun className="h-3 w-3" />
           ) : (
             <Moon className="h-3 w-3" />
           )}
-          <span className="max-w-0 overflow-hidden text-[11px] font-medium whitespace-nowrap transition-all duration-300 group-hover:max-w-[60px]">
-            {editorTheme === 'dark' ? 'Light' : 'Dark'}
-          </span>
         </button>
         <button
           onClick={handleSave}

@@ -42,13 +42,10 @@ export function SingleLineInputRenderer({
   props,
   validation,
 }: RendererProps<SingleLineInputProps, TextValidation>) {
-  // 1. ALL hooks must be called at the top level
   const formMode = useFormMode();
   const formContext = useFormContext();
 
-  // 2. Early returns happen AFTER the hooks
   if (formMode === 'view' && formContext) {
-    // 3. Safeguard against the "TypeError: (intermediate value)() is null" crash
     if (!formContext) {
       console.error(
         'SingleLineInputRenderer is not wrapped in a FormProvider.'
@@ -56,7 +53,6 @@ export function SingleLineInputRenderer({
       return null;
     }
 
-    // 4. Safely destructure now that we know we have context
     const {
       register,
       formState: { errors },
@@ -92,7 +88,6 @@ export function SingleLineInputRenderer({
               : undefined,
           })}
         />
-        {/* 3. Manual Error Rendering */}
         {errors[instanceId] && (
           <p className="mt-1 text-sm text-red-500">
             {errors[instanceId]?.message as string}

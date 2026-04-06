@@ -104,7 +104,6 @@ export const useRuntimeFormStore = create<RuntimeFormStore>()(
     setComponentVisibility: (instanceId, isVisible) =>
       set((state) => {
         if (!state.renderState) return;
-        // Iterate through all pages to find and update the component
         Object.values(state.renderState.PageStates).forEach((pageState) => {
           if (pageState.ComponentStates[instanceId]) {
             pageState.ComponentStates[instanceId].isHidden = !isVisible;

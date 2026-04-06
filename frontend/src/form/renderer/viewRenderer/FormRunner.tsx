@@ -171,16 +171,16 @@ export function FormRunner() {
               }
 
               return (
-                <div
-                  key={comp.componentId}
-                  className="rounded-md border bg-gray-50 p-4 shadow-sm"
-                >
-                  <p className="text-sm font-medium text-gray-700">
-                    Label: <span className="font-bold">{comp.label}</span>
-                  </p>
-                  <p className="mb-4 text-xs text-gray-500">
-                    Instance ID: {comp.componentId} | Type: {comp.componentType}
-                  </p>
+                // <div
+                //   key={comp.componentId}
+                //   className="rounded-md border bg-gray-50 p-4 shadow-sm"
+                // >
+                //   <p className="text-sm font-medium text-gray-700">
+                //     Label: <span className="font-bold">{comp.label}</span>
+                //   </p>
+                //   <p className="mb-4 text-xs text-gray-500">
+                //     Instance ID: {comp.componentId} | Type: {comp.componentType}
+                //   </p>
 
                   <Renderer
                     metadata={null}
@@ -188,7 +188,7 @@ export function FormRunner() {
                     validation={comp.validation}
                     instanceId={comp.componentId}
                   />
-                </div>
+                // </div>
               );
             })
           )}

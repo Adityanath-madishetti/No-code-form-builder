@@ -5,9 +5,7 @@ import { api } from '@/lib/api';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
-import {
-  FormRunner,
-} from '@/form/renderer/viewRenderer/FormRunner';
+import { FormRunner } from '@/form/renderer/viewRenderer/FormRunner';
 
 export default function FormSubmit() {
   const { formId } = useParams<{ formId: string }>();
@@ -15,7 +13,7 @@ export default function FormSubmit() {
   const [globalFormLoading, setGlobalFormLoading] = useState(true);
 
   const { initRuntimeForm } = useRuntimeFormStore();
-  
+
   useEffect(() => {
     if (!formId) return;
     api
@@ -30,5 +28,9 @@ export default function FormSubmit() {
       .finally(() => setGlobalFormLoading(false));
   }, [formId, initRuntimeForm]);
 
-  return <FormRunner></FormRunner>;
+  return (
+    <div className='mx-auto max-w-3xl'>
+      <FormRunner></FormRunner>
+    </div>
+  );
 }
