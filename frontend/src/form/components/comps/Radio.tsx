@@ -11,9 +11,12 @@ import type { BaseComponentProps } from '../base';
 import { inp, lbl, Card, Q } from '../ComponentRender.Helper';
 import { Plus, Trash2 } from 'lucide-react';
 
+import { useFormContext } from 'react-hook-form';
+import { useFormMode } from '@/form/context/FormModeContext';
+
 export interface RadioOption {
   id: string;
-  label: string;
+  // label: string;
   value: string;
 }
 
@@ -23,10 +26,6 @@ export interface RadioProps extends BaseComponentProps {
   defaultValue?: string;
   layout?: 'vertical' | 'horizontal';
 }
-
-// export interface RadioValidation {
-//   required: boolean;
-// }
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const createRadioComponent = (
@@ -46,10 +45,64 @@ export const createRadioComponent = (
 export function RadioComponentRenderer({
   props,
   instanceId,
+  validation,
 }: RendererProps<RadioProps, BasicValidation>) {
+  const formMode = useFormMode();
+  const formContext = useFormContext();
   const isHorizontal = props.layout === 'horizontal';
+
+  // --- View Mode (Live Form with Validation) ---
+  if (formMode === 'view' && formContext) {
+    if (!formContext) {
+      console.error('RadioComponentRenderer is not wrapped in a FormProvider.');
+      return null;
+    }
+
+    const {
+      register,
+      formState: { errors },
+    } = formContext;
+
+    return (
+      <Card className="rounded-none shadow-none">
+        <Q html={props.questionText} />
+        <div
+          className={`flex ${
+            isHorizontal ? 'flex-row flex-wrap gap-4' : 'flex-col gap-2'
+          }`}
+        >
+          {(props.options || []).map((option) => (
+            <label
+              key={option.id}
+              className="flex cursor-pointer items-center gap-2 text-sm text-foreground"
+            >
+              <input
+                type="radio"
+                value={option.value}
+                defaultChecked={props.defaultValue === option.value}
+                className="accent-primary"
+                {...register(instanceId, {
+                  required: validation?.required
+                    ? 'This field is required'
+                    : false,
+                })}
+              />
+              {option.value}
+            </label>
+          ))}
+        </div>
+        {errors[instanceId] && (
+          <p className="mt-1 text-sm text-red-500">
+            {errors[instanceId]?.message as string}
+          </p>
+        )}
+      </Card>
+    );
+  }
+
+  // --- Builder Mode (Static/Preview) ---
   return (
-    <Card>
+    <Card className="rounded-none shadow-none">
       <Q html={props.questionText} />
       <div
         className={`flex ${
@@ -68,7 +121,7 @@ export function RadioComponentRenderer({
               defaultChecked={props.defaultValue === option.value}
               className="accent-primary"
             />
-            {option.label}
+            {option.value}
           </label>
         ))}
       </div>
@@ -79,14 +132,16 @@ export function RadioComponentRenderer({
 export function RadioComponentPropsRenderer({
   props,
   instanceId,
+  validation,
 }: RendererProps<RadioProps, BasicValidation>) {
   const u = useFormStore((s) => s.updateComponentProps);
+  const uv = useFormStore((s) => s.updateComponentValidation); // Added for validation updates
 
   const handleAddOption = () => {
     const newOption: RadioOption = {
       id: crypto.randomUUID(),
-      label: `Option ${(props.options?.length || 0) + 1}`,
-      value: `option-${(props.options?.length || 0) + 1}`,
+      // label: `Option ${(props.options?.length || 0) + 1}`,
+      value: `Option ${(props.options?.length || 0) + 1}`,
     };
     u(instanceId, { options: [...(props.options || []), newOption] });
   };
@@ -132,14 +187,14 @@ export function RadioComponentPropsRenderer({
         </div>
         {(props.options || []).map((option) => (
           <div key={option.id} className="flex items-center gap-1.5">
-            <input
+            {/* <input
               placeholder="Label"
               value={option.label}
               onChange={(e) =>
                 handleUpdateOption(option.id, 'label', e.target.value)
               }
               className={inp + ' flex-1'}
-            />
+            /> */}
             <input
               placeholder="Value"
               value={option.value}
@@ -180,7 +235,7 @@ export function RadioComponentPropsRenderer({
             <option value="none">None</option>
             {(props.options || []).map((opt) => (
               <option key={opt.id} value={opt.value}>
-                {opt.label}
+                {opt.value}
               </option>
             ))}
           </select>
@@ -201,6 +256,17 @@ export function RadioComponentPropsRenderer({
           </select>
         </div>
       </div>
+
+      {/* Added Required Validation Toggle */}
+      <label className="flex items-center gap-2 text-sm text-foreground">
+        <input
+          type="checkbox"
+          checked={!!validation?.required}
+          onChange={() => uv(instanceId, { required: !validation?.required })}
+          className="accent-primary"
+        />
+        Required
+      </label>
     </div>
   );
 }

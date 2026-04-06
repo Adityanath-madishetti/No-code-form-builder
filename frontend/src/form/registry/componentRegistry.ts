@@ -130,6 +130,34 @@ import {
   RadioComponentPropsRenderer,
 } from '../components/comps/Radio';
 
+import {
+  type RatingScaleProps,
+  createRatingScaleComponent,
+  RatingScaleRenderer,
+  RatingScalePropsRenderer,
+} from '../components/comps/RatingScale';
+
+import {
+  type LinearScaleProps,
+  createLinearScaleComponent,
+  LinearScaleRenderer,
+  LinearScalePropsRenderer,
+} from '../components/comps/LinearScale';
+
+import {
+  type SliderProps,
+  createSliderComponent,
+  SliderRenderer,
+  SliderPropsRenderer,
+} from '../components/comps/Slider';
+
+import {
+  type AddressBlockProps,
+  createAddressBlockComponent,
+  AddressBlockRenderer,
+  AddressBlockPropsRenderer,
+} from '../components/comps/AddressBlock';
+
 // ------------------------------------------------------------------------------------------------
 //
 //
@@ -142,14 +170,6 @@ import {
   SingleChoiceGridRenderer,
   MultiChoiceGridRenderer,
   MatrixTableRenderer,
-  RatingScaleRenderer,
-  RatingScalePropsRenderer,
-  LinearScaleRenderer,
-  LinearScalePropsRenderer,
-  SliderRenderer,
-  SliderPropsRenderer,
-  AddressBlockRenderer,
-  AddressBlockPropsRenderer,
   NameBlockRenderer,
   NameBlockPropsRenderer,
   ColorPickerRenderer,
@@ -169,10 +189,6 @@ import {
   createSingleChoiceGridComponent,
   createMultiChoiceGridComponent,
   createMatrixTableComponent,
-  createRatingScaleComponent,
-  createLinearScaleComponent,
-  createSliderComponent,
-  createAddressBlockComponent,
   createNameBlockComponent,
   createColorPickerComponent,
   createSignatureComponent,
@@ -189,10 +205,6 @@ import type {
   SingleChoiceGridProps,
   MultiChoiceGridProps,
   MatrixTableProps,
-  RatingScaleProps,
-  LinearScaleProps,
-  SliderProps,
-  AddressBlockProps,
   NameBlockProps,
   ColorPickerProps,
   SignatureProps,
@@ -440,11 +452,9 @@ const registry: Registry = {
         instanceId,
         { label: 'Single Choice Question' },
         {
-          questionText: '<p>Select an option</p>',
+          questionText: 'Select an option',
           layout: 'vertical',
-          options: [
-            { id: crypto.randomUUID(), label: 'Option 1', value: 'option-1' },
-          ],
+          options: [{ id: crypto.randomUUID(), value: 'Option 1' }],
           hiddenByDefault: false,
         },
         { required: false }
@@ -477,8 +487,8 @@ const registry: Registry = {
           layout: 'vertical',
           defaultValues: [],
           options: [
-            { id: crypto.randomUUID(), label: 'Option 1', value: 'option-1' },
-            { id: crypto.randomUUID(), label: 'Option 2', value: 'option-2' },
+            { id: crypto.randomUUID(), value: 'Option 1' },
+            { id: crypto.randomUUID(), value: 'Option 2' },
           ],
           hiddenByDefault: false,
         },
@@ -511,8 +521,8 @@ const registry: Registry = {
           questionText: '<p>Please select an option from the list</p>',
           placeholder: 'Select an option',
           options: [
-            { id: crypto.randomUUID(), label: 'Option 1', value: 'option-1' },
-            { id: crypto.randomUUID(), label: 'Option 2', value: 'option-2' },
+            { id: crypto.randomUUID(), value: 'Option 1' },
+            { id: crypto.randomUUID(), value: 'Option 2' },
           ],
           hiddenByDefault: false,
         },

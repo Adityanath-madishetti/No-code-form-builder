@@ -6,13 +6,21 @@ import type {
 } from '../base';
 import { ComponentIDs, createComponent } from '../base';
 
-import type { BaseComponentProps, NoValidation } from '../base';
+import type { BaseComponentProps } from '../base';
 import { inp, lbl, Card, Q } from '../ComponentRender.Helper';
+import { useFormContext } from 'react-hook-form';
+import { useFormMode } from '@/form/context/FormModeContext';
 
 export interface TimeProps extends BaseComponentProps {
   questionText: string;
   placeholder: string;
   format24h: boolean;
+  defaultValue?: string;
+}
+
+export interface TimeValidation extends BasicValidation {
+  minTime?: string;
+  maxTime?: string;
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -26,22 +34,82 @@ export const createTimeComponent = (
     instanceId,
     metadata,
     {
-      questionText: '<p>Select a time</p>',
+      questionText: 'Select a time',
       placeholder: 'HH:MM',
       format24h: false,
+      defaultValue: '',
       hiddenByDefault: false,
       ...props,
     },
-    { required: false } as BasicValidation
+    { 
+      required: false,
+      minTime: undefined,
+      maxTime: undefined,
+    } as TimeValidation
   );
 
 export function TimeRenderer({
+  instanceId,
   props,
-}: RendererProps<TimeProps, BasicValidation>) {
+  validation,
+}: RendererProps<TimeProps, TimeValidation>) {
+  const formMode = useFormMode();
+  const formContext = useFormContext();
+
+  // --- View Mode (Live Form with Validation) ---
+  if (formMode === 'view' && formContext) {
+    if (!formContext) {
+      console.error('TimeRenderer is not wrapped in a FormProvider.');
+      return null;
+    }
+
+    const {
+      register,
+      formState: { errors },
+    } = formContext;
+
+    return (
+      <Card className="rounded-none shadow-none">
+        <Q html={props.questionText} />
+        <input
+          type="time"
+          defaultValue={props.defaultValue}
+          className={inp}
+          {...register(instanceId, {
+            required: validation?.required ? 'This field is required' : false,
+            min: validation?.minTime
+              ? {
+                  value: validation.minTime,
+                  message: `Time must be at or after ${validation.minTime}`,
+                }
+              : undefined,
+            max: validation?.maxTime
+              ? {
+                  value: validation.maxTime,
+                  message: `Time must be at or before ${validation.maxTime}`,
+                }
+              : undefined,
+          })}
+        />
+        {errors[instanceId] && (
+          <p className="mt-1 text-sm text-red-500">
+            {errors[instanceId]?.message as string}
+          </p>
+        )}
+      </Card>
+    );
+  }
+
+  // --- Builder Mode (Static/Preview) ---
   return (
-    <Card>
+    <Card className="rounded-none shadow-none">
       <Q html={props.questionText} />
-      <input type="time" className={inp} />
+      <input
+        type="time"
+        readOnly
+        defaultValue={props.defaultValue}
+        className={inp}
+      />
     </Card>
   );
 }
@@ -49,19 +117,44 @@ export function TimeRenderer({
 export function TimePropsRenderer({
   instanceId,
   props,
-}: RendererProps<TimeProps, NoValidation>) {
+  validation,
+}: RendererProps<TimeProps, TimeValidation>) {
   const u = useFormStore((s) => s.updateComponentProps);
+  const uv = useFormStore((s) => s.updateComponentValidation);
+
   return (
     <div className="space-y-4">
       <div>
-        <label className={lbl}>Placeholder</label>
+        <label className={lbl}>Question Text</label>
         <input
           type="text"
-          value={props.placeholder || ''}
-          onChange={(e) => u(instanceId, { placeholder: e.target.value })}
+          value={props.questionText || ''}
+          onChange={(e) => u(instanceId, { questionText: e.target.value })}
           className={inp}
         />
       </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className={lbl}>Placeholder</label>
+          <input
+            type="text"
+            value={props.placeholder || ''}
+            onChange={(e) => u(instanceId, { placeholder: e.target.value })}
+            className={inp}
+          />
+        </div>
+        <div>
+          <label className={lbl}>Default Value</label>
+          <input
+            type="time"
+            value={props.defaultValue || ''}
+            onChange={(e) => u(instanceId, { defaultValue: e.target.value })}
+            className={inp}
+          />
+        </div>
+      </div>
+
       <label className="flex items-center gap-2 text-sm text-foreground">
         <input
           type="checkbox"
@@ -71,6 +164,46 @@ export function TimePropsRenderer({
         />
         24-hour format
       </label>
+
+      <label className="flex items-center gap-2 text-sm text-foreground">
+        <input
+          type="checkbox"
+          checked={!!validation?.required}
+          onChange={() => uv(instanceId, { required: !validation?.required })}
+          className="accent-primary"
+        />
+        Required
+      </label>
+
+      <div>
+        <label className={lbl}>Minimum Time</label>
+        <input
+          type="time"
+          defaultValue={validation?.minTime ?? ''}
+          onChange={(e) => {
+            const val = e.target.value;
+            uv(instanceId, {
+              minTime: val === '' ? undefined : val,
+            });
+          }}
+          className={inp}
+        />
+      </div>
+
+      <div>
+        <label className={lbl}>Maximum Time</label>
+        <input
+          type="time"
+          defaultValue={validation?.maxTime ?? ''}
+          onChange={(e) => {
+            const val = e.target.value;
+            uv(instanceId, {
+              maxTime: val === '' ? undefined : val,
+            });
+          }}
+          className={inp}
+        />
+      </div>
     </div>
   );
 }

@@ -11,9 +11,11 @@ import type { BaseComponentProps } from '../base';
 import { inp, lbl, Card, Q } from '../ComponentRender.Helper';
 import { Plus, Trash2 } from 'lucide-react';
 
+import { useFormContext } from 'react-hook-form';
+import { useFormMode } from '@/form/context/FormModeContext';
+
 export interface DropdownOption {
   id: string;
-  label: string;
   value: string;
 }
 
@@ -24,17 +26,18 @@ export interface DropdownProps extends BaseComponentProps {
   defaultValue?: string;
 }
 
-// export interface DropdownValidation {
-//   requred: boolean;
-// }
+export interface DropdownValidation extends BasicValidation {
+  minOptionsSelected?: number;
+  maxOptionsSelected?: number;
+}
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const createDropdownComponent = (
   instanceId: string,
   metadata: ComponentMetadata,
   props: DropdownProps,
-  validation: BasicValidation
-): FormComponent<'Dropdown', DropdownProps, BasicValidation> => ({
+  validation: DropdownValidation
+): FormComponent<'Dropdown', DropdownProps, DropdownValidation> => ({
   id: ComponentIDs.Dropdown,
   instanceId,
   metadata,
@@ -44,12 +47,58 @@ export const createDropdownComponent = (
 });
 
 export function DropdownComponentRenderer({
-  // instanceId,
+  instanceId,
   props,
-  // validation,
-}: RendererProps<DropdownProps, BasicValidation>) {
+  validation,
+}: RendererProps<DropdownProps, DropdownValidation>) {
+  const formMode = useFormMode();
+  const formContext = useFormContext();
+
+  // --- View Mode (Live Form with Validation) ---
+  if (formMode === 'view' && formContext) {
+    if (!formContext) {
+      console.error(
+        'DropdownComponentRenderer is not wrapped in a FormProvider.'
+      );
+      return null;
+    }
+
+    const {
+      register,
+      formState: { errors },
+    } = formContext;
+
+    return (
+      <Card className="rounded-none shadow-none">
+        <Q html={props.questionText} />
+        <select
+          defaultValue={props.defaultValue || ''}
+          className={inp}
+          {...register(instanceId, {
+            required: validation?.required ? 'This field is required' : false,
+          })}
+        >
+          <option value="" disabled>
+            {props.placeholder || 'Select an option...'}
+          </option>
+          {(props.options || []).map((option) => (
+            <option key={option.id} value={option.value}>
+              {option.value}
+            </option>
+          ))}
+        </select>
+        {errors[instanceId] && (
+          <p className="mt-1 text-sm text-red-500">
+            {errors[instanceId]?.message as string}
+          </p>
+        )}
+      </Card>
+    );
+  }
+
+  // --- Builder Mode (Static/Preview) ---
   return (
-    <Card>
+    <Card className="rounded-none shadow-none">
       <Q html={props.questionText} />
       <select defaultValue={props.defaultValue || ''} className={inp}>
         <option value="" disabled>
@@ -57,7 +106,7 @@ export function DropdownComponentRenderer({
         </option>
         {(props.options || []).map((option) => (
           <option key={option.id} value={option.value}>
-            {option.label}
+            {option.value}
           </option>
         ))}
       </select>
@@ -68,14 +117,15 @@ export function DropdownComponentRenderer({
 export function DropdownComponentPropsRenderer({
   props,
   instanceId,
+  validation,
 }: RendererProps<DropdownProps, BasicValidation>) {
   const u = useFormStore((s) => s.updateComponentProps);
+  const uv = useFormStore((s) => s.updateComponentValidation);
 
   const handleAddOption = () => {
     const newOption: DropdownOption = {
       id: crypto.randomUUID(),
-      label: `Option ${(props.options?.length || 0) + 1}`,
-      value: `option-${(props.options?.length || 0) + 1}`,
+      value: `Option ${(props.options?.length || 0) + 1}`,
     };
     u(instanceId, { options: [...(props.options || []), newOption] });
   };
@@ -131,14 +181,6 @@ export function DropdownComponentPropsRenderer({
         {(props.options || []).map((option) => (
           <div key={option.id} className="flex items-center gap-1.5">
             <input
-              placeholder="Label"
-              value={option.label}
-              onChange={(e) =>
-                handleUpdateOption(option.id, 'label', e.target.value)
-              }
-              className={inp + ' flex-1'}
-            />
-            <input
               placeholder="Value"
               value={option.value}
               onChange={(e) =>
@@ -177,11 +219,22 @@ export function DropdownComponentPropsRenderer({
           <option value="none">None</option>
           {(props.options || []).map((opt) => (
             <option key={opt.id} value={opt.value}>
-              {opt.label}
+              {opt.value}
             </option>
           ))}
         </select>
       </div>
+
+      {/* Added Required Validation Toggle */}
+      <label className="flex items-center gap-2 text-sm text-foreground">
+        <input
+          type="checkbox"
+          checked={!!validation?.required}
+          onChange={() => uv(instanceId, { required: !validation?.required })}
+          className="accent-primary"
+        />
+        Required
+      </label>
     </div>
   );
 }

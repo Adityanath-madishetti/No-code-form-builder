@@ -11,9 +11,11 @@ import type { BaseComponentProps } from '../base';
 import { inp, lbl, Card, Q } from '../ComponentRender.Helper';
 import { Plus, Trash2 } from 'lucide-react';
 
+import { useFormContext } from 'react-hook-form';
+import { useFormMode } from '@/form/context/FormModeContext';
+
 export interface CheckboxOption {
   id: string;
-  label: string;
   value: string;
 }
 
@@ -24,17 +26,18 @@ export interface CheckboxProps extends BaseComponentProps {
   layout?: 'vertical' | 'horizontal';
 }
 
-// export interface CheckboxValidation {
-//   required: boolean;
-// }
+export interface CheckboxValidation extends BasicValidation {
+  minSelected?: number;
+  maxSelected?: number;
+}
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const createCheckboxComponent = (
   instanceId: string,
   metadata: ComponentMetadata,
   props: CheckboxProps,
-  validation: BasicValidation
-): FormComponent<'Checkbox', CheckboxProps, BasicValidation> => ({
+  validation: CheckboxValidation
+): FormComponent<'Checkbox', CheckboxProps, CheckboxValidation> => ({
   id: ComponentIDs.Checkbox,
   instanceId,
   metadata,
@@ -46,10 +49,86 @@ export const createCheckboxComponent = (
 export function CheckboxComponentRenderer({
   props,
   instanceId,
-}: RendererProps<CheckboxProps, BasicValidation>) {
+  validation,
+}: RendererProps<CheckboxProps, CheckboxValidation>) {
+  const formMode = useFormMode();
+  const formContext = useFormContext();
   const isHorizontal = props.layout === 'horizontal';
+
+  // --- View Mode (Live Form with Validation) ---
+  if (formMode === 'view' && formContext) {
+    if (!formContext) {
+      console.error(
+        'CheckboxComponentRenderer is not wrapped in a FormProvider.'
+      );
+      return null;
+    }
+
+    const {
+      register,
+      formState: { errors },
+    } = formContext;
+
+    return (
+      <Card className="rounded-none shadow-none">
+        <Q html={props.questionText} />
+        <div
+          className={`flex ${
+            isHorizontal ? 'flex-row flex-wrap gap-4' : 'flex-col gap-2'
+          }`}
+        >
+          {(props.options || []).map((option) => (
+            <label
+              key={option.id}
+              className="flex cursor-pointer items-center gap-2 text-sm text-foreground"
+            >
+              <input
+                type="checkbox"
+                value={option.value}
+                defaultChecked={(props.defaultValues || []).includes(
+                  option.value
+                )}
+                className="accent-primary"
+                {...register(instanceId, {
+                  required: validation?.required
+                    ? 'Please select at least one option'
+                    : false,
+                  validate: (value) => {
+                    // RHF returns an array of values when multiple checkboxes share a name
+                    const selectedCount = Array.isArray(value) ? value.length : (value ? 1 : 0);
+                    
+                    if (
+                      validation?.minSelected &&
+                      selectedCount < validation.minSelected
+                    ) {
+                      return `Please select at least ${validation.minSelected} option(s)`;
+                    }
+                    if (
+                      validation?.maxSelected &&
+                      selectedCount > validation.maxSelected
+                    ) {
+                      return `Please select no more than ${validation.maxSelected} option(s)`;
+                    }
+                    return true;
+                  },
+                })}
+              />
+              {option.value}
+            </label>
+          ))}
+        </div>
+        {errors[instanceId] && (
+          <p className="mt-1 text-sm text-red-500">
+            {errors[instanceId]?.message as string}
+          </p>
+        )}
+      </Card>
+    );
+  }
+
+  // --- Builder Mode (Static/Preview) ---
   return (
-    <Card>
+    <Card className="rounded-none shadow-none">
       <Q html={props.questionText} />
       <div
         className={`flex ${
@@ -70,7 +149,7 @@ export function CheckboxComponentRenderer({
               )}
               className="accent-primary"
             />
-            {option.label}
+            {option.value}
           </label>
         ))}
       </div>
@@ -81,14 +160,15 @@ export function CheckboxComponentRenderer({
 export function CheckboxComponentPropsRenderer({
   props,
   instanceId,
-}: RendererProps<CheckboxProps, BasicValidation>) {
+  validation,
+}: RendererProps<CheckboxProps, CheckboxValidation>) {
   const u = useFormStore((s) => s.updateComponentProps);
+  const uv = useFormStore((s) => s.updateComponentValidation);
 
   const handleAddOption = () => {
     const newOption: CheckboxOption = {
       id: crypto.randomUUID(),
-      label: `Option ${(props.options?.length || 0) + 1}`,
-      value: `option-${(props.options?.length || 0) + 1}`,
+      value: `Option ${(props.options?.length || 0) + 1}`,
     };
     u(instanceId, { options: [...(props.options || []), newOption] });
   };
@@ -156,14 +236,6 @@ export function CheckboxComponentPropsRenderer({
               title="Default selected"
             />
             <input
-              placeholder="Label"
-              value={option.label}
-              onChange={(e) =>
-                handleUpdateOption(option.id, 'label', e.target.value)
-              }
-              className={inp + ' flex-1'}
-            />
-            <input
               placeholder="Value"
               value={option.value}
               onChange={(e) =>
@@ -197,6 +269,51 @@ export function CheckboxComponentPropsRenderer({
           <option value="vertical">Vertical</option>
           <option value="horizontal">Horizontal</option>
         </select>
+      </div>
+
+      {/* Validation Rules */}
+      <label className="flex items-center gap-2 text-sm text-foreground">
+        <input
+          type="checkbox"
+          checked={!!validation?.required}
+          onChange={() => uv(instanceId, { required: !validation?.required })}
+          className="accent-primary"
+        />
+        Required
+      </label>
+
+      <div>
+        <label className={lbl}>Minimum Options Selected</label>
+        <input
+          type="number"
+          min="0"
+          value={validation?.minSelected ?? ''}
+          onChange={(e) => {
+            const val = e.target.value;
+            uv(instanceId, {
+              minSelected: val === '' ? undefined : parseInt(val, 10),
+            });
+          }}
+          className={inp}
+          placeholder="e.g., 1"
+        />
+      </div>
+
+      <div>
+        <label className={lbl}>Maximum Options Selected</label>
+        <input
+          type="number"
+          min="0"
+          value={validation?.maxSelected ?? ''}
+          onChange={(e) => {
+            const val = e.target.value;
+            uv(instanceId, {
+              maxSelected: val === '' ? undefined : parseInt(val, 10),
+            });
+          }}
+          className={inp}
+          placeholder="e.g., 3"
+        />
       </div>
     </div>
   );

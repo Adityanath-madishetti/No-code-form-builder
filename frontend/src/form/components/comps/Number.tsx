@@ -1,15 +1,15 @@
+import { useFormStore } from '@/form/store/formStore';
 import type {
   BaseComponentProps,
   ComponentMetadata,
-  NoValidation,
   NumericValidation,
+  RendererProps,
 } from '../base';
 import { ComponentIDs, createComponent } from '../base';
 
-import type { RendererProps } from '../base';
-import { useFormStore } from '@/form/store/formStore';
-
 import { inp, lbl, Card, Q } from '../ComponentRender.Helper';
+import { useFormContext } from 'react-hook-form';
+import { useFormMode } from '@/form/context/FormModeContext';
 
 export interface NumberProps extends BaseComponentProps {
   questionText: string;
@@ -28,7 +28,7 @@ export const createNumberComponent = (
     instanceId,
     metadata,
     {
-      questionText: '<p>Enter a number</p>',
+      questionText: 'Enter a number',
       placeholder: '0',
       defaultValue: '',
       hiddenByDefault: false,
@@ -36,7 +36,6 @@ export const createNumberComponent = (
     },
     {
       required: false,
-      hidden: false,
       min: undefined,
       max: undefined,
     } as NumericValidation
@@ -45,15 +44,67 @@ export const createNumberComponent = (
 export function NumberRenderer({
   instanceId,
   props,
+  validation,
 }: RendererProps<NumberProps, NumericValidation>) {
-  const u = useFormStore((s) => s.updateComponentProps);
+  const formMode = useFormMode();
+  const formContext = useFormContext();
+
+  // --- View Mode (Live Form with Validation) ---
+  if (formMode === 'view' && formContext) {
+    if (!formContext) {
+      console.error('NumberRenderer is not wrapped in a FormProvider.');
+      return null;
+    }
+
+    const {
+      register,
+      formState: { errors },
+    } = formContext;
+
+    return (
+      <Card className="rounded-none shadow-none">
+        <Q html={props.questionText} />
+        <input
+          type="number"
+          placeholder={props.placeholder || '0'}
+          defaultValue={props.defaultValue}
+          className={inp}
+          {...register(instanceId, {
+            required: validation?.required ? 'This field is required' : false,
+            valueAsNumber: true, // Crucial for correct min/max evaluation
+            min:
+              validation?.min !== undefined
+                ? {
+                    value: validation.min,
+                    message: `Value must be at least ${validation.min}`,
+                  }
+                : undefined,
+            max:
+              validation?.max !== undefined
+                ? {
+                    value: validation.max,
+                    message: `Value must be no more than ${validation.max}`,
+                  }
+                : undefined,
+          })}
+        />
+        {errors[instanceId] && (
+          <p className="mt-1 text-sm text-red-500">
+            {errors[instanceId]?.message as string}
+          </p>
+        )}
+      </Card>
+    );
+  }
+
+  // --- Builder Mode (Static/Preview) ---
   return (
-    <Card>
+    <Card className="rounded-none shadow-none">
       <Q html={props.questionText} />
       <input
         type="number"
+        readOnly
         value={props.defaultValue}
-        onChange={(e) => u(instanceId, { defaultValue: e.target.value })}
         placeholder={props.placeholder || '0'}
         className={inp}
       />
@@ -64,26 +115,83 @@ export function NumberRenderer({
 export function NumberPropsRenderer({
   instanceId,
   props,
-}: RendererProps<NumberProps, NoValidation>) {
+  validation,
+}: RendererProps<NumberProps, NumericValidation>) {
   const u = useFormStore((s) => s.updateComponentProps);
+  const uv = useFormStore((s) => s.updateComponentValidation);
+
   return (
     <div className="space-y-4">
       <div>
-        <label className={lbl}>Placeholder</label>
+        <label className={lbl}>Question Text</label>
         <input
           type="text"
-          value={props.placeholder || ''}
-          onChange={(e) => u(instanceId, { placeholder: e.target.value })}
+          value={props.questionText || ''}
+          onChange={(e) => u(instanceId, { questionText: e.target.value })}
           className={inp}
         />
       </div>
-      <div>
-        <label className={lbl}>Default Value</label>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className={lbl}>Placeholder</label>
+          <input
+            type="text"
+            value={props.placeholder || ''}
+            onChange={(e) => u(instanceId, { placeholder: e.target.value })}
+            className={inp}
+          />
+        </div>
+        <div>
+          <label className={lbl}>Default Value</label>
+          <input
+            type="number"
+            value={props.defaultValue || ''}
+            onChange={(e) => u(instanceId, { defaultValue: e.target.value })}
+            className={inp}
+          />
+        </div>
+      </div>
+
+      <label className="flex items-center gap-2 text-sm text-foreground">
         <input
-          type="text"
-          value={props.defaultValue || ''}
-          onChange={(e) => u(instanceId, { defaultValue: e.target.value })}
+          type="checkbox"
+          checked={!!validation?.required}
+          onChange={() => uv(instanceId, { required: !validation?.required })}
+          className="accent-primary"
+        />
+        Required
+      </label>
+
+      <div>
+        <label className={lbl}>Minimum Value</label>
+        <input
+          type="number"
+          value={validation?.min ?? ''}
+          onChange={(e) => {
+            const val = e.target.value;
+            uv(instanceId, {
+              min: val === '' ? undefined : Number(val),
+            });
+          }}
           className={inp}
+          placeholder="e.g., 0"
+        />
+      </div>
+
+      <div>
+        <label className={lbl}>Maximum Value</label>
+        <input
+          type="number"
+          value={validation?.max ?? ''}
+          onChange={(e) => {
+            const val = e.target.value;
+            uv(instanceId, {
+              max: val === '' ? undefined : Number(val),
+            });
+          }}
+          className={inp}
+          placeholder="e.g., 100"
         />
       </div>
     </div>

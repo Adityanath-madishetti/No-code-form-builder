@@ -232,120 +232,16 @@ export const createMatrixTableComponent = (
 // ========================================================================================
 
 // ── Rating Scale ──
-export interface RatingScaleProps extends BaseComponentProps {
-  questionText: string;
-  maxRating: number;
-  icon: 'star' | 'heart' | 'circle';
-}
-export const createRatingScaleComponent = (
-  instanceId: string,
-  metadata: ComponentMetadata,
-  props?: Partial<RatingScaleProps>
-) =>
-  createComponent(
-    ComponentIDs.RatingScale,
-    instanceId,
-    metadata,
-    {
-      questionText: '<p>Rate this</p>',
-      maxRating: 5,
-      icon: 'star' as const,
-      hiddenByDefault: false,
-      ...props,
-    },
-    { required: false } as BasicValidation
-  );
 
 // ── Linear Scale ──
-export interface LinearScaleProps extends BaseComponentProps {
-  questionText: string;
-  min: number;
-  max: number;
-  minLabel: string;
-  maxLabel: string;
-}
-export const createLinearScaleComponent = (
-  instanceId: string,
-  metadata: ComponentMetadata,
-  props?: Partial<LinearScaleProps>
-) =>
-  createComponent(
-    ComponentIDs.LinearScale,
-    instanceId,
-    metadata,
-    {
-      questionText: '<p>How would you rate this?</p>',
-      min: 1,
-      max: 10,
-      minLabel: 'Low',
-      maxLabel: 'High',
-      hiddenByDefault: false,
-      ...props,
-    },
-    { required: false } as BasicValidation
-  );
 
 // ── Slider ──
-export interface SliderProps extends BaseComponentProps {
-  questionText: string;
-  min: number;
-  max: number;
-  step: number;
-  defaultValue: number;
-}
-export const createSliderComponent = (
-  instanceId: string,
-  metadata: ComponentMetadata,
-  props?: Partial<SliderProps>
-) =>
-  createComponent(
-    ComponentIDs.Slider,
-    instanceId,
-    metadata,
-    {
-      questionText: '<p>Adjust the slider</p>',
-      min: 0,
-      max: 100,
-      step: 1,
-      defaultValue: 50,
-      hiddenByDefault: false,
-      ...props,
-    },
-    { required: false } as BasicValidation
-  );
 
 // ========================================================================================
 //  COMPOSITE / BLOCKS
 // ========================================================================================
 
 // ── Address Block ──
-export interface AddressBlockProps extends BaseComponentProps {
-  questionText: string;
-  showLine2: boolean;
-  showState: boolean;
-  showZip: boolean;
-  showCountry: boolean;
-}
-export const createAddressBlockComponent = (
-  instanceId: string,
-  metadata: ComponentMetadata,
-  props?: Partial<AddressBlockProps>
-) =>
-  createComponent(
-    ComponentIDs.AddressBlock,
-    instanceId,
-    metadata,
-    {
-      questionText: '<p>Enter your address</p>',
-      showLine2: true,
-      showState: true,
-      showZip: true,
-      showCountry: true,
-      hiddenByDefault: false,
-      ...props,
-    },
-    { required: false } as BasicValidation
-  );
 
 // ── Name Block ──
 export interface NameBlockProps extends BaseComponentProps {
