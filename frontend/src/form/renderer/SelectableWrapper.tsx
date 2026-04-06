@@ -8,8 +8,8 @@ import type { PageID } from '@/form/components/base';
 import {
   ArrowDown,
   ArrowUp,
-  ClipboardCopy,
   Copy,
+  SquareCheck,
   Move,
   Settings,
   Trash2,
@@ -269,10 +269,10 @@ export const SelectableComponent = ({
               {/* Heading (instanceId only) */}
               <div className="flex min-w-0 flex-1 items-center gap-1">
                 <span
-                  title={component.instanceId}
-                  className="inline-block w-[92px] truncate rounded-none border border-border/50 bg-background px-1 font-mono text-[11px] font-semibold text-foreground/80"
+                  title={component.metadata.label}
+                  className="inline-block  truncate rounded-none border border-border/50 bg-background px-1 font-mono text-[11px] font-semibold text-foreground/80"
                 >
-                  {component.instanceId}
+                  {component.metadata.label}
                 </span>
 
                 {/* Copy instanceId */}
@@ -280,7 +280,7 @@ export const SelectableComponent = ({
                   onClick={async (e) => {
                     e.stopPropagation();
                     try {
-                      await navigator.clipboard.writeText(component.instanceId);
+                      await navigator.clipboard.writeText(component.metadata.label);
                       setCopiedId(true);
                       window.setTimeout(() => setCopiedId(false), 900);
                     } catch {
@@ -292,9 +292,9 @@ export const SelectableComponent = ({
                   title="Copy component id"
                 >
                   {copiedId ? (
-                    <Copy className="h-3 w-3 text-primary" />
+                    <SquareCheck className="h-3 w-3 text-primary" />
                   ) : (
-                    <ClipboardCopy className="h-3 w-3" />
+                    <Copy className="h-3 w-3" />
                   )}
                 </button>
               </div>
