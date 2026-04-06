@@ -10,7 +10,10 @@ import type { RendererProps } from '../base';
 import { useFormStore } from '@/form/store/formStore';
 
 import { inp, lbl, Card, Q } from '../ComponentRender.Helper';
-// import { Card } from '../ComponentRender.Helper';
+
+import { useFormContext } from 'react-hook-form';
+
+import { useFormMode } from '@/form/context/FormModeContext';
 
 export interface SingleLineInputProps extends BaseComponentProps {
   type?: string;
@@ -39,23 +42,78 @@ export function SingleLineInputRenderer({
   props,
   validation,
 }: RendererProps<SingleLineInputProps, TextValidation>) {
+  // 1. ALL hooks must be called at the top level
+  const formMode = useFormMode();
+  const formContext = useFormContext();
+
+  // 2. Early returns happen AFTER the hooks
+  if (formMode === 'view' && formContext) {
+    // 3. Safeguard against the "TypeError: (intermediate value)() is null" crash
+    if (!formContext) {
+      console.error(
+        'SingleLineInputRenderer is not wrapped in a FormProvider.'
+      );
+      return null;
+    }
+
+    // 4. Safely destructure now that we know we have context
+    const {
+      register,
+      formState: { errors },
+    } = formContext;
+
+    return (
+      <Card className="rounded-none shadow-none">
+        <Q html={props.questionText} />
+        <input
+          type={props.type || 'text'}
+          placeholder={props.placeholder}
+          defaultValue={props.defaultValue}
+          className={inp}
+          {...register(instanceId, {
+            required: validation?.required ? 'This field is required' : false,
+            minLength: validation?.minLength
+              ? {
+                  value: validation.minLength,
+                  message: `Minimum ${validation.minLength} characters`,
+                }
+              : undefined,
+            maxLength: validation?.maxLength
+              ? {
+                  value: validation.maxLength,
+                  message: `Maximum ${validation.maxLength} characters`,
+                }
+              : undefined,
+            pattern: validation?.pattern
+              ? {
+                  value: new RegExp(validation.pattern),
+                  message: 'Invalid format',
+                }
+              : undefined,
+          })}
+        />
+        {/* 3. Manual Error Rendering */}
+        {errors[instanceId] && (
+          <p className="mt-1 text-sm text-red-500">
+            {errors[instanceId]?.message as string}
+          </p>
+        )}
+      </Card>
+    );
+  }
+
   return (
     <Card className="rounded-none shadow-none">
       <Q html={props.questionText} />
       <input
-        type="text"
-        name={instanceId}
+        type={props.type || 'text'}
         placeholder={props.placeholder}
         defaultValue={props.defaultValue}
         className={inp}
-        required={validation.required}
-        minLength={validation.minLength}
-        maxLength={validation.maxLength}
       />
     </Card>
   );
 }
-
 export function SingleLineInputPropsRenderer({
   instanceId,
   props,

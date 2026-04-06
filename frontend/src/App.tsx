@@ -15,6 +15,8 @@ import NotificationSettingsPage from "./pages/NotificationSettingsPage";
 import AccountPage from "./pages/AccountPage";
 import EditorThemeTemplatesPage from "./pages/EditorThemeTemplatesPage";
 
+import FormSubmit from "./pages/FormSubmit/FormSubmit";
+
 const router = createBrowserRouter([
   {
     path: "/login",
@@ -23,6 +25,10 @@ const router = createBrowserRouter([
   {
     path: "/forms/:formId",
     element: <FormFill />,
+  },
+  {
+    path: "forms/s/:formId",
+    element: <FormSubmit />,
   },
   {
     path: "/forms/:formId/success",
