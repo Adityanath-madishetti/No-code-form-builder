@@ -23,8 +23,8 @@ interface WorkspacesProps {
   showDebug: boolean;
   rightWidth: number | string;
   debugWidth: number | string;
-  editorTheme: string;
-  setEditorTheme: (theme: any) => void;
+  editorTheme: 'dark' | 'light' | 'system' | string;
+  setEditorTheme: (theme: 'dark' | 'light' | 'system') => void;
   saving: boolean;
   handleSave: () => Promise<void>;
   formId?: string;

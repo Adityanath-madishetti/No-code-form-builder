@@ -9,16 +9,29 @@ import { getMySubmissions } from "./controllers/submissionController.js";
 import { verifyToken } from "./middleware/auth.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
-
+import swaggerUi from "swagger-ui-express";
+import { swaggerSpec } from "./config/swagger.js";
 
 const app = express();
 
+// ── Swagger UI ──
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // ── Global Middleware ──
 app.use(express.json({ limit: "10mb" }));
 app.use(cors());
 app.use(helmet());
 
 // ── Health Check ──
+/**
+ * @swagger
+ * /api/health:
+ *   get:
+ *     summary: API Health Check
+ *     tags: [System]
+ *     responses:
+ *       200:
+ *         description: OK
+ */
 app.get("/api/health", (_req, res) => {
     res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
 });
@@ -31,6 +44,24 @@ app.use("/api/forms", formRoutes);
 //       at /api/forms/:formId/versions and /api/forms/:formId/submissions
 
 // User-level submission history (not nested under a specific form)
+/**
+ * @swagger
+ * /api/submissions/mine:
+ *   get:
+ *     summary: Get all submissions made by the current user across all forms
+ *     tags: [Submissions]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of the user's global submissions
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ */
 app.get("/api/submissions/mine", verifyToken, getMySubmissions);
 
 // ── Error Handling (must be last) ──
