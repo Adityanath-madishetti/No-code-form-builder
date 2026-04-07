@@ -1,4 +1,6 @@
 // src/pages/FormEditor/components/FormulaEditor.tsx
+// TODO: sanitize the expression input to prevent XSS or other injection attacks. 
+// Currently we trust that only form builders can edit this, but if we ever expose it to end-users, we need to be careful.
 import { useState, useMemo, useRef, useCallback } from 'react';
 import { Calculator, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';

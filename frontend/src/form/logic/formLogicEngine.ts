@@ -100,46 +100,6 @@ export class FormLogicEngine {
     });
   }
 
-  // // Evaluates and returns a flat array of Actions to apply to the UI
-  // public async evaluate(formValues: Record<string, unknown>) {
-  //   const sanitizedValues: Record<string, unknown> = {};
-  //   for (const [key, value] of Object.entries(formValues)) {
-  //     sanitizedValues[key] = typeof value === 'string' ? value.trim() : value;
-  //   }
-
-  //   const { events, failureEvents } = await this.engine.run(sanitizedValues);
-
-  //   const actionsToProcess: any[] = [];
-
-  //   events.forEach((event) => {
-  //     const originalRule = this.rulesMap.get(event.params?.ruleId);
-  //     if (originalRule) {
-  //       actionsToProcess.push(...originalRule.thenActions);
-  //     }
-  //   });
-
-  //   failureEvents.forEach((event) => {
-  //     const originalRule = this.rulesMap.get(event.params?.ruleId);
-  //     if (!originalRule) return;
-
-  //     if (originalRule.elseActions && originalRule.elseActions.length > 0) {
-  //       actionsToProcess.push(...originalRule.elseActions);
-  //     } else {
-  //       // AUTO-REVERT (No Else actions defined, do the opposite)
-  //       originalRule.thenActions.forEach((action) => {
-  //         const inverseAction = { ...action };
-  //         if (action.type === 'SHOW') inverseAction.type = 'HIDE';
-  //         else if (action.type === 'HIDE') inverseAction.type = 'SHOW';
-  //         else if (action.type === 'ENABLE') inverseAction.type = 'DISABLE';
-  //         else if (action.type === 'DISABLE') inverseAction.type = 'ENABLE';
-  //         actionsToProcess.push(inverseAction);
-  //       });
-  //     }
-  //   });
-
-  //   return actionsToProcess;
-  // }
-
   // Returns both UI Actions (SHOW/HIDE) and Computed Formula Values
   public async evaluate(formValues: Record<string, unknown>) {
     const sanitizedValues: Record<string, unknown> = {};
