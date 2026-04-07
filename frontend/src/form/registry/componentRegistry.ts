@@ -304,10 +304,15 @@ export type AnySerializedComponent = {
   >;
 }[ComponentID];
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ComponentRenderer<TProps = any, TValidation = any> = ComponentType<
-  RendererProps<TProps, TValidation>
->;
+export type ComponentRenderer<
+  TProps = unknown,
+  TValidation = unknown,
+> = ComponentType<RendererProps<TProps, TValidation>>;
+
+export type ComponentPropsRenderer<
+  TProps = unknown,
+  TValidation = unknown,
+> = ComponentType<RendererProps<TProps, TValidation>>;
 
 // ── Registry entry type ──
 
@@ -319,7 +324,7 @@ export interface ComponentRegistryEntry<T extends ComponentID> {
       ComponentPropsMap[T],
       ComponentValidationMap[T]
     > | null;
-    settings: ComponentRenderer<
+    settings: ComponentPropsRenderer<
       ComponentPropsMap[T],
       ComponentValidationMap[T]
     > | null;
@@ -348,23 +353,24 @@ function makeEntry<T extends ComponentID>(
     instanceId: string,
     metadata: { label: string }
   ) => FormComponent<T, ComponentPropsMap[T]>,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  mainRenderer: ComponentRenderer<any, any>,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  settingsRenderer?: ComponentRenderer<any, any>
+  mainRenderer: ComponentRenderer<
+    ComponentPropsMap[T],
+    ComponentValidationMap[T]
+  >,
+  settingsRenderer?: ComponentPropsRenderer<
+    ComponentPropsMap[T],
+    ComponentValidationMap[T]
+  >
 ): ComponentRegistryEntry<T> {
   return {
     id,
     catalog: { label, description, category },
     renderers: {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      main: mainRenderer as any,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      settings: (settingsRenderer || PlaceholderSettingsRenderer) as any,
+      main: mainRenderer,
+      settings: settingsRenderer || PlaceholderSettingsRenderer,
     },
     create: (instanceId) => createFn(instanceId, { label }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    deserialize: (json: any) => ({
+    deserialize: (json) => ({
       id: json.id,
       instanceId: json.instanceId,
       metadata: json.metadata,
@@ -376,166 +382,61 @@ function makeEntry<T extends ComponentID>(
 }
 
 const registry: Registry = {
-  // ════════════════════════════════════════════════════════
-  //  EXISTING (custom renderers)
-  // ════════════════════════════════════════════════════════
-  [ComponentIDs.TextBox]: {
-    id: ComponentIDs.TextBox,
-    catalog: {
-      label: 'Text Box',
-      description: 'A static rich text block.',
-      category: 'Layout',
-    },
-    renderers: {
-      main: TextBoxComponentRenderer,
-      settings: TextBoxComponentPropsRenderer,
-    },
-    create: (instanceId) =>
+  [ComponentIDs.TextBox]: makeEntry(
+    ComponentIDs.TextBox,
+    'Text Box',
+    'A static rich text block.',
+    'Layout',
+    (id, m) =>
       createTextBoxComponent(
-        instanceId,
-        { label: 'Text Box' },
+        id,
+        m,
         { text: '', hiddenByDefault: false },
         { proxy: 0 }
       ),
-    deserialize: (json) =>
-      createTextBoxComponent(
-        json.instanceId,
-        json.metadata,
-        json.props,
-        json.validation
-      ),
-  },
-  [ComponentIDs.SingleLineInput]: {
-    id: ComponentIDs.SingleLineInput,
-    catalog: {
-      label: 'Single-line Text',
-      description: 'A single-line text input.',
-      category: 'Text Inputs',
-    },
-    renderers: {
-      main: SingleLineInputRenderer,
-      settings: SingleLineInputPropsRenderer,
-    },
-    create: (instanceId) =>
-      createSingleLineInputComponent(
-        instanceId,
-        { label: 'Input Field' },
-        {
-          questionText: 'Write the answer...',
-          placeholder: '',
-          defaultValue: '',
-          hiddenByDefault: false,
-        },
-        { required: false, minLength: 0 }
-      ),
-    deserialize: (json) =>
-      createSingleLineInputComponent(
-        json.instanceId,
-        json.metadata,
-        json.props,
-        json.validation
-      ),
-  },
-  [ComponentIDs.Radio]: {
-    id: ComponentIDs.Radio,
-    catalog: {
-      label: 'Radio Buttons',
-      description: 'Single choice selection.',
-      category: 'Selection',
-    },
-    renderers: {
-      main: RadioComponentRenderer,
-      settings: RadioComponentPropsRenderer,
-    },
-    create: (instanceId) =>
-      createRadioComponent(
-        instanceId,
-        { label: 'Single Choice Question' },
-        {
-          questionText: 'Select an option',
-          layout: 'vertical',
-          options: [{ id: crypto.randomUUID(), value: 'Option 1' }],
-          hiddenByDefault: false,
-        },
-        { required: false }
-      ),
-    deserialize: (json) =>
-      createRadioComponent(
-        json.instanceId,
-        json.metadata,
-        json.props,
-        json.validation
-      ),
-  },
-  [ComponentIDs.Checkbox]: {
-    id: ComponentIDs.Checkbox,
-    catalog: {
-      label: 'Checkboxes',
-      description: 'Multiple choice selection.',
-      category: 'Selection',
-    },
-    renderers: {
-      main: CheckboxComponentRenderer,
-      settings: CheckboxComponentPropsRenderer,
-    },
-    create: (instanceId) =>
-      createCheckboxComponent(
-        instanceId,
-        { label: 'Multiple Choice Question' },
-        {
-          questionText: '<p>Select all that apply</p>',
-          layout: 'vertical',
-          defaultValues: [],
-          options: [
-            { id: crypto.randomUUID(), value: 'Option 1' },
-            { id: crypto.randomUUID(), value: 'Option 2' },
-          ],
-          hiddenByDefault: false,
-        },
-        { required: false }
-      ),
-    deserialize: (json) =>
-      createCheckboxComponent(
-        json.instanceId,
-        json.metadata,
-        json.props,
-        json.validation
-      ),
-  },
-  [ComponentIDs.Dropdown]: {
-    id: ComponentIDs.Dropdown,
-    catalog: {
-      label: 'Dropdown',
-      description: 'Select from a dropdown list.',
-      category: 'Selection',
-    },
-    renderers: {
-      main: DropdownComponentRenderer,
-      settings: DropdownComponentPropsRenderer,
-    },
-    create: (instanceId) =>
-      createDropdownComponent(
-        instanceId,
-        { label: 'Dropdown Selection' },
-        {
-          questionText: '<p>Please select an option from the list</p>',
-          placeholder: 'Select an option',
-          options: [
-            { id: crypto.randomUUID(), value: 'Option 1' },
-            { id: crypto.randomUUID(), value: 'Option 2' },
-          ],
-          hiddenByDefault: false,
-        },
-        { required: false }
-      ),
-    deserialize: (json) =>
-      createDropdownComponent(
-        json.instanceId,
-        json.metadata,
-        json.props,
-        json.validation
-      ),
-  },
+    TextBoxComponentRenderer,
+    TextBoxComponentPropsRenderer
+  ),
+
+  [ComponentIDs.SingleLineInput]: makeEntry(
+    ComponentIDs.SingleLineInput,
+    'Single-line Text',
+    'A single-line text input.',
+    'Text Inputs',
+    (id, m) => createSingleLineInputComponent(id, m),
+    SingleLineInputRenderer,
+    SingleLineInputPropsRenderer
+  ),
+
+  [ComponentIDs.Radio]: makeEntry(
+    ComponentIDs.Radio,
+    'Radio Buttons',
+    'Single choice selection.',
+    'Selection',
+    (id, m) => createRadioComponent(id, m),
+    RadioComponentRenderer,
+    RadioComponentPropsRenderer
+  ),
+
+  [ComponentIDs.Checkbox]: makeEntry(
+    ComponentIDs.Checkbox,
+    'Checkboxes',
+    'Multiple choice selection.',
+    'Selection',
+    (id, m) => createCheckboxComponent(id, m),
+    CheckboxComponentRenderer,
+    CheckboxComponentPropsRenderer
+  ),
+
+  [ComponentIDs.Dropdown]: makeEntry(
+    ComponentIDs.Dropdown,
+    'Dropdown',
+    'Select from a dropdown list.',
+    'Selection',
+    (id, m) => createDropdownComponent(id, m),
+    DropdownComponentRenderer,
+    DropdownComponentPropsRenderer
+  ),
 
   // ════════════════════════════════════════════════════════
   //  LAYOUT

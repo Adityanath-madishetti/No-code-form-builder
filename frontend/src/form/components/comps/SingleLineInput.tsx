@@ -15,6 +15,8 @@ import { useFormContext } from 'react-hook-form';
 
 import { useFormMode } from '@/form/context/FormModeContext';
 
+import { createComponent } from '../base';
+
 export interface SingleLineInputProps extends BaseComponentProps {
   type?: string;
   questionText?: string;
@@ -26,16 +28,23 @@ export interface SingleLineInputProps extends BaseComponentProps {
 export const createSingleLineInputComponent = (
   instanceId: string,
   metadata: ComponentMetadata,
-  props: SingleLineInputProps,
-  validation: TextValidation
-): FormComponent<'Input', SingleLineInputProps, TextValidation> => ({
-  id: ComponentIDs.SingleLineInput,
-  instanceId,
-  metadata,
-  children: [],
-  props,
-  validation,
-});
+  props?: Partial<SingleLineInputProps>
+): FormComponent<'Input', SingleLineInputProps, TextValidation> =>
+  createComponent(
+    ComponentIDs.SingleLineInput,
+    instanceId,
+    metadata,
+    {
+      questionText: 'Write the answer...',
+      placeholder: '',
+      defaultValue: '',
+      hiddenByDefault: false,
+      ...props,
+    },
+    {
+      required: false,
+    } as TextValidation
+  );
 
 export function SingleLineInputRenderer({
   instanceId,
@@ -117,7 +126,7 @@ export function SingleLineInputPropsRenderer({
 }: RendererProps<SingleLineInputProps, TextValidation>) {
   const u = useFormStore((s) => s.updateComponentProps);
   const uv = useFormStore((s) => s.updateComponentValidation);
-  
+
   return (
     <div className="space-y-4">
       <div>
@@ -188,7 +197,7 @@ export function SingleLineInputPropsRenderer({
           placeholder="e.g., 255"
         />
       </div>
-      
+
       {/* Added Regex Pattern Input */}
       <div>
         <label className={lbl}>Regex Pattern</label>

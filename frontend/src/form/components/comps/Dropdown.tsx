@@ -5,7 +5,7 @@ import type {
   FormComponent,
   RendererProps,
 } from '../base';
-import { ComponentIDs } from '../base';
+import { ComponentIDs, createComponent } from '../base';
 
 import type { BaseComponentProps } from '../base';
 import { inp, lbl, Card, Q } from '../ComponentRender.Helper';
@@ -35,16 +35,24 @@ export interface DropdownValidation extends BasicValidation {
 export const createDropdownComponent = (
   instanceId: string,
   metadata: ComponentMetadata,
-  props: DropdownProps,
-  validation: DropdownValidation
-): FormComponent<'Dropdown', DropdownProps, DropdownValidation> => ({
-  id: ComponentIDs.Dropdown,
-  instanceId,
-  metadata,
-  children: [],
-  props,
-  validation,
-});
+  props?: Partial<DropdownProps>
+): FormComponent<'Dropdown', DropdownProps, DropdownValidation> =>
+  createComponent(
+    ComponentIDs.Dropdown,
+    instanceId,
+    metadata,
+    {
+      questionText: 'Please select an option from the list',
+      placeholder: 'Select an option',
+      options: [
+        { id: crypto.randomUUID(), value: 'Option 1' },
+        { id: crypto.randomUUID(), value: 'Option 2' },
+      ],
+      hiddenByDefault: false,
+      ...props,
+    },
+    { required: false } as DropdownValidation
+  );
 
 export function DropdownComponentRenderer({
   instanceId,

@@ -1,9 +1,5 @@
 // src/pages/FormEditor/components/FormulaEditor.tsx
-/**
- * Formula expression editor with field reference hints.
- * Users type expressions like: {field1} + {field2} * 2
- */
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useCallback } from 'react';
 import { Calculator, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -13,7 +9,7 @@ interface FieldOption {
 }
 
 interface FormulaEditorProps {
-  expression: string;
+  expression: string; // The system version: e.g., "{field_1} + 2"
   targetId: string;
   fields: FieldOption[];
   targets: { id: string; label: string }[];
@@ -30,6 +26,39 @@ export function FormulaEditor({
   onTargetChange,
 }: FormulaEditorProps) {
   const [showFieldHelper, setShowFieldHelper] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  /**
+   * Fast lookup for 2-way conversion
+   */
+  const idToLabel = useMemo(() => new Map(fields.map((f) => [f.id, f.label])), [fields]);
+  const labelToId = useMemo(() => new Map(fields.map((f) => [f.label, f.id])), [fields]);
+
+  /**
+   * useCallback for stability
+   */
+  const idsToLabels = useCallback((expr: string) => {
+    if (!expr) return '';
+    return expr.replace(/\{([^}]+)\}/g, (match, id) => {
+      const label = idToLabel.get(id);
+      return label ? `{${label}}` : match;
+    });
+  }, [idToLabel]);
+
+  const labelsToIds = useCallback((expr: string) => {
+    if (!expr) return '';
+    return expr.replace(/\{([^}]+)\}/g, (match, label) => {
+      const id = labelToId.get(label);
+      return id ? `{${id}}` : match; 
+    });
+  }, [labelToId]);
+
+  const displayValue = idsToLabels(expression);
+
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newValue = e.target.value;
+    onExpressionChange(labelsToIds(newValue)); 
+  };
 
   const referencedFields = useMemo(() => {
     const matches = expression.match(/\{([^}]+)\}/g);
@@ -38,13 +67,41 @@ export function FormulaEditor({
   }, [expression]);
 
   const insertField = (fieldId: string) => {
-    onExpressionChange(expression + `{${fieldId}}`);
-    setShowFieldHelper(false);
+    const field = fields.find((f) => f.id === fieldId);
+    if (!field) return;
+
+    const labelToken = `{${field.label}}`;
+    
+    if (textareaRef.current) {
+      const start = textareaRef.current.selectionStart;
+      const end = textareaRef.current.selectionEnd;
+      
+      const newDisplayValue = 
+        displayValue.substring(0, start) + 
+        labelToken + 
+        displayValue.substring(end);
+        
+      // sync with the parent
+      onExpressionChange(labelsToIds(newDisplayValue));
+
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+          const newCursorPos = start + labelToken.length;
+          textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
+        }
+      }, 0);
+    } else {
+      const newDisplayValue = displayValue + labelToken;
+      onExpressionChange(labelsToIds(newDisplayValue));
+    }
+    
+    // setShowFieldHelper(false);
   };
 
   return (
-    <div className="space-y-3">
-      {/* Target field */}
+    <div className="space-y-4">
+      {/* Target field select */}
       <div>
         <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           Store result in
@@ -81,9 +138,10 @@ export function FormulaEditor({
         </div>
 
         <textarea
-          value={expression}
-          onChange={(e) => onExpressionChange(e.target.value)}
-          placeholder="e.g. {field_id_1} + {field_id_2} * 2"
+          ref={textareaRef}
+          value={displayValue} 
+          onChange={handleTextareaChange}
+          placeholder="e.g. {Revenue} + {Costs} * 2"
           className="h-20 w-full rounded border border-input bg-background px-2 py-1.5 font-mono text-xs resize-none"
         />
 
@@ -111,25 +169,37 @@ export function FormulaEditor({
         )}
       </div>
 
-      {/* Referenced fields */}
+      {/* System Debug / References */}
       {referencedFields.length > 0 && (
-        <div>
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            References
-          </span>
-          <div className="mt-1 flex flex-wrap gap-1">
-            {referencedFields.map((fId, i) => {
-              const field = fields.find((f) => f.id === fId);
-              return (
-                <span
-                  key={i}
-                  className="rounded bg-violet-500/10 px-1.5 py-0.5 text-[10px] font-mono text-violet-600"
-                >
-                  {field?.label || fId}
-                </span>
-              );
-            })}
+        <div className="space-y-2">
+          <div>
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              System References (Debug)
+            </span>
+            <div className="mt-1 flex flex-wrap gap-1">
+              {referencedFields.map((fId, i) => {
+                const field = fields.find((f) => f.id === fId);
+                const isValid = !!field; 
+                
+                return (
+                  <span
+                    key={i}
+                    className={`rounded px-1.5 py-0.5 text-[10px] font-mono ${
+                      isValid 
+                        ? 'bg-violet-500/10 text-violet-600' 
+                        : 'bg-red-500/10 text-red-600'
+                    }`}
+                  >
+                    {isValid ? `${field.label} [${fId}]` : `Unknown [${fId}]`}
+                  </span>
+                );
+              })}
+            </div>
           </div>
+          
+          <p className="text-[10px] font-medium text-red-500/90 leading-tight">
+            * Important: Field labels must be uniquely named across your form. If multiple fields share the exact same label, this formula may map to the wrong ID.
+          </p>
         </div>
       )}
     </div>

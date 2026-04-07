@@ -5,7 +5,7 @@ import type {
   FormComponent,
   RendererProps,
 } from '../base';
-import { ComponentIDs } from '../base';
+import { ComponentIDs, createComponent } from '../base';
 
 import type { BaseComponentProps } from '../base';
 import { inp, lbl, Card, Q } from '../ComponentRender.Helper';
@@ -35,16 +35,27 @@ export interface CheckboxValidation extends BasicValidation {
 export const createCheckboxComponent = (
   instanceId: string,
   metadata: ComponentMetadata,
-  props: CheckboxProps,
-  validation: CheckboxValidation
-): FormComponent<'Checkbox', CheckboxProps, CheckboxValidation> => ({
-  id: ComponentIDs.Checkbox,
-  instanceId,
-  metadata,
-  children: [],
-  props,
-  validation,
-});
+  props?: Partial<CheckboxProps>
+): FormComponent<'Checkbox', CheckboxProps, CheckboxValidation> =>
+  createComponent(
+    ComponentIDs.Checkbox,
+    instanceId,
+    metadata,
+    {
+      questionText: 'Select all that apply',
+      layout: 'vertical',
+      defaultValues: [],
+      options: [
+        { id: crypto.randomUUID(), value: 'Option 1' },
+        { id: crypto.randomUUID(), value: 'Option 2' },
+      ],
+      hiddenByDefault: false,
+      ...props,
+    },
+    { required: false } as CheckboxValidation
+  );
+
+
 
 export function CheckboxComponentRenderer({
   props,
@@ -95,8 +106,12 @@ export function CheckboxComponentRenderer({
                     : false,
                   validate: (value) => {
                     // RHF returns an array of values when multiple checkboxes share a name
-                    const selectedCount = Array.isArray(value) ? value.length : (value ? 1 : 0);
-                    
+                    const selectedCount = Array.isArray(value)
+                      ? value.length
+                      : value
+                        ? 1
+                        : 0;
+
                     if (
                       validation?.minSelected &&
                       selectedCount < validation.minSelected

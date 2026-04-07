@@ -5,7 +5,7 @@ import type {
   FormComponent,
   RendererProps,
 } from '../base';
-import { ComponentIDs } from '../base';
+import { ComponentIDs, createComponent } from '../base';
 
 import type { BaseComponentProps } from '../base';
 import { inp, lbl, Card, Q } from '../ComponentRender.Helper';
@@ -31,16 +31,23 @@ export interface RadioProps extends BaseComponentProps {
 export const createRadioComponent = (
   instanceId: string,
   metadata: ComponentMetadata,
-  props: RadioProps,
-  validation: BasicValidation
-): FormComponent<'Radio', RadioProps, BasicValidation> => ({
-  id: ComponentIDs.Radio,
-  instanceId,
-  metadata,
-  children: [],
-  props,
-  validation,
-});
+  props?: Partial<RadioProps>
+): FormComponent<'Radio', RadioProps, BasicValidation> =>
+  createComponent(
+    ComponentIDs.Radio,
+    instanceId,
+    metadata,
+    {
+      questionText: 'Select an option',
+      layout: 'vertical',
+      options: [{ id: crypto.randomUUID(), value: 'Option 1' }],
+      hiddenByDefault: false,
+      ...props,
+    },
+    {
+      required: false,
+    } as BasicValidation
+  );
 
 export function RadioComponentRenderer({
   props,

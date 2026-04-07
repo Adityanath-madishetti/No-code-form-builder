@@ -1,7 +1,6 @@
 import type {
   BaseComponentProps,
   ComponentMetadata,
-  NoValidation,
   TextValidation,
 } from '../base';
 import { ComponentIDs, createComponent } from '../base';
@@ -29,7 +28,7 @@ export const createMultiLineInputComponent = (
     instanceId,
     metadata,
     {
-      questionText: '<p>Enter your response</p>',
+      questionText: 'Enter your response',
       placeholder: '',
       defaultValue: '',
       rows: 4,
@@ -61,7 +60,7 @@ export function MultiLineInputRenderer({
 export function MultiLineInputPropsRenderer({
   instanceId,
   props,
-}: RendererProps<MultiLineInputProps, NoValidation>) {
+}: RendererProps<MultiLineInputProps, TextValidation>) {
   const u = useFormStore((s) => s.updateComponentProps);
   return (
     <div className="space-y-4">

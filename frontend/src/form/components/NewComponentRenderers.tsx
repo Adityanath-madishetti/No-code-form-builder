@@ -307,7 +307,7 @@ export function NameBlockRenderer({
 export function NameBlockPropsRenderer({
   instanceId,
   props,
-}: RendererProps<NameBlockProps, NoValidation>) {
+}: RendererProps<NameBlockProps, BasicValidation>) {
   const u = useFormStore((s) => s.updateComponentProps);
   return (
     <div className="space-y-4">
@@ -409,7 +409,7 @@ export function LocationRenderer({
 export function LocationPropsRenderer({
   instanceId,
   props,
-}: RendererProps<LocationProps, NoValidation>) {
+}: RendererProps<LocationProps, BasicValidation>) {
   const u = useFormStore((s) => s.updateComponentProps);
   return (
     <div className="space-y-4">

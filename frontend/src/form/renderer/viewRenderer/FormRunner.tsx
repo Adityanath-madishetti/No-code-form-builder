@@ -1,4 +1,4 @@
-// src/form/renderer/viewRenderer/RenderForm.tsx
+// src/form/renderer/viewRenderer/FormRunner.tsx
 
 import { useEffect, useRef } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
@@ -7,21 +7,14 @@ import {
   useRuntimeFormStore,
 } from './useRuntimeFormStore';
 import { useShallow } from 'zustand/react/shallow';
-
 import { backendToFrontend } from '@/lib/frontendBackendCompArray';
 import { getComponentRenderer } from '@/form/registry/componentRegistry';
-
-// import { RenderComponent } from '../editRenderer/RenderComponent';
 import type { ComponentID } from '@/form/components/base';
-
 import { FormLogicEngine } from '@/form/logic/formLogicEngine';
-
 import { Button } from '@/components/ui/button';
 
-// 1. Create a private module-level variable to hold the reference
 let globalGetValues: ((instanceId: string) => unknown) | null = null;
 
-// 2. Export a pure function that anyone, anywhere can call
 // eslint-disable-next-line react-refresh/only-export-components
 export const getGlobalFieldValue = (instanceId: string): unknown => {
   if (!globalGetValues) {
@@ -57,9 +50,10 @@ export function FormRunner() {
   const setActivePage = useRuntimeFormStore((s) => s.setActivePage);
 
   useEffect(() => {
-    const rules = formData?.version.logic?.rules;
-    if (rules && rules.length > 0) {
-      logicEngineRef.current = new FormLogicEngine(rules);
+    const rules = formData?.version.logic?.rules || [];
+    const formulas = formData?.version.logic?.formulas || [];
+    if (rules?.length > 0 || formulas?.length > 0) {
+      logicEngineRef.current = new FormLogicEngine(rules, formulas);
       triggerLogicEvaluation(methods.getValues());
     }
   }, [formData, methods]);
@@ -69,7 +63,8 @@ export function FormRunner() {
   ) => {
     if (!logicEngineRef.current) return;
 
-    const actions = await logicEngineRef.current.evaluate(currentValues);
+    const { actions, computedValues } =
+      await logicEngineRef.current.evaluate(currentValues);
 
     const store = useRuntimeFormStore.getState();
 
@@ -92,11 +87,24 @@ export function FormRunner() {
           break;
       }
     });
+
+    // Apply computed formula values directly to React Hook Form
+    Object.entries(computedValues).forEach(([targetId, computedValue]) => {
+      // PREVENT INFINITE LOOPS: Only set the value if it actually changed
+      if (currentValues[targetId] !== computedValue) {
+        console.log(`Setting computed value for ${targetId}:`, computedValue);
+        methods.setValue(targetId, computedValue, {
+          shouldValidate: true,
+          shouldDirty: true,
+        });
+      }
+    });
   };
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/incompatible-library
     const subscription = methods.watch((value) => {
+      console.log('Form values changed:', value);
       triggerLogicEvaluation(value as Record<string, unknown>);
     });
 
@@ -171,24 +179,24 @@ export function FormRunner() {
               }
 
               return (
-                // <div
-                //   key={comp.componentId}
-                //   className="rounded-md border bg-gray-50 p-4 shadow-sm"
-                // >
-                //   <p className="text-sm font-medium text-gray-700">
-                //     Label: <span className="font-bold">{comp.label}</span>
-                //   </p>
-                //   <p className="mb-4 text-xs text-gray-500">
-                //     Instance ID: {comp.componentId} | Type: {comp.componentType}
-                //   </p>
-
+                <div
+                  key={comp.componentId}
+                  className="rounded-md border bg-gray-50 p-4 shadow-sm"
+                >
+                  <p className="text-sm font-medium text-gray-700">
+                    Label: <span className="font-bold">{comp.label}</span>
+                  </p>
+                  <p className="mb-4 text-xs text-gray-500">
+                    Instance ID: {comp.componentId} | Type: {comp.componentType}
+                  </p>
                   <Renderer
+                    key={comp.componentId}
                     metadata={null}
                     props={comp.props}
                     validation={comp.validation}
                     instanceId={comp.componentId}
                   />
-                // </div>
+                </div>
               );
             })
           )}
