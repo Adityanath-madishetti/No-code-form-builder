@@ -1,5 +1,5 @@
 import ProtectedLayout from "../components/layout/ProtectedLayout";
-import Dashboard from "../pages/Dashboard";
+import Dashboard from "../pages/Dashboard/Dashboard";
 import KeyboardShortcutsPage from "../pages/KeyboardShortcutsPage";
 
 import { settingsRoutes } from "./settingsRoutes";
