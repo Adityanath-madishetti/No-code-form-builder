@@ -4,9 +4,9 @@
 @import 'shadcn/tailwind.css';
 @import '@fontsource-variable/geist';
 
-@import './styles/font-theme.css';
-@import './styles/form-theme.css';
-@import './styles/theming-page.css';
+@import './font-theme.css';
+@import './form-theme.css';
+@import './theming-page.css';
 
 @import '@heroui/styles';
 
