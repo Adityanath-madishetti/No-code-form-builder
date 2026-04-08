@@ -53,7 +53,7 @@ export function Workspaces({
   setPublishing,
 }: WorkspacesProps) {
   return (
-    <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border bg-background px-3 py-1">
+    <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border bg-background px-3 py-[5.5px]">
       <div className="flex items-center gap-1">
         <button
           onClick={() => setEditorView('canvas')}

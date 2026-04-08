@@ -3,7 +3,6 @@
  * Recursive condition tree builder.
  * Renders a nested AND/OR group of condition rows.
  */
-import { useCallback } from 'react';
 import { Plus, Trash2, GitBranch } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type {
@@ -19,6 +18,9 @@ import {
   createConditionLeaf,
   createConditionGroup,
 } from '@/form/logic/logicTypes';
+import { formSelectors, useFormStore } from '@/form/store/form.store';
+import { ComponentIDs } from '@/form/components/base';
+import { useState, useCallback } from 'react';
 
 interface FieldOption {
   id: string;
@@ -78,12 +80,36 @@ function LeafRow({
   const needsValue =
     condition.operator !== 'is_empty' && condition.operator !== 'is_not_empty';
 
+  const component = useFormStore(
+    formSelectors.componentById(condition.instanceId)
+  );
+
+  const isDropdownComp = component?.id === ComponentIDs.Dropdown;
+  const isRadioComp = component?.id === ComponentIDs.Radio;
+  const hasSelectableOptions = isRadioComp || isDropdownComp;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const options = (component?.props as any)?.options || [];
+
+  const isPredefined = options.some(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (opt: any) => String(opt.value) === String(condition.value)
+  );
+  const hasValue = condition.value !== undefined && condition.value !== '';
+  const isCustomValue = hasValue && !isPredefined;
+
+  const [forceCustom, setForceCustom] = useState(false);
+  const showCustomInput = forceCustom || isCustomValue;
+
   return (
     <div className="flex items-center gap-1.5 rounded-md border border-border bg-muted/30 px-2 py-1.5">
       {/* Field selector */}
       <select
         value={condition.instanceId}
-        onChange={(e) => onChange({ ...condition, instanceId: e.target.value })}
+        onChange={(e) => {
+          setForceCustom(false);
+          onChange({ ...condition, instanceId: e.target.value, value: '' });
+        }}
         className="h-7 min-w-0 flex-1 rounded border border-input bg-background px-1.5 text-xs"
       >
         <option value="">Select field…</option>
@@ -109,16 +135,60 @@ function LeafRow({
         ))}
       </select>
 
-      {/* Value input */}
-      {needsValue && (
-        <input
-          type="text"
-          value={String(condition.value ?? '')}
-          onChange={(e) => onChange({ ...condition, value: e.target.value })}
-          placeholder="value"
-          className="h-7 w-24 min-w-0 rounded border border-input bg-background px-1.5 text-xs"
-        />
-      )}
+      {/* Value input / select */}
+      {needsValue &&
+        (hasSelectableOptions ? (
+          <>
+            <select
+              value={
+                showCustomInput ? '__custom__' : String(condition.value ?? '')
+              }
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === '__custom__') {
+                  setForceCustom(true);
+                  onChange({ ...condition, value: '' }); // Clear value so they can type
+                } else {
+                  setForceCustom(false);
+                  onChange({ ...condition, value: val });
+                }
+              }}
+              className="h-7 w-24 min-w-0 rounded border border-input bg-background px-1.5 text-xs"
+            >
+              <option value="" disabled>
+                Select...
+              </option>
+              {options.map((opt: { id: string; value: string }) => (
+                <option key={opt.id} value={opt.value}>
+                  {opt.value}
+                </option>
+              ))}
+              <option value="__custom__">Custom...</option>
+            </select>
+
+            {/* Render the actual text input right next to the select if Custom is chosen */}
+            {showCustomInput && (
+              <input
+                type="text"
+                value={String(condition.value ?? '')}
+                onChange={(e) =>
+                  onChange({ ...condition, value: e.target.value })
+                }
+                placeholder="Custom value"
+                autoFocus // Automatically focus so they can start typing
+                className="h-7 w-24 min-w-0 rounded border border-input bg-background px-1.5 text-xs"
+              />
+            )}
+          </>
+        ) : (
+          <input
+            type="text"
+            value={String(condition.value ?? '')}
+            onChange={(e) => onChange({ ...condition, value: e.target.value })}
+            placeholder="value"
+            className="h-7 w-24 min-w-0 rounded border border-input bg-background px-1.5 text-xs"
+          />
+        ))}
 
       {/* Remove */}
       {onRemove && (
