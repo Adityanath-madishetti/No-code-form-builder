@@ -71,6 +71,7 @@ export const ACTION_TYPES = [
   'DISABLE',
   'SET_VALUE',
   'SKIP_PAGE',
+  'CONDITIONAL',
 ] as const;
 
 export type ActionType = (typeof ACTION_TYPES)[number];
@@ -82,6 +83,7 @@ export const ACTION_TYPE_LABELS: Record<ActionType, string> = {
   DISABLE: 'Disable',
   SET_VALUE: 'Set value',
   SKIP_PAGE: 'Skip page',
+  CONDITIONAL: 'If / Then',
 };
 
 export const ACTION_TYPE_COLORS: Record<ActionType, string> = {
@@ -91,6 +93,7 @@ export const ACTION_TYPE_COLORS: Record<ActionType, string> = {
   DISABLE: 'text-orange-500',
   SET_VALUE: 'text-violet-500',
   SKIP_PAGE: 'text-amber-600',
+  CONDITIONAL: 'text-purple-600',
 };
 
 export interface RuleAction {
@@ -98,6 +101,10 @@ export interface RuleAction {
   type: ActionType;
   targetId: string; // componentId or pageId
   value?: unknown; // for SET_VALUE
+
+  condition?: Condition;
+  thenActions?: RuleAction[];
+  elseActions?: RuleAction[];
 }
 
 export const RULE_TYPES = ['field', 'validation', 'navigation'] as const;
@@ -175,11 +182,20 @@ export function createConditionGroup(
 }
 
 export function createRuleAction(type: ActionType = 'SHOW'): RuleAction {
-  return {
+  const action: RuleAction = {
     id: crypto.randomUUID(),
     type,
-    targetId: '',
+    // Fix: Give CONDITIONAL actions a dummy string to bypass Mongoose's empty-string rejection
+    targetId: type === 'CONDITIONAL' ? 'NESTED_LOGIC_BLOCK' : '',
   };
+
+  if (type === 'CONDITIONAL') {
+    action.condition = createConditionGroup('AND');
+    action.thenActions = [];
+    action.elseActions = [];
+  }
+
+  return action;
 }
 
 export function createLogicRule(

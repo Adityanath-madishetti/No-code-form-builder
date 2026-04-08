@@ -8,6 +8,7 @@ const ACTION_TYPES = new Set([
     "DISABLE",
     "SET_VALUE",
     "SKIP_PAGE",
+    "CONDITIONAL",
 ]);
 
 function asIso(value) {
@@ -59,12 +60,32 @@ function normalizeConditionNode(node) {
 
 function normalizeAction(action) {
     const type = ACTION_TYPES.has(action?.type) ? action.type : "SHOW";
-    return {
+
+    let targetId = typeof action?.targetId === "string" ? action.targetId : "";
+    if (targetId.trim() === "") targetId = "UNASSIGNED";
+
+    const normalized = {
         id: typeof action?.id === "string" ? action.id : crypto.randomUUID(),
         type,
-        targetId: typeof action?.targetId === "string" ? action.targetId : "",
+        targetId,
         value: action?.value,
     };
+
+    if (type === "CONDITIONAL") {
+        normalized.targetId = "NESTED_LOGIC_BLOCK"; 
+        
+        normalized.condition = normalizeConditionNode(action.condition);
+        
+        normalized.thenActions = Array.isArray(action.thenActions)
+            ? action.thenActions.map(normalizeAction) // <-- Recursive call
+            : [];
+            
+        normalized.elseActions = Array.isArray(action.elseActions)
+            ? action.elseActions.map(normalizeAction) // <-- Recursive call
+            : [];
+    }
+
+    return normalized;
 }
 
 function extractReferencedFields(expression = "") {
@@ -104,6 +125,9 @@ function normalizeFormula(formula = {}) {
             .map((id) => id.trim())
         : extractReferencedFields(expression);
 
+    let targetId = typeof formula.targetId === "string" ? formula.targetId : "";
+    if (targetId.trim() === "") targetId = "UNASSIGNED";
+
     return {
         ruleId:
             typeof formula.ruleId === "string"
@@ -111,7 +135,7 @@ function normalizeFormula(formula = {}) {
                 : crypto.randomUUID(),
         name: typeof formula.name === "string" ? formula.name : "New Formula",
         enabled: formula.enabled !== false,
-        targetId: typeof formula.targetId === "string" ? formula.targetId : "",
+        targetId,
         expression,
         referencedFields,
         updatedAt: asIso(formula.updatedAt),

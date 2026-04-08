@@ -5,17 +5,196 @@
  * or the formula editor for the active formula.
  */
 import { useMemo, useCallback } from 'react';
-import { ArrowLeft, Plus, Zap, Calculator } from 'lucide-react';
+import { ArrowLeft, Plus, Zap, Calculator, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLogicStore } from '@/form/logic/logic.store';
 import { useFormStore } from '@/form/store/form.store';
-import { createRuleAction } from '@/form/logic/logicTypes';
-import type { Condition, RuleAction } from '@/form/logic/logicTypes';
+import {
+  createRuleAction,
+  createConditionGroup,
+  ACTION_TYPES,
+  ACTION_TYPE_LABELS,
+  ACTION_TYPE_COLORS,
+} from '@/form/logic/logicTypes';
+import type {
+  Condition,
+  RuleAction,
+  RuleType,
+  ActionType,
+} from '@/form/logic/logicTypes';
 import { RULE_TYPES } from '@/form/logic/logicTypes';
 import { ConditionBuilder } from './ConditionBuilder';
 import { ActionRow } from './ActionRow';
 import { FormulaEditor } from './FormulaEditor';
 
+// ── Recursive Action List Component ──
+// This handles infinite nesting of IF/THEN/ELSE blocks when ActionType is CONDITIONAL
+// ── Recursive Action List Component ──
+interface RecursiveActionListProps {
+  actions: RuleAction[];
+  onChange: (actions: RuleAction[]) => void;
+  fields: { id: string; label: string }[];
+  targets: { id: string; label: string; type: 'component' | 'page' }[];
+  ruleType: RuleType;
+}
+
+function RecursiveActionList({
+  actions,
+  onChange,
+  fields,
+  targets,
+  ruleType,
+}: RecursiveActionListProps) {
+  const handleActionChange = (index: number, updated: RuleAction) => {
+    const newActions = [...actions];
+
+    // Intercept: If the user just switched the type to CONDITIONAL
+    if (
+      updated.type === 'CONDITIONAL' &&
+      newActions[index].type !== 'CONDITIONAL'
+    ) {
+      updated.condition = updated.condition || createConditionGroup('AND');
+      updated.thenActions = updated.thenActions || [];
+      updated.elseActions = updated.elseActions || [];
+      // Fix: Populate the targetId to bypass Mongoose validation
+      updated.targetId = 'NESTED_LOGIC_BLOCK';
+    }
+    // Intercept: If the user switched FROM Conditional back to a standard action
+    else if (
+      updated.type !== 'CONDITIONAL' &&
+      newActions[index].type === 'CONDITIONAL'
+    ) {
+      // Clear the dummy ID so they are forced to pick a real component target
+      updated.targetId = '';
+    }
+
+    newActions[index] = updated;
+    onChange(newActions);
+  };
+
+  const handleRemove = (index: number) => {
+    onChange(actions.filter((_, i) => i !== index));
+  };
+
+  const handleAddAction = () => {
+    onChange([
+      ...actions,
+      createRuleAction(ruleType === 'navigation' ? 'SKIP_PAGE' : 'SHOW'),
+    ]);
+  };
+
+  return (
+    <div className="space-y-3">
+      {actions.map((action, index) => (
+        <div key={action.id}>
+          {action.type === 'CONDITIONAL' ? (
+            /* ── NESTED BLOCK (Replaces ActionRow entirely) ── */
+            <div className="space-y-4 rounded-md border bg-muted/30 p-2">
+              {/* Header with integrated Type Selector and Trash Button */}
+              <div className="flex items-center justify-between border-b pb-3">
+                <select
+                  value={action.type}
+                  onChange={(e) =>
+                    handleActionChange(index, {
+                      ...action,
+                      type: e.target.value as ActionType,
+                    })
+                  }
+                  className={`h-7 min-w-0 rounded border border-input bg-background px-1.5 text-xs font-medium ${ACTION_TYPE_COLORS[action.type]}`}
+                >
+                  {ACTION_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                      {ACTION_TYPE_LABELS[type]}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  onClick={() => handleRemove(index)}
+                  className="shrink-0 text-muted-foreground transition-colors hover:text-destructive"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </div>
+
+              {/* Nested IF */}
+              <section>
+                <h4 className="mb-2 text-[10px] font-bold tracking-widest text-purple-600 uppercase">
+                  IF
+                </h4>
+                {action.condition && (
+                  <ConditionBuilder
+                    condition={action.condition}
+                    fields={fields}
+                    onChange={(cond) =>
+                      handleActionChange(index, { ...action, condition: cond })
+                    }
+                  />
+                )}
+              </section>
+
+              {/* Nested THEN */}
+              <section>
+                <h4 className="mb-2 text-[10px] font-bold tracking-widest text-green-600 uppercase">
+                  THEN
+                </h4>
+                <RecursiveActionList
+                  actions={action.thenActions || []}
+                  onChange={(thenActs) =>
+                    handleActionChange(index, {
+                      ...action,
+                      thenActions: thenActs,
+                    })
+                  }
+                  fields={fields}
+                  targets={targets}
+                  ruleType={ruleType}
+                />
+              </section>
+
+              {/* Nested ELSE */}
+              <section>
+                <h4 className="mb-2 text-[10px] font-bold tracking-widest text-red-500 uppercase">
+                  ELSE
+                </h4>
+                <RecursiveActionList
+                  actions={action.elseActions || []}
+                  onChange={(elseActs) =>
+                    handleActionChange(index, {
+                      ...action,
+                      elseActions: elseActs,
+                    })
+                  }
+                  fields={fields}
+                  targets={targets}
+                  ruleType={ruleType}
+                />
+              </section>
+            </div>
+          ) : (
+            /* ── STANDARD BLOCK (Normal Action Row) ── */
+            <ActionRow
+              action={action}
+              targets={targets}
+              onChange={(updated) => handleActionChange(index, updated)}
+              onRemove={() => handleRemove(index)}
+            />
+          )}
+        </div>
+      ))}
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-6 px-2 text-[10px]"
+        onClick={handleAddAction}
+      >
+        <Plus className="mr-0.5 h-2.5 w-2.5" />
+        Add action
+      </Button>
+    </div>
+  );
+}
+
+// ── Main Logic Playground Component ──
 interface LogicPlaygroundProps {
   onClose: () => void;
 }
@@ -28,13 +207,13 @@ export function LogicPlayground({ onClose }: LogicPlaygroundProps) {
   const formula = useLogicStore((s) =>
     s.formulas.find((f) => f.ruleId === s.activeFormulaId)
   );
+
   const updateRule = useLogicStore((s) => s.updateRule);
   const updateRuleCondition = useLogicStore((s) => s.updateRuleCondition);
   const updateRuleThenActions = useLogicStore((s) => s.updateRuleThenActions);
   const updateRuleElseActions = useLogicStore((s) => s.updateRuleElseActions);
   const updateFormula = useLogicStore((s) => s.updateFormula);
 
-  // Get form fields and pages for selectors
   const components = useFormStore((s) => s.components);
   const pages = useFormStore((s) => s.pages);
   const formPages = useFormStore((s) => s.form?.pages ?? []);
@@ -70,58 +249,12 @@ export function LogicPlayground({ onClose }: LogicPlaygroundProps) {
     return [...compTargets, ...pageTargets];
   }, [components, pages, formPages]);
 
-  // ── Rule editing callbacks ──
-
   const handleConditionChange = useCallback(
     (condition: Condition) => {
       if (activeRuleId) updateRuleCondition(activeRuleId, condition);
     },
     [activeRuleId, updateRuleCondition]
   );
-
-  const handleThenChange = useCallback(
-    (index: number, updated: RuleAction) => {
-      if (!rule) return;
-      const newActions = [...rule.thenActions];
-      newActions[index] = updated;
-      updateRuleThenActions(rule.ruleId, newActions);
-    },
-    [rule, updateRuleThenActions]
-  );
-
-  const handleElseChange = useCallback(
-    (index: number, updated: RuleAction) => {
-      if (!rule) return;
-      const newActions = [...rule.elseActions];
-      newActions[index] = updated;
-      updateRuleElseActions(rule.ruleId, newActions);
-    },
-    [rule, updateRuleElseActions]
-  );
-
-  const removeThenAction = useCallback(
-    (index: number) => {
-      if (!rule) return;
-      updateRuleThenActions(
-        rule.ruleId,
-        rule.thenActions.filter((_, i) => i !== index)
-      );
-    },
-    [rule, updateRuleThenActions]
-  );
-
-  const removeElseAction = useCallback(
-    (index: number) => {
-      if (!rule) return;
-      updateRuleElseActions(
-        rule.ruleId,
-        rule.elseActions.filter((_, i) => i !== index)
-      );
-    },
-    [rule, updateRuleElseActions]
-  );
-
-  // ── No active rule/formula ──
 
   if (!rule && !formula) {
     return (
@@ -143,12 +276,10 @@ export function LogicPlayground({ onClose }: LogicPlaygroundProps) {
     );
   }
 
-  // ── Formula editor ──
-
   if (formula) {
     return (
       <div className="flex h-full flex-col">
-        {/* Header */}
+        {/* Formula Header & Body */}
         <div className="flex items-center gap-2 border-b border-border bg-background/80 px-4 py-2.5 backdrop-blur-sm">
           <button
             onClick={onClose}
@@ -167,8 +298,6 @@ export function LogicPlayground({ onClose }: LogicPlaygroundProps) {
             placeholder="Formula name…"
           />
         </div>
-
-        {/* Body */}
         <div className="flex-1 overflow-y-auto p-6">
           <div className="mx-auto max-w-xl">
             <FormulaEditor
@@ -195,11 +324,8 @@ export function LogicPlayground({ onClose }: LogicPlaygroundProps) {
     );
   }
 
-  // ── Rule editor ──
-
   return (
     <div className="flex h-full flex-col">
-      {/* Header */}
       <div className="flex items-center gap-2 border-b border-border bg-background/80 px-4 py-2.5 backdrop-blur-sm">
         <button
           onClick={onClose}
@@ -230,10 +356,8 @@ export function LogicPlayground({ onClose }: LogicPlaygroundProps) {
         </select>
       </div>
 
-      {/* Body */}
       <div className="flex-1 overflow-y-auto p-6">
         <div className="mx-auto max-w-xl space-y-6">
-          {/* IF section */}
           <section>
             <h3 className="mb-2 text-xs font-bold tracking-widest text-primary uppercase">
               IF
@@ -245,45 +369,22 @@ export function LogicPlayground({ onClose }: LogicPlaygroundProps) {
             />
           </section>
 
-          {/* THEN section */}
           <section>
             <h3 className="mb-2 text-xs font-bold tracking-widest text-green-600 uppercase">
               THEN
             </h3>
-            <div className="space-y-1.5">
-              {rule!.thenActions.map((action, index) => (
-                <ActionRow
-                  key={action.id}
-                  action={action}
-                  targets={targetOptions}
-                  onChange={(updated) => handleThenChange(index, updated)}
-                  onRemove={
-                    rule!.thenActions.length > 1
-                      ? () => removeThenAction(index)
-                      : undefined
-                  }
-                />
-              ))}
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="mt-1.5 h-6 px-2 text-[10px]"
-              onClick={() =>
-                updateRuleThenActions(rule!.ruleId, [
-                  ...rule!.thenActions,
-                  createRuleAction(
-                    rule!.ruleType === 'navigation' ? 'SKIP_PAGE' : 'SHOW'
-                  ),
-                ])
+            {/* Replaced manual map with RecursiveActionList */}
+            <RecursiveActionList
+              actions={rule!.thenActions}
+              onChange={(actions) =>
+                updateRuleThenActions(rule!.ruleId, actions)
               }
-            >
-              <Plus className="mr-0.5 h-2.5 w-2.5" />
-              Add action
-            </Button>
+              fields={fieldOptions}
+              targets={targetOptions}
+              ruleType={rule!.ruleType}
+            />
           </section>
 
-          {/* ELSE section */}
           <section>
             <h3 className="mb-2 text-xs font-bold tracking-widest text-red-500 uppercase">
               ELSE{' '}
@@ -292,35 +393,15 @@ export function LogicPlayground({ onClose }: LogicPlaygroundProps) {
               </span>
             </h3>
             {rule!.elseActions.length > 0 ? (
-              <>
-                <div className="space-y-1.5">
-                  {rule!.elseActions.map((action, index) => (
-                    <ActionRow
-                      key={action.id}
-                      action={action}
-                      targets={targetOptions}
-                      onChange={(updated) => handleElseChange(index, updated)}
-                      onRemove={() => removeElseAction(index)}
-                    />
-                  ))}
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="mt-1.5 h-6 px-2 text-[10px]"
-                onClick={() =>
-                  updateRuleElseActions(rule!.ruleId, [
-                    ...rule!.elseActions,
-                    createRuleAction(
-                      rule!.ruleType === 'navigation' ? 'SKIP_PAGE' : 'HIDE'
-                    ),
-                  ])
+              <RecursiveActionList
+                actions={rule!.elseActions}
+                onChange={(actions) =>
+                  updateRuleElseActions(rule!.ruleId, actions)
                 }
-              >
-                  <Plus className="mr-0.5 h-2.5 w-2.5" />
-                  Add action
-                </Button>
-              </>
+                fields={fieldOptions}
+                targets={targetOptions}
+                ruleType={rule!.ruleType}
+              />
             ) : (
               <Button
                 variant="outline"

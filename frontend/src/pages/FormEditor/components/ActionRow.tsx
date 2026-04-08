@@ -28,7 +28,7 @@ export function ActionRow({ action, targets, onChange, onRemove }: ActionRowProp
     : targets.filter((t) => t.type === 'component');
 
   return (
-    <div className="flex items-center gap-1.5 rounded-md border border-border bg-muted/30 px-2 py-1.5">
+    <div className="flex items-center gap-1.5 rounded-md border border-border bg-muted/30 px-2 py-2">
       {/* Action type */}
       <select
         value={action.type}

@@ -189,7 +189,9 @@ export const useLogicStore = create<LogicStore>()(
       set((state) => {
         const formula = state.formulas.find((f) => f.ruleId === ruleId);
         if (formula) {
-          Object.assign(formula, updates, { updatedAt: new Date().toISOString() });
+          Object.assign(formula, updates, {
+            updatedAt: new Date().toISOString(),
+          });
         }
       }),
 
@@ -212,7 +214,9 @@ export const useLogicStore = create<LogicStore>()(
 
     updateComponentShuffleStack: (stackId, updates) =>
       set((state) => {
-        const stack = state.componentShuffleStacks.find((s) => s.stackId === stackId);
+        const stack = state.componentShuffleStacks.find(
+          (s) => s.stackId === stackId
+        );
         if (stack) Object.assign(stack, updates);
       }),
 
@@ -280,6 +284,7 @@ export function getDependencyEdges(
 ): DependencyEdge[] {
   const edges: DependencyEdge[] = [];
 
+  // Helper to extract component IDs from a condition tree
   function extractFieldIds(condition: Condition): string[] {
     if (condition.type === 'leaf') {
       return condition.instanceId ? [condition.instanceId] : [];
@@ -287,24 +292,53 @@ export function getDependencyEdges(
     return condition.conditions.flatMap(extractFieldIds);
   }
 
-  for (const rule of rules) {
-    if (!rule.enabled) continue;
-    const sourceFields = extractFieldIds(rule.condition);
-    const allActions = [...rule.thenActions, ...rule.elseActions];
+  // Recursive helper to process nested actions and inherited dependencies
+  function processActions(
+    actions: RuleAction[],
+    inheritedSourceFields: string[],
+    ruleId: string
+  ) {
+    for (const action of actions) {
+      if (action.type === 'CONDITIONAL') {
+        // 1. Extract sources from this specific nested condition
+        const nestedSources = action.condition
+          ? extractFieldIds(action.condition)
+          : [];
 
-    for (const action of allActions) {
-      if (!action.targetId) continue;
-      for (const sourceFieldId of sourceFields) {
-        edges.push({
-          sourceFieldId,
-          targetId: action.targetId,
-          ruleId: rule.ruleId,
-          actionType: action.type,
-        });
+        // 2. Combine parent condition sources with nested condition sources
+        const combinedSources = [...inheritedSourceFields, ...nestedSources];
+
+        // 3. Recursively process children
+        if (action.thenActions)
+          processActions(action.thenActions, combinedSources, ruleId);
+        if (action.elseActions)
+          processActions(action.elseActions, combinedSources, ruleId);
+      } else {
+        // Standard Action: Create edges linking all inherited sources to this target
+        if (!action.targetId) continue;
+        for (const sourceFieldId of inheritedSourceFields) {
+          edges.push({
+            sourceFieldId,
+            targetId: action.targetId,
+            ruleId,
+            actionType: action.type,
+          });
+        }
       }
     }
   }
 
+  // Process Logic Rules
+  for (const rule of rules) {
+    if (!rule.enabled) continue;
+    const rootSourceFields = extractFieldIds(rule.condition);
+
+    // Kick off the recursive trace
+    processActions(rule.thenActions, rootSourceFields, rule.ruleId);
+    processActions(rule.elseActions, rootSourceFields, rule.ruleId);
+  }
+
+  // Process Formulas
   for (const formula of formulas) {
     if (!formula.enabled || !formula.targetId) continue;
     for (const sourceFieldId of formula.referencedFields || []) {

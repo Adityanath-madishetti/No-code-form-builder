@@ -190,14 +190,20 @@ const RuleActionSchema = new Schema(
         id: { type: String, required: true },
         type: {
             type: String,
-            enum: ["SHOW", "HIDE", "ENABLE", "DISABLE", "SET_VALUE", "SKIP_PAGE"],
+            enum: ["SHOW", "HIDE", "ENABLE", "DISABLE", "SET_VALUE", "SKIP_PAGE", "CONDITIONAL"],
             required: true,
         },
         targetId: { type: String, required: true },
         value: { type: Schema.Types.Mixed },
+        condition: { type: Schema.Types.Mixed },
     },
     { _id: false }
 );
+
+RuleActionSchema.add({
+    thenActions: [RuleActionSchema],
+    elseActions: [RuleActionSchema],
+});
 
 const LogicRuleSchema = new Schema(
     {

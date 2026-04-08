@@ -5,12 +5,48 @@ const ajv = new Ajv({ allErrors: true, verbose: true });
 /**
  * JSON Schema for validating a FormVersion payload
  * when saving/updating from the builder (PUT /api/forms/:formId/versions/:version).
- *
- * This validates the top-level structure — individual component props
- * use Schema.Types.Mixed in Mongoose for flexibility.
  */
 const formVersionPayloadSchema = {
     type: "object",
+    // 1. Define a reusable, recursive schema block for actions
+    $defs: {
+        ruleAction: {
+            type: "object",
+            properties: {
+                id: { type: "string" },
+                type: {
+                    type: "string",
+                    enum: [
+                        "SHOW",
+                        "HIDE",
+                        "ENABLE",
+                        "DISABLE",
+                        "SET_VALUE",
+                        "SKIP_PAGE",
+                        "CONDITIONAL", // <-- Added support for nested logic
+                    ],
+                },
+                targetId: { type: "string" }, // Empty string is valid for CONDITIONAL
+                
+                // Safe way to allow any type without crashing AJV strict mode
+                value: { 
+                    type: ["string", "number", "boolean", "object", "array", "null"] 
+                },
+                
+                // Nested properties for CONDITIONAL actions
+                condition: { type: ["object", "null"] },
+                thenActions: {
+                    type: "array",
+                    items: { $ref: "#/$defs/ruleAction" }, // Recursive reference
+                },
+                elseActions: {
+                    type: "array",
+                    items: { $ref: "#/$defs/ruleAction" }, // Recursive reference
+                },
+            },
+            required: ["id", "type", "targetId"],
+        },
+    },
     properties: {
         meta: {
             type: "object",
@@ -129,6 +165,8 @@ const formVersionPayloadSchema = {
                                     enum: ["layout", "input", "selection"],
                                 },
                                 order: { type: "number" },
+                                props: { type: "object" }, 
+                                validation: { type: "object" },
                             },
                             required: ["componentId", "componentType"],
                         },
@@ -154,53 +192,15 @@ const formVersionPayloadSchema = {
                             },
                             updatedAt: { type: "string" },
                             condition: {
-                                anyOf: [{ type: "object" }, { type: "null" }],
+                                type: ["object", "null"],
                             },
                             thenActions: {
                                 type: "array",
-                                items: {
-                                    type: "object",
-                                    properties: {
-                                        id: { type: "string" },
-                                        type: {
-                                            type: "string",
-                                            enum: [
-                                                "SHOW",
-                                                "HIDE",
-                                                "ENABLE",
-                                                "DISABLE",
-                                                "SET_VALUE",
-                                                "SKIP_PAGE",
-                                            ],
-                                        },
-                                        targetId: { type: "string" },
-                                        value: {},
-                                    },
-                                    required: ["id", "type", "targetId"],
-                                },
+                                items: { $ref: "#/$defs/ruleAction" },
                             },
                             elseActions: {
                                 type: "array",
-                                items: {
-                                    type: "object",
-                                    properties: {
-                                        id: { type: "string" },
-                                        type: {
-                                            type: "string",
-                                            enum: [
-                                                "SHOW",
-                                                "HIDE",
-                                                "ENABLE",
-                                                "DISABLE",
-                                                "SET_VALUE",
-                                                "SKIP_PAGE",
-                                            ],
-                                        },
-                                        targetId: { type: "string" },
-                                        value: {},
-                                    },
-                                    required: ["id", "type", "targetId"],
-                                },
+                                items: { $ref: "#/$defs/ruleAction" },
                             },
                         },
                         required: ["ruleId", "condition"],
