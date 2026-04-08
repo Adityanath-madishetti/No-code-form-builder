@@ -11,7 +11,7 @@ import {
   Eye,
   Globe,
 } from 'lucide-react';
-import { useFormStore } from '@/form/store/formStore';
+import { useFormStore } from '@/form/store/form.store';
 
 interface WorkspacesProps {
   editorView: 'canvas' | 'logic' | 'workflow' | 'formProperties' | 'theming';

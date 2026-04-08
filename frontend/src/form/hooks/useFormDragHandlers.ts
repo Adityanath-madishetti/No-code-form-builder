@@ -1,5 +1,5 @@
 // src/form/hooks/useFormDragHandlers.ts
-import { useFormStore, type FormDragData } from '@/form/store/formStore';
+import { useFormStore, type FormDragData } from '@/form/store/form.store';
 import {
   TEMP_COMPONENT_PLACEHOLDER_ID,
   TEMP_PAGE_PLACEHOLDER_ID,

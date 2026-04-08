@@ -1,7 +1,7 @@
 // src/form/renderer/SelectableWrapper.tsx
 import { useState } from 'react';
-import { formSelectors, useFormStore } from '@/form/store/formStore';
-import { useGroupStore } from '@/form/store/groupStore';
+import { formSelectors, useFormStore } from '@/form/store/form.store';
+import { useGroupStore } from '@/form/store/group.store';
 import type { PageID } from '@/form/components/base';
 // import { TEMP_PAGE_PLACEHOLDER_ID } from '@/form/utils/DndUtils';
 

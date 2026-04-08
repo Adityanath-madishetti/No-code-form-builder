@@ -45,7 +45,7 @@ import {
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { catalogRegistry } from '@/form/registry/componentRegistry';
-import { useFormStore } from '@/form/store/formStore';
+import { useFormStore } from '@/form/store/form.store';
 import { DRAG_CATALOG_COMPONENT_ID } from '@/form/utils/DndUtils';
 
 // Icons mapped to component IDs

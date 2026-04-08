@@ -3,7 +3,7 @@
  * Functional renderers for all new components — boxy, flat design.
  */
 import type { RendererProps } from './base';
-import { useFormStore } from '../store/formStore';
+import { useFormStore } from '../store/form.store';
 import {
   Upload,
   Image as ImageIcon,

@@ -1,7 +1,7 @@
 // src/form/theme/FormThemeProvider.tsx
 import type { ReactNode } from 'react';
 import { useMemo } from 'react';
-import { formSelectors, useFormStore } from '@/form/store/formStore';
+import { formSelectors, useFormStore } from '@/form/store/form.store';
 import { formThemeColors, formThemeModes } from './formTheme';
 import type {
   FormTheme,

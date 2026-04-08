@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useFormStore } from '@/form/store/formStore';
+import { useFormStore } from '@/form/store/form.store';
 import type { SidebarPanelId } from './components/EditorSidebar';
 
 export type FormEditorView = 'canvas' | 'logic' | 'workflow' | 'formProperties' | 'theming';

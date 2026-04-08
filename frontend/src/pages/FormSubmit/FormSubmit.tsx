@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import type { PublicFormData } from '@/form/renderer/viewRenderer/types';
-import { useRuntimeFormStore } from '@/form/renderer/viewRenderer/useRuntimeFormStore';
+import type { PublicFormData } from '@/form/renderer/viewRenderer/runtimeForm.types';
+import { useRuntimeFormStore } from '@/form/renderer/viewRenderer/runtimeForm.store';
 import { api } from '@/lib/api';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';

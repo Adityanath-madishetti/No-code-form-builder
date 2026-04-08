@@ -1,5 +1,5 @@
 // src/pages/FormEditor/components/DebugPanel.tsx
-import { useFormStore } from '@/form/store/formStore';
+import { useFormStore } from '@/form/store/form.store';
 import { serializeFormFromState } from '@/form/store/formSerialization';
 import { useMemo, useState } from 'react';
 import { Copy, Check, RefreshCw } from 'lucide-react';

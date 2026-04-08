@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import { type PublicFormData } from './types';
+import { type PublicFormData } from './runtimeForm.types';
 
 import { type InstanceID, type PageID } from '@/form/components/base';
 

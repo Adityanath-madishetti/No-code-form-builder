@@ -5,7 +5,7 @@ import { useForm, FormProvider } from 'react-hook-form';
 import {
   runtimeFormSelector,
   useRuntimeFormStore,
-} from './useRuntimeFormStore';
+} from './runtimeForm.store';
 import { useShallow } from 'zustand/react/shallow';
 import { backendToFrontend } from '@/lib/frontendBackendCompArray';
 import { getComponentRenderer } from '@/form/registry/componentRegistry';

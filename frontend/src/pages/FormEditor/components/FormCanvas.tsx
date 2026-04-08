@@ -1,5 +1,5 @@
 // src/pages/FormEditor/components/FormCanvas.tsx
-import { useFormStore } from '@/form/store/formStore';
+import { useFormStore } from '@/form/store/form.store';
 import { FormModeProvider } from '@/form/context/FormModeContext';
 import { FormThemeProvider } from '@/form/theme/FormThemeProvider';
 import { RenderPage } from '@/form/renderer/editRenderer/RenderPage';

@@ -7,7 +7,7 @@ import type {
 import { ComponentIDs, createComponent } from '../base';
 
 import type { RendererProps } from '../base';
-import { useFormStore } from '@/form/store/formStore';
+import { useFormStore } from '@/form/store/form.store';
 
 import { inp, lbl, Card, Q } from '../ComponentRender.Helper';
 import { Circle, Heart, Star } from 'lucide-react';

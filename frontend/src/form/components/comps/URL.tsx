@@ -1,4 +1,4 @@
-import { useFormStore } from '@/form/store/formStore';
+import { useFormStore } from '@/form/store/form.store';
 import type {
   BaseComponentProps,
   ComponentMetadata,

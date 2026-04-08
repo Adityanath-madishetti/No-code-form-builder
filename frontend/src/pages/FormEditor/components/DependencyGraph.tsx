@@ -5,8 +5,8 @@
  */
 import { useMemo } from 'react';
 import { GitBranch } from 'lucide-react';
-import { useLogicStore, getDependencyEdges } from '@/form/logic/logicStore';
-import { useFormStore } from '@/form/store/formStore';
+import { useLogicStore, getDependencyEdges } from '@/form/logic/logic.store';
+import { useFormStore } from '@/form/store/form.store';
 import { ACTION_TYPE_LABELS, ACTION_TYPE_COLORS } from '@/form/logic/logicTypes';
 
 export function DependencyGraph() {

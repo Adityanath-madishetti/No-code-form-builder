@@ -5,7 +5,7 @@
  */
 /* eslint-disable react-hooks/static-components */
 
-import { useFormStore } from '@/form/store/formStore';
+import { useFormStore } from '@/form/store/form.store';
 import { useShallow } from 'zustand/react/shallow';
 import { getComponentPropsRenderer } from '@/form/registry/componentRegistry';
 import { Settings2, EyeOff } from 'lucide-react';

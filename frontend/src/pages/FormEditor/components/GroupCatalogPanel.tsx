@@ -1,9 +1,9 @@
 import { useDraggable } from '@dnd-kit/react';
-import { useGroupStore } from '@/form/store/groupStore';
-import type { Group } from '@/form/store/groupStore';
+import { useGroupStore } from '@/form/store/group.store';
+import type { Group } from '@/form/store/group.store';
 import { DRAG_CATALOG_GROUP_ID } from '@/form/utils/DndUtils';
 import { Layers } from 'lucide-react';
-import type { CatalogGroupDragData } from '@/form/store/formStore';
+import type { CatalogGroupDragData } from '@/form/store/form.store';
 
 function GroupItem({ group }: { group: Group }) {
   const { ref, isDragging } = useDraggable({

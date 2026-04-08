@@ -1,7 +1,7 @@
 // src/pages/FormEditor/components/ThemingPage.tsx
 import { useCallback, useMemo, useRef } from 'react';
-import { useFormStore, formSelectors } from '@/form/store/formStore';
-import { useThemeUIStore } from '@/form/theme/themeStore';
+import { useFormStore, formSelectors } from '@/form/store/form.store';
+import { useThemeUIStore } from '@/form/theme/theme.store';
 import { FormThemeProvider } from '@/form/theme/FormThemeProvider';
 import { FormModeProvider } from '@/form/context/FormModeContext';
 import { RenderPage } from '@/form/renderer/editRenderer/RenderPage';
@@ -23,7 +23,7 @@ import {
   Type,
 } from 'lucide-react';
 import { formFontNames, type formFontName } from '@/form/theme/formTheme';
-import type { ThemeSection, BackgroundSubTab } from '@/form/theme/themeStore';
+import type { ThemeSection, BackgroundSubTab } from '@/form/theme/theme.store';
 
 // ── Theme color swatch map ──
 const THEME_COLORS: { key: string; color: formThemeColor; bg: string }[] = [

@@ -14,14 +14,14 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { useLogicStore } from '@/form/logic/logicStore';
+import { useLogicStore } from '@/form/logic/logic.store';
 import {
   ACTION_TYPE_LABELS,
   ACTION_TYPE_COLORS,
   RULE_TYPES,
   type RuleType,
 } from '@/form/logic/logicTypes';
-import { useFormStore } from '@/form/store/formStore';
+import { useFormStore } from '@/form/store/form.store';
 import { DependencyGraph } from './DependencyGraph';
 
 type RuleFilter = 'all' | RuleType | 'formula';

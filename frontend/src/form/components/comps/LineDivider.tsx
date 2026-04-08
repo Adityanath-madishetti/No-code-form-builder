@@ -9,7 +9,7 @@ import type {
 import { ComponentIDs, createComponent } from '../base';
 import { inp, lbl } from '../ComponentRender.Helper';
 
-import { useFormStore } from '@/form/store/formStore';
+import { useFormStore } from '@/form/store/form.store';
 
 export interface LineDividerProps extends BaseComponentProps {
   style: 'solid' | 'dashed' | 'dotted';

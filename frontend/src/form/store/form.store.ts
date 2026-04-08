@@ -90,7 +90,7 @@ import type {
   DRAG_COMPONENT_TYPE,
   DRAG_PAGE_TYPE,
 } from '../utils/DndUtils';
-import type { Group } from './groupStore';
+import type { Group } from './group.store';
 import { DEFAULT_FORM_THEME } from '../theme/formTheme';
 // import {
 //   TEMP_COMPONENT_PLACEHOLDER_ID,

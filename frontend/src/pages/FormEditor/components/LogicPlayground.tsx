@@ -7,8 +7,8 @@
 import { useMemo, useCallback } from 'react';
 import { ArrowLeft, Plus, Zap, Calculator } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useLogicStore } from '@/form/logic/logicStore';
-import { useFormStore } from '@/form/store/formStore';
+import { useLogicStore } from '@/form/logic/logic.store';
+import { useFormStore } from '@/form/store/form.store';
 import { createRuleAction } from '@/form/logic/logicTypes';
 import type { Condition, RuleAction } from '@/form/logic/logicTypes';
 import { RULE_TYPES } from '@/form/logic/logicTypes';

@@ -3,7 +3,7 @@ import { useFormMode } from '@/form/context/FormModeContext';
 import { SelectablePage } from '@/form/renderer/SelectableWrapper';
 import type { PageID } from '@/form/components/base';
 import { useShallow } from 'zustand/react/shallow';
-import { useFormStore } from '@/form/store/formStore';
+import { useFormStore } from '@/form/store/form.store';
 import { useDroppable } from '@dnd-kit/react';
 import {
   DRAG_CATALOG_PAGE_ID,

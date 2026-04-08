@@ -1,4 +1,4 @@
-import { useFormStore } from './formStore';
+import { useFormStore } from './form.store';
 import type { Form, FormPage } from '../components/base';
 import type { AnyFormComponent, AnySerializedComponent } from '../registry/componentRegistry';
 import { deserializeComponent, serializeComponent } from '../registry/componentRegistry';

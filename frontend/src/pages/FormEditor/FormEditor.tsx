@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useFormStore } from '@/form/store/formStore';
+import { useFormStore } from '@/form/store/form.store';
 import { DragDropProvider, DragOverlay } from '@dnd-kit/react';
 import {
   componentRenderers,
@@ -35,7 +35,7 @@ import { RightFloatingPanel } from './components/RightFloatingPanel';
 import { LogicPlayground } from './components/LogicPlayground';
 import { ThemingPage } from './components/ThemingPage';
 import { useTheme } from '@/components/theme-provider';
-import { useLogicStore } from '@/form/logic/logicStore';
+import { useLogicStore } from '@/form/logic/logic.store';
 import { Bug, PanelLeftClose, PanelRightClose, ArrowLeft } from 'lucide-react';
 import { Workspaces } from './components/Workspaces';
 import { useFormEditorShortcuts } from './useFormEditorShortcuts';

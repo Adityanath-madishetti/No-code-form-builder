@@ -4,7 +4,7 @@ import { ComponentIDs, createComponent } from '../base';
 import type { FormComponent } from '../base';
 
 import type { RendererProps } from '../base';
-import { useFormStore } from '@/form/store/formStore';
+import { useFormStore } from '@/form/store/form.store';
 import { ComponentPropTitle } from '../ComponentRender.Helper';
 import {
   RichTextEditor,
