@@ -70,7 +70,7 @@ export const ACTION_TYPES = [
   // 'ENABLE',
   // 'DISABLE',
   'SET_VALUE',
-  'SKIP_PAGE',
+  // 'SKIP_PAGE',
   'CONDITIONAL',
 ] as const;
 
@@ -82,7 +82,7 @@ export const ACTION_TYPE_LABELS: Record<ActionType, string> = {
   // ENABLE: 'Enable',
   // DISABLE: 'Disable',
   SET_VALUE: 'Set value',
-  SKIP_PAGE: 'Skip page',
+  // SKIP_PAGE: 'Skip page',
   CONDITIONAL: 'If / Then',
 };
 
@@ -92,7 +92,7 @@ export const ACTION_TYPE_COLORS: Record<ActionType, string> = {
   // ENABLE: 'text-blue-500',
   // DISABLE: 'text-orange-500',
   SET_VALUE: 'text-violet-500',
-  SKIP_PAGE: 'text-amber-600',
+  // SKIP_PAGE: 'text-amber-600',
   CONDITIONAL: 'text-purple-600',
 };
 

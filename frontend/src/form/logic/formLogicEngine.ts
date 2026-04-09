@@ -14,8 +14,9 @@ const OPERATOR_MAP: Record<string, string> = {
   greater_than: 'greaterThan',
   less_than: 'lessThan',
   contains: 'contains',
-  is_empty: 'equal',
-  is_not_empty: 'notEqual',
+  not_contains: 'notContains',
+  is_empty: 'isEmpty',
+  is_not_empty: 'isNotEmpty',
 };
 
 // Helper: expr-eval does not allow hyphens in variable names.
@@ -34,6 +35,23 @@ export class FormLogicEngine {
 
   constructor(rules: LogicRule[], formulas: FormulaRule[]) {
     this.engine = new Engine([], { allowUndefinedFacts: true });
+
+    // --- Register Custom Operators for Empty States ---
+    this.engine.addOperator('isEmpty', (factValue) => {
+      if (factValue === undefined || factValue === null) return true;
+      if (typeof factValue === 'string') return factValue.trim() === '';
+      if (Array.isArray(factValue)) return factValue.length === 0;
+      return false;
+    });
+
+    this.engine.addOperator('isNotEmpty', (factValue) => {
+      if (factValue === undefined || factValue === null) return false;
+      if (typeof factValue === 'string') return factValue.trim() !== '';
+      if (Array.isArray(factValue)) return factValue.length > 0;
+      return true;
+    });
+    // ------------------------------------------------
+
     this.rulesMap = new Map(rules.map((r) => [r.ruleId, r]));
     this.initRules(rules);
     this.initFormulas(formulas);
@@ -69,7 +87,8 @@ export class FormLogicEngine {
       return {
         fact: condition.instanceId,
         operator: OPERATOR_MAP[condition.operator] || condition.operator,
-        value: condition.operator === 'is_empty' ? '' : condition.value,
+        // Removed the empty string hack; the custom operator handles it now
+        value: condition.value,
       };
     }
     if (condition.type === 'group') {
@@ -94,15 +113,18 @@ export class FormLogicEngine {
     });
   }
 
-  /**
-   * Evaluates nested AST conditions synchronously.
-   */
   private evaluateConditionAST(
     condition: any,
     values: Record<string, unknown>
   ): boolean {
     if (condition.type === 'leaf') {
-      const safeFact = values[condition.instanceId] ?? '';
+      const fact = values[condition.instanceId];
+      const isFactEmpty =
+        fact === undefined ||
+        fact === null ||
+        (typeof fact === 'string' && fact.trim() === '');
+
+      const safeFact = fact ?? '';
       const safeTarget = condition.value ?? '';
 
       switch (condition.operator) {
@@ -125,9 +147,9 @@ export class FormLogicEngine {
             .toLowerCase()
             .includes(String(safeTarget).toLowerCase());
         case 'is_empty':
-          return safeFact === '';
+          return isFactEmpty;
         case 'is_not_empty':
-          return safeFact !== '';
+          return !isFactEmpty;
         default:
           return false;
       }
@@ -205,8 +227,8 @@ export class FormLogicEngine {
           const inverseAction = { ...action };
           if (action.type === 'SHOW') inverseAction.type = 'HIDE';
           else if (action.type === 'HIDE') inverseAction.type = 'SHOW';
-          else if (action.type === 'ENABLE') inverseAction.type = 'DISABLE';
-          else if (action.type === 'DISABLE') inverseAction.type = 'ENABLE';
+          // else if (action.type === 'ENABLE') inverseAction.type = 'DISABLE';
+          // else if (action.type === 'DISABLE') inverseAction.type = 'ENABLE';
           actionsToProcess.push(inverseAction);
         }
       });
