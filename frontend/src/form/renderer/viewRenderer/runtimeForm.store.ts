@@ -28,6 +28,15 @@ export const runtimeFormSelector = {
   renderState: (state: RuntimeFormStore) => state.renderState,
 
   currentPageId: (state: RuntimeFormStore) => state.renderState?.currentPageId,
+
+  currentPage: (state: RuntimeFormStore) => {
+    const currentPageId = state.renderState?.currentPageId;
+    if (!currentPageId || !state.formData) return undefined;
+    return state.formData.version.pages.find(
+      (page) => page.pageId === currentPageId
+    );
+  },
+
   currentPageComponentStates: (state: RuntimeFormStore) => {
     const currentPageId = state.renderState?.currentPageId;
     if (!currentPageId) return {};
@@ -81,35 +90,6 @@ export const useRuntimeFormStore = create<RuntimeFormStore>()(
                 isEnabled: true, // TODO: derive from comp.props if needed
               };
             });
-
-            // pageStates[page.pageId] = {
-            //   pageId: page.pageId,
-            //   pageIndex: index,
-            //   ComponentStates: componentStates,
-            //   previousPageId:
-            //     index > 0 ? data.version.pages[index - 1].pageId : undefined,
-            //   nextPageId:
-            //     index < data.version.pages.length - 1
-            //       ? data.version.pages[index + 1].pageId
-            //       : undefined,
-            //   // Map directly from the static schema values injected by the builder
-            //   // previousPageId: page.defaultPreviousPageId,
-            //   // nextPageId: page.defaultNextPageId,
-            // };
-            // pageStates[page.pageId] = {
-            //   pageId: page.pageId,
-            //   pageIndex: index,
-            //   ComponentStates: componentStates,
-            //   // previousPageId:
-            //   //   index > 0 ? data.version.pages[index - 1].pageId : undefined,
-            //   // nextPageId:
-            //   //   index < data.version.pages.length - 1
-            //   //     ? data.version.pages[index + 1].pageId
-            //   //     : undefined,
-            //   // Map directly from the static schema values injected by the builder
-            //   previousPageId: page.defaultPreviousPageId ? page.defaultPreviousPageId: pageStates[page.pageId].previousPageId,
-            //   nextPageId: page.defaultNextPageId?page.defaultNextPageId : pageStates[page.pageId].nextPageId,
-            // };
 
             pageStates[page.pageId] = {
               pageId: page.pageId,
@@ -177,103 +157,3 @@ export const useRuntimeFormStore = create<RuntimeFormStore>()(
       }),
   }))
 );
-
-// interface FormRuntimeState {
-//   // State
-//   formData: RuntimeFormData | null;
-//   evaluation: RuntimeEvaluation;
-
-//   // Actions
-//   initForm: (data: RuntimeFormData) => void;
-//   setValue: (componentId: string, value: unknown) => void;
-//   setValues: (values: Record<string, unknown>) => void;
-//   setValidationError: (componentId: string, error: string | null) => void;
-//   clearValidationErrors: () => void;
-//   updateEvaluation: (evalData: Partial<RuntimeEvaluation>) => void;
-//   resetForm: () => void;
-// }
-
-// // --- Initial State ---
-
-// const initialEvaluationState: RuntimeEvaluation = {
-//   values: {},
-//   visibility: {},
-//   enabled: {},
-//   validationErrors: {},
-//   nextPageId: null,
-// };
-
-// // --- Store Implementation ---
-
-// export const useFormRuntimeStore = create<FormRuntimeState>()(
-//   immer((set) => ({
-//     // Initial State
-//     formData: null,
-//     evaluation: { ...initialEvaluationState },
-
-//     // Actions
-//     initForm: (data) =>
-//       set((state) => {
-//         state.formData = data;
-//         // Optionally reset evaluation when a new form is loaded
-//         state.evaluation = { ...initialEvaluationState };
-//       }),
-
-//     setValue: (componentId, value) =>
-//       set((state) => {
-//         state.evaluation.values[componentId] = value;
-//         // Automatically clear validation error when a user types/changes a value
-//         if (state.evaluation.validationErrors[componentId]) {
-//           delete state.evaluation.validationErrors[componentId];
-//         }
-//       }),
-
-//     setValues: (values) =>
-//       set((state) => {
-//         // Merge new values into existing values
-//         state.evaluation.values = {
-//           ...state.evaluation.values,
-//           ...values,
-//         };
-//       }),
-
-//     setValidationError: (componentId, error) =>
-//       set((state) => {
-//         if (error === null) {
-//           delete state.evaluation.validationErrors[componentId];
-//         } else {
-//           state.evaluation.validationErrors[componentId] = error;
-//         }
-//       }),
-
-//     clearValidationErrors: () =>
-//       set((state) => {
-//         state.evaluation.validationErrors = {};
-//       }),
-
-//     updateEvaluation: (evalData) =>
-//       set((state) => {
-//         // Deep merge the incoming evaluation data using Immer's draft mutation
-//         if (evalData.values)
-//           Object.assign(state.evaluation.values, evalData.values);
-//         if (evalData.visibility)
-//           Object.assign(state.evaluation.visibility, evalData.visibility);
-//         if (evalData.enabled)
-//           Object.assign(state.evaluation.enabled, evalData.enabled);
-//         if (evalData.validationErrors)
-//           Object.assign(
-//             state.evaluation.validationErrors,
-//             evalData.validationErrors
-//           );
-
-//         if (evalData.nextPageId !== undefined) {
-//           state.evaluation.nextPageId = evalData.nextPageId;
-//         }
-//       }),
-
-//     resetForm: () =>
-//       set((state) => {
-//         state.evaluation = { ...initialEvaluationState };
-//       }),
-//   }))
-// );

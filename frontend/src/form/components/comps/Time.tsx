@@ -7,10 +7,14 @@ import type {
 import { ComponentIDs, createComponent } from '../base';
 
 import type { BaseComponentProps } from '../base';
-import { inp, lbl, Card, Q } from '../ComponentRender.Helper';
+import { inp, lbl } from '../ComponentRender.Helper';
 import { useFormContext } from 'react-hook-form';
 import { useFormMode } from '@/form/context/FormModeContext';
 import { nanoid } from 'nanoid';
+
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export interface TimeProps extends BaseComponentProps {
   questionText: string;
@@ -61,58 +65,65 @@ export function TimeRenderer({
 
   // --- View Mode (Live Form with Validation) ---
   if (formMode === 'view' && formContext) {
-    if (!formContext) {
-      console.error('TimeRenderer is not wrapped in a FormProvider.');
-      return null;
-    }
-
     const {
       register,
       formState: { errors },
     } = formContext;
 
     return (
-      <Card className="rounded-none shadow-none">
-        <Q html={props.questionText} />
-        <input
-          type="time"
-          defaultValue={props.defaultValue}
-          className={inp}
-          {...register(instanceId, {
-            required: validation?.required ? 'This field is required' : false,
-            min: validation?.minTime
-              ? {
-                  value: validation.minTime,
-                  message: `Time must be at or after ${validation.minTime}`,
-                }
-              : undefined,
-            max: validation?.maxTime
-              ? {
-                  value: validation.maxTime,
-                  message: `Time must be at or before ${validation.maxTime}`,
-                }
-              : undefined,
-          })}
-        />
-        {errors[instanceId] && (
-          <p className="mt-1 text-sm text-red-500">
-            {errors[instanceId]?.message as string}
-          </p>
-        )}
+      <Card>
+        <CardContent className="space-y-3 pt-6">
+          <Label
+            htmlFor={instanceId}
+            className="block text-base font-semibold"
+            dangerouslySetInnerHTML={{ __html: props.questionText }}
+          />
+          <Input
+            id={instanceId}
+            type="time"
+            defaultValue={props.defaultValue}
+            {...register(instanceId, {
+              required: validation?.required ? 'This field is required' : false,
+              min: validation?.minTime
+                ? {
+                    value: validation.minTime,
+                    message: `Time must be at or after ${validation.minTime}`,
+                  }
+                : undefined,
+              max: validation?.maxTime
+                ? {
+                    value: validation.maxTime,
+                    message: `Time must be at or before ${validation.maxTime}`,
+                  }
+                : undefined,
+            })}
+          />
+          {errors[instanceId] && (
+            <p className="text-[0.8rem] font-medium text-destructive">
+              {errors[instanceId]?.message as string}
+            </p>
+          )}
+        </CardContent>
       </Card>
     );
   }
 
   // --- Builder Mode (Static/Preview) ---
   return (
-    <Card className="rounded-none shadow-none">
-      <Q html={props.questionText} />
-      <input
-        type="time"
-        readOnly
-        defaultValue={props.defaultValue}
-        className={inp}
-      />
+    <Card>
+      <CardContent className="space-y-3 pt-6">
+        <Label
+          className="block text-base font-semibold"
+          dangerouslySetInnerHTML={{ __html: props.questionText }}
+        />
+        <Input
+          type="time"
+          readOnly
+          defaultValue={props.defaultValue}
+          className="opacity-70"
+          disabled
+        />
+      </CardContent>
     </Card>
   );
 }

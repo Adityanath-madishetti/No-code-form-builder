@@ -1,3 +1,4 @@
 Change the icon of decimal component
 
-[HIGH] Add a front end logic verifier, expected to run before saving the form.
+[H] Add a front end logic verifier, expected to run before saving the form.
+[L] Embed fonts via woff2 instead of google fonts

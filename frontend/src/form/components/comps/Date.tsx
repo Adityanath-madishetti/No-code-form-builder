@@ -7,10 +7,14 @@ import type {
 import { ComponentIDs, createComponent } from '../base';
 
 import type { BaseComponentProps } from '../base';
-import { inp, lbl, Card, Q } from '../ComponentRender.Helper';
+import { inp, lbl } from '../ComponentRender.Helper';
 import { useFormContext } from 'react-hook-form';
 import { useFormMode } from '@/form/context/FormModeContext';
 import { nanoid } from 'nanoid';
+
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export interface DateProps extends BaseComponentProps {
   questionText: string;
@@ -63,58 +67,65 @@ export function DateRenderer({
 
   // --- View Mode (Live Form with Validation) ---
   if (formMode === 'view' && formContext) {
-    if (!formContext) {
-      console.error('DateRenderer is not wrapped in a FormProvider.');
-      return null;
-    }
-
     const {
       register,
       formState: { errors },
     } = formContext;
 
     return (
-      <Card className="rounded-none shadow-none">
-        <Q html={props.questionText} />
-        <input
-          type={inputType}
-          defaultValue={props.defaultValue}
-          className={inp}
-          {...register(instanceId, {
-            required: validation?.required ? 'This field is required' : false,
-            min: validation?.minDate
-              ? {
-                  value: validation.minDate,
-                  message: `Date must be on or after ${validation.minDate}`,
-                }
-              : undefined,
-            max: validation?.maxDate
-              ? {
-                  value: validation.maxDate,
-                  message: `Date must be on or before ${validation.maxDate}`,
-                }
-              : undefined,
-          })}
-        />
-        {errors[instanceId] && (
-          <p className="mt-1 text-sm text-red-500">
-            {errors[instanceId]?.message as string}
-          </p>
-        )}
+      <Card>
+        <CardContent className="space-y-3">
+          <Label
+            htmlFor={instanceId}
+            className="block text-base font-semibold"
+            dangerouslySetInnerHTML={{ __html: props.questionText }}
+          />
+          <Input
+            id={instanceId}
+            type={inputType}
+            defaultValue={props.defaultValue}
+            {...register(instanceId, {
+              required: validation?.required ? 'This field is required' : false,
+              min: validation?.minDate
+                ? {
+                    value: validation.minDate,
+                    message: `Date must be on or after ${validation.minDate}`,
+                  }
+                : undefined,
+              max: validation?.maxDate
+                ? {
+                    value: validation.maxDate,
+                    message: `Date must be on or before ${validation.maxDate}`,
+                  }
+                : undefined,
+            })}
+          />
+          {errors[instanceId] && (
+            <p className="text-[0.8rem] font-medium text-destructive">
+              {errors[instanceId]?.message as string}
+            </p>
+          )}
+        </CardContent>
       </Card>
     );
   }
 
   // --- Builder Mode (Static/Preview) ---
   return (
-    <Card className="rounded-none shadow-none">
-      <Q html={props.questionText} />
-      <input
-        type={inputType}
-        readOnly
-        defaultValue={props.defaultValue}
-        className={inp}
-      />
+    <Card>
+      <CardContent className="space-y-3">
+        <Label
+          className="block text-base font-semibold"
+          dangerouslySetInnerHTML={{ __html: props.questionText }}
+        />
+        <Input
+          type={inputType}
+          readOnly
+          defaultValue={props.defaultValue}
+          className="opacity-70"
+          disabled // Prevents interaction in the builder canvas
+        />
+      </CardContent>
     </Card>
   );
 }
@@ -140,23 +151,6 @@ export function DatePropsRenderer({
           className={inp}
         />
       </div>
-
-      {/* <div className="flex items-center justify-between">
-        <label className="flex items-center gap-2 text-sm text-foreground">
-          <input
-            type="checkbox"
-            checked={props.includeTime}
-            onChange={(e) => {
-              // Clear default/min/max values when toggling time to avoid format mismatches
-              u(instanceId, { includeTime: e.target.checked, defaultValue: '' });
-              uv(instanceId, { minDate: undefined, maxDate: undefined });
-            }}
-            className="accent-primary"
-          />
-          Include Time
-        </label>
-      </div> */}
-
       <div>
         <label className={lbl}>Default Value</label>
         <input

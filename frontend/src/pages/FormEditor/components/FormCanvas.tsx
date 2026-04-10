@@ -12,12 +12,14 @@ import {
   DRAG_CATALOG_GROUP_ID,
 } from '@/form/utils/DndUtils';
 import { LayoutGrid } from 'lucide-react';
+import { RichTextEditor } from '@/components/RichTextEditor';
+import { SelectablePage } from '@/form/renderer/SelectableWrapper';
 
 interface FormCanvasProps {
   currentPageIndex: number;
 }
 
-function EmptyPageDrop({ pageId }: { pageId: string }) {
+function EmptyPageDrop({ pageId, index }: { pageId: string; index: number }) {
   const { ref, isDropTarget: isOver } = useDroppable({
     id: `content-drop-${pageId}`,
     accept: [
@@ -29,19 +31,17 @@ function EmptyPageDrop({ pageId }: { pageId: string }) {
   });
 
   return (
-    <div
-      ref={ref}
-      className={`flex min-h-[200px] w-full items-center justify-center border-2 border-dashed transition-colors ${
-        isOver
-          ? 'border-primary bg-primary/5 text-primary'
-          : 'border-border/40 text-muted-foreground/30'
-      }`}
-    >
-      <div className="flex flex-col items-center gap-2 text-center">
-        <LayoutGrid className="h-6 w-6 opacity-40" />
-        <p className="text-xs font-medium">Drop components here</p>
+    <SelectablePage pageId={pageId} index={index}>
+      <div
+        ref={ref}
+        className={`flex min-h-[200px] w-full items-center justify-center border-2 transition-colors`}
+      >
+        <div className="flex flex-col items-center gap-2 text-center">
+          <LayoutGrid className="h-6 w-6 opacity-40" />
+          <p className="text-xs font-medium">Drop components here</p>
+        </div>
       </div>
-    </div>
+    </SelectablePage>
   );
 }
 
@@ -74,7 +74,7 @@ export function FormCanvas({ currentPageIndex }: FormCanvasProps) {
 
           {/* Components or empty drop zone */}
           {!hasComponents ? (
-            <EmptyPageDrop pageId={pageId} />
+            <EmptyPageDrop pageId={pageId} index={currentPageIndex} />
           ) : (
             <RenderPage pageId={pageId} index={currentPageIndex} />
           )}
@@ -103,12 +103,17 @@ function FormHeader() {
         placeholder="Untitled Form"
         className="w-full bg-transparent text-2xl font-bold tracking-tight text-foreground outline-none placeholder:text-muted-foreground/20"
       />
-      <textarea
+      <RichTextEditor
+        value={formDescription}
+        placeholder="Description"
+        onChange={(newHTML) => updateFormDescription(newHTML)}
+      />
+      {/* <textarea
         value={formDescription}
         onChange={(e) => updateFormDescription(e.target.value)}
         placeholder="Description"
         className="text-md h-auto w-full bg-transparent tracking-tight text-foreground placeholder:text-muted-foreground/20"
-      />
+      /> */}
     </div>
   );
 }

@@ -1,5 +1,4 @@
 // src/form/renderer/viewRenderer/FormRunner.tsx
-
 import { useEffect, useRef, useState } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { runtimeFormSelector, useRuntimeFormStore } from './runtimeForm.store';
@@ -17,6 +16,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
 import { AlertCircle } from 'lucide-react';
 import { sharedProseClasses } from '@/components/RichTextEditor';
+import { Separator } from '@/components/ui/separator';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 let globalGetValues: ((instanceId: string) => unknown) | null = null;
 
@@ -40,6 +41,8 @@ export function FormRunner() {
   const [userEmail, setUserEmail] = useState('');
 
   const { initRuntimeForm } = useRuntimeFormStore();
+
+  const currentPage = useRuntimeFormStore(runtimeFormSelector.currentPage);
 
   useEffect(() => {
     if (!formId) return;
@@ -173,7 +176,8 @@ export function FormRunner() {
       // This automatically "reverts" navigation if a skip condition is no longer met.
       pages.forEach((page, index) => {
         const prevId = index > 0 ? pages[index - 1].pageId : undefined;
-        const nextId = index < pages.length - 1 ? pages[index + 1].pageId : undefined;
+        const nextId =
+          index < pages.length - 1 ? pages[index + 1].pageId : undefined;
         store.setPreviousPageOfPage(page.pageId, prevId);
         store.setNextPageOfPage(page.pageId, nextId);
       });
@@ -192,8 +196,11 @@ export function FormRunner() {
       };
 
       // Helper to find if an action ID exists inside nested logic arrays
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const actionExistsInTree = (actionsTree: any[], actionId: string): boolean => {
+      const actionExistsInTree = (
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        actionsTree: any[],
+        actionId: string
+      ): boolean => {
         if (!actionsTree) return false;
         for (const a of actionsTree) {
           if (a.id === actionId) return true;
@@ -333,63 +340,91 @@ export function FormRunner() {
   }
 
   return (
-    <FormProvider {...methods}>
-      <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6">
-        <div>
-          <div className="w-full bg-transparent text-5xl font-bold tracking-tight text-foreground outline-none placeholder:text-muted-foreground/20">
-            {formData.form.title}
+    <div className="mx-auto mt-15 mb-15 max-w-3xl">
+      <FormProvider {...methods}>
+        <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6">
+          <div>
+            <Card>
+              <CardHeader>
+                <div className="w-full bg-transparent text-5xl font-bold tracking-tight text-foreground outline-none">
+                  {formData.form.title}
+                </div>
+              </CardHeader>
+              <CardContent>
+                {formData.version.meta.description && (
+                  <div
+                    className={sharedProseClasses}
+                    dangerouslySetInnerHTML={{
+                      __html: formData.version.meta.description,
+                    }}
+                  />
+                )}
+              </CardContent>
+            </Card>
+
+            <Separator className="mt-5" />
           </div>
 
-          <div
-            className={sharedProseClasses}
-            dangerouslySetInnerHTML={{
-              __html: formData.version.meta.description,
-            }}
-          />
-
-          {/* <p className="text-md h-auto w-full bg-transparent tracking-tight text-foreground placeholder:text-muted-foreground/20">
-            {formData.version.meta.description}
-          </p> */}
-        </div>
-        {/* Render the components for the active page */}
-        <div className="space-y-4">
-          {componentsData.length === 0 ? (
-            <p className="text-gray-500">
-              No components to display on this page.
-            </p>
-          ) : (
-            componentsData.map((comp) => {
-              const frontendId = backendToFrontend[comp.componentType];
-              const Renderer = getComponentRenderer(frontendId as ComponentID);
-
-              const isHidden =
-                componentsStates[comp.componentId]?.isHidden ?? false;
-              if (isHidden) {
-                return null;
-              }
-
-              if (!Renderer) {
-                return (
-                  <div
-                    key={comp.componentId}
-                    className="border bg-red-50 p-4 text-red-500"
-                  >
-                    Unknown component type: {comp.componentType}
+          {(currentPage?.title || currentPage?.description) && (
+            <Card>
+              <CardHeader>
+                <div className="text-4xl font-semibold tracking-tight">
+                  {currentPage?.title}
+                </div>
+              </CardHeader>
+              <CardContent>
+                {currentPage?.description && (
+                  <div className={`tracking-tight ${sharedProseClasses}`}>
+                    {currentPage?.description}
                   </div>
-                );
-              }
+                )}
+              </CardContent>
+            </Card>
+          )}
 
-              return (
-                <div
-                  key={comp.componentId}
-                  className="rounded-md border bg-gray-50 p-4 shadow-sm"
-                >
-                  <p className="text-sm font-medium text-gray-700">
-                    Label: <span className="font-bold">{comp.label}</span>
-                  </p>
-                  <p className="mb-4 text-xs text-gray-500">
-                    Instance ID: {comp.componentId} | Type: {comp.componentType}
-                  </p>
+          {/* Render the components for the active page */}
+
+          <div className="space-y-4">
+            {componentsData.length === 0 ? (
+              <p className="text-gray-500">
+                No components to display on this page.
+              </p>
+            ) : (
+              componentsData.map((comp) => {
+                const frontendId = backendToFrontend[comp.componentType];
+                const Renderer = getComponentRenderer(
+                  frontendId as ComponentID
+                );
+
+                const isHidden =
+                  componentsStates[comp.componentId]?.isHidden ?? false;
+                if (isHidden) {
+                  return null;
+                }
+
+                if (!Renderer) {
+                  return (
+                    <div
+                      key={comp.componentId}
+                      className="border bg-red-50 p-4 text-red-500"
+                    >
+                      Unknown component type: {comp.componentType}
+                    </div>
+                  );
+                }
+
+                return (
+                  // <div
+                  //   key={comp.componentId}
+                  //   className="rounded-md border bg-gray-50 p-4 shadow-sm"
+                  // >
+                  //   <p className="text-sm font-medium text-gray-700">
+                  //     Label: <span className="font-bold">{comp.label}</span>
+                  //   </p>
+                  //   <p className="mb-4 text-xs text-gray-500">
+                  //     Instance ID: {comp.componentId} | Type:{' '}
+                  //     {comp.componentType}
+                  //   </p>
                   <Renderer
                     key={comp.componentId}
                     metadata={null}
@@ -397,42 +432,38 @@ export function FormRunner() {
                     validation={comp.validation}
                     instanceId={comp.componentId}
                   />
-                </div>
-              );
-            })
-          )}
-        </div>
-
-        {/* --- Pagination Controls --- */}
-        <div className="mt-8 flex items-center justify-between border-t pt-6">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={handleBack}
-            disabled={!hasPrevious}
-          >
-            Back
-          </Button>
-
-          {hasNext ? (
+                  // </div>
+                );
+              })
+            )}
+          </div>
+          {/* --- Pagination Controls --- */}
+          <div className="mt-8 flex items-center justify-between border-t pt-6">
             <Button
               type="button"
-              onClick={handleNext}
-              className="bg-blue-600 text-white hover:bg-blue-700"
+              variant="secondary"
+              onClick={handleBack}
+              disabled={!hasPrevious}
             >
-              Next
+              Back
             </Button>
-          ) : (
-            <Button
-              type="submit"
-              className="bg-green-600 text-white hover:bg-green-700"
-            >
-              Submit
-            </Button>
-          )}
-        </div>
-      </form>
-    </FormProvider>
+
+            {hasNext ? (
+              <Button type="button" onClick={handleNext} className="">
+                Next
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                className="bg-green-600 text-white hover:bg-green-700"
+              >
+                Submit
+              </Button>
+            )}
+          </div>
+        </form>
+      </FormProvider>
+    </div>
   );
 }
 
