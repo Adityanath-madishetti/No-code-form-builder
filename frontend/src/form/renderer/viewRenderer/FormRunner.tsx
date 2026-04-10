@@ -115,7 +115,8 @@ export function FormRunner() {
     const visibilityPatch: Record<string, boolean> = {};
     const enabledPatch: Record<string, boolean> = {};
     const valuePatch: Record<string, unknown> = {};
-    let skipPageTarget: string | null = null;
+    // Separate SKIP actions to be processed based on their origin page
+    const skipActions = actions.filter((a) => a.type === 'SKIP_PAGE');
 
     actions.forEach((action) => {
       // If multiple rules target the same component, the last one evaluated wins.
@@ -135,9 +136,7 @@ export function FormRunner() {
         case 'SET_VALUE':
           valuePatch[action.targetId] = action.value;
           break;
-        case 'SKIP_PAGE':
-          skipPageTarget = action.targetId;
-          break;
+        // case 'SKIP_PAGE': handled separately
       }
     });
 
@@ -167,15 +166,71 @@ export function FormRunner() {
       }
     });
 
-    // Apply SKIP_PAGE Routing
-    if (skipPageTarget) {
-      const currentPageId = store.renderState?.currentPageId;
-      if (currentPageId) {
-        // Overwrite the forward pointer for the "Next" button
-        store.setNextPageOfPage(currentPageId, skipPageTarget);
-        // Overwrite the backward pointer for the "Back" button on the target page
-        store.setPreviousPageOfPage(skipPageTarget, currentPageId);
-      }
+    if (formData) {
+      const pages = formData.version.pages;
+
+      // Step A: Reset all pages to their default sequential routing.
+      // This automatically "reverts" navigation if a skip condition is no longer met.
+      pages.forEach((page, index) => {
+        const prevId = index > 0 ? pages[index - 1].pageId : undefined;
+        const nextId = index < pages.length - 1 ? pages[index + 1].pageId : undefined;
+        store.setPreviousPageOfPage(page.pageId, prevId);
+        store.setNextPageOfPage(page.pageId, nextId);
+      });
+
+      // Helper to recursively find the first instanceId in a logic condition tree
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const findInstanceId = (cond: any): string | null => {
+        if (cond?.type === 'leaf') return cond.instanceId;
+        if (cond?.type === 'group' && Array.isArray(cond.conditions)) {
+          for (const c of cond.conditions) {
+            const id = findInstanceId(c);
+            if (id) return id;
+          }
+        }
+        return null;
+      };
+
+      // Helper to find if an action ID exists inside nested logic arrays
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const actionExistsInTree = (actionsTree: any[], actionId: string): boolean => {
+        if (!actionsTree) return false;
+        for (const a of actionsTree) {
+          if (a.id === actionId) return true;
+          if (a.type === 'CONDITIONAL') {
+            if (actionExistsInTree(a.thenActions, actionId)) return true;
+            if (actionExistsInTree(a.elseActions, actionId)) return true;
+          }
+        }
+        return false;
+      };
+
+      // Step B: Apply active skips dynamically to their specific origin pages
+      skipActions.forEach((action) => {
+        // 1. Find the rule that generated this action
+        const rule = formData.version.logic?.rules?.find(
+          (r) =>
+            actionExistsInTree(r.thenActions, action.id) ||
+            actionExistsInTree(r.elseActions, action.id)
+        );
+
+        if (rule) {
+          // 2. Extract the instanceId that triggers the rule
+          const instanceId = findInstanceId(rule.condition);
+          if (instanceId) {
+            // 3. Find the page that contains that component
+            const sourcePage = pages.find((p) =>
+              p.components.some((c) => c.componentId === instanceId)
+            );
+
+            // 4. Overwrite pointers for the origin page specifically
+            if (sourcePage) {
+              store.setNextPageOfPage(sourcePage.pageId, action.targetId);
+              store.setPreviousPageOfPage(action.targetId, sourcePage.pageId);
+            }
+          }
+        }
+      });
     }
   };
 

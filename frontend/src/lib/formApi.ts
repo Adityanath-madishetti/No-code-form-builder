@@ -65,6 +65,8 @@ interface BackendPage {
   title: string;
   description?: string;
   components: BackendComponent[];
+  defaultNextPageId?: string;
+  defaultPreviousPageId?: string;
 }
 
 interface BackendFormVersion {
@@ -207,6 +209,8 @@ export async function loadFormVersion(formId: string): Promise<{
       description: bp.description,
       children: childIds,
       isTerminal: false,
+      defaultPreviousPageId: bp.defaultPreviousPageId,
+      defaultNextPageId: bp.defaultNextPageId,
     });
   }
 
@@ -271,6 +275,8 @@ export async function saveFormVersion(
       title: page?.title || `Page ${idx + 1}`,
       description: page?.description || '',
       components: comps,
+      defaultPreviousPageId: page?.defaultPreviousPageId,
+      defaultNextPageId: page?.defaultNextPageId,
     };
   });
 

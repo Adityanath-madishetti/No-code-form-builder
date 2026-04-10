@@ -171,6 +171,8 @@ const formVersionPayloadSchema = {
                             required: ["componentId", "componentType"],
                         },
                     },
+                    defaultPreviousPageId: { type: "string" },
+                    defaultNextPageId: { type: "string" },
                 },
                 required: ["pageId", "pageNo"],
             },

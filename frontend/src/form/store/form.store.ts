@@ -81,6 +81,8 @@ const createFormPage = (id: PageID): FormPage => ({
   id,
   children: [],
   isTerminal: false,
+  defaultNextPageId: undefined,
+  defaultPreviousPageId: undefined,
 });
 
 import type {
@@ -210,6 +212,7 @@ interface FormSchemaActions {
   reorderPages: (fromIndex: number, toIndex: number) => void;
   updatePageTitle: (pageId: PageID, name: string) => void;
   updatePageDesc: (pageId: PageID, desc: string) => void;
+  updatePageNextPage: (pageId: PageID, nextPageId?: PageID) => void;
 
   addComponent: (
     pageId: PageID,
@@ -283,20 +286,52 @@ export type FormStore = FormSchemaState &
 // ------------------------------------------------------------------------------------------------
 
 /**
- * Ensures only the last page is marked as `isTerminal = true`.
- *
- * Called after any page ordering change.
+ * Syncs terminal flags AND enforces a sparse bidirectional pointer layout.
+ * - `undefined` signifies implicit sequential flow (index + 1 or index - 1).
+ * - Explicit IDs are only retained for custom logical jumps.
  */
-function syncTerminalFlags(state: {
+function syncPageOrdering(state: {
   form: Form | null;
   pages: Record<PageID, FormPage>;
 }) {
   if (!state.form) return;
-  state.form.pages.forEach((id, i, arr) => {
-    state.pages[id].isTerminal = i === arr.length - 1;
+
+  const pagesArray = state.form.pages;
+
+  // PASS 1: Enforce terminal flags and validate explicit forward paths
+  pagesArray.forEach((id, i) => {
+    const page = state.pages[id];
+    const isLast = i === pagesArray.length - 1;
+
+    page.isTerminal = isLast;
+
+    if (isLast) {
+      // The terminal page has nowhere to go forward.
+      page.defaultNextPageId = undefined;
+    } else {
+      // If there is an explicit jump, but the target page was deleted,
+      // revert it to undefined (which restores implicit sequential flow).
+      if (page.defaultNextPageId && !state.pages[page.defaultNextPageId]) {
+        page.defaultNextPageId = undefined;
+      }
+    }
+
+    // Wipe reverse pointers to prepare for clean reconstruction
+    page.defaultPreviousPageId = undefined;
+  });
+
+  // PASS 2: Derive explicit reverse pointers ONLY for explicit forward jumps
+  pagesArray.forEach((id) => {
+    const page = state.pages[id];
+    const nextId = page.defaultNextPageId;
+
+    // If there is an explicit forward jump, wire up the explicit reverse pointer.
+    // If nextId is undefined, no explicit reverse pointer is created.
+    if (nextId && state.pages[nextId]) {
+      state.pages[nextId].defaultPreviousPageId = id;
+    }
   });
 }
-
 // ------------------------------------------------------------------------------------------------
 //
 // Selectors
@@ -479,7 +514,7 @@ export const useFormStore = create<FormStore>()(
         } else {
           state.form.pages.splice(insertIndex, 0, newPageId);
         }
-        syncTerminalFlags(state);
+        syncPageOrdering(state);
       });
       return newPageId;
     },
@@ -494,9 +529,8 @@ export const useFormStore = create<FormStore>()(
         }
         delete state.pages[pageId];
         state.form.pages = state.form.pages.filter((id) => id !== pageId);
-        syncTerminalFlags(state);
+        syncPageOrdering(state);
         if (state.activePageId === pageId) {
-          // state.activePageId = state.form.pages[0] ?? null;
           state.activePageId = null;
         }
       }),
@@ -506,7 +540,7 @@ export const useFormStore = create<FormStore>()(
         if (!state.form) return;
         const [moved] = state.form.pages.splice(fromIndex, 1);
         state.form.pages.splice(toIndex, 0, moved);
-        syncTerminalFlags(state);
+        syncPageOrdering(state);
       }),
 
     updatePageTitle: (pageId: PageID, name: string) =>
@@ -519,6 +553,27 @@ export const useFormStore = create<FormStore>()(
       set((state) => {
         if (!state.form || state.form.pages.length === 1) return;
         state.pages[pageId].description = desc;
+      }),
+
+    updatePageNextPage: (pageId: PageID, nextPageId?: PageID) =>
+      set((state) => {
+        if (!state.form || state.form.pages.length === 1) return;
+        if (pageId === nextPageId) return;
+
+        const pagesArray = state.form.pages;
+        const currentIndex = pagesArray.indexOf(pageId);
+        const sequentialNextId = pagesArray[currentIndex + 1];
+
+        // If the requested next page is just the standard sequential one,
+        // or if it's explicitly cleared, keep the schema sparse (undefined).
+        if (nextPageId === sequentialNextId || !nextPageId) {
+          state.pages[pageId].defaultNextPageId = undefined;
+        } else {
+          // Otherwise, record the explicit custom jump
+          state.pages[pageId].defaultNextPageId = nextPageId;
+        }
+
+        syncPageOrdering(state);
       }),
 
     addComponent: (pageId, component, index) =>

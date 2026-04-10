@@ -14,13 +14,13 @@ interface PageRenderState {
   pageId: PageID;
   pageIndex: number;
   ComponentStates: Record<InstanceID, ComponentRenderState>;
-  previousPageId: PageID | null;
-  nextPageId: PageID | null;
+  previousPageId: PageID | undefined;
+  nextPageId: PageID | undefined;
 }
 
 interface FormRenderState {
   PageStates: Record<PageID, PageRenderState>;
-  currentPageId: PageID;
+  currentPageId: PageID | undefined;
 }
 
 export const runtimeFormSelector = {
@@ -36,7 +36,7 @@ export const runtimeFormSelector = {
 
   currentPageComponentData: (state: RuntimeFormStore) => {
     const currentPageId = state.renderState?.currentPageId;
-    if (!currentPageId) return [];
+    if (!currentPageId || currentPageId === '') return [];
     const pageData = state.formData?.version.pages.find(
       (p) => p.pageId === currentPageId
     );
@@ -45,23 +45,26 @@ export const runtimeFormSelector = {
 };
 
 interface RuntimeFormStore {
-  formData: PublicFormData | null;
-  renderState: FormRenderState | null;
+  formData: PublicFormData | undefined;
+  renderState: FormRenderState | undefined;
 
   initRuntimeForm: (data: PublicFormData) => void;
 
   setComponentVisibility: (instanceId: InstanceID, isVisible: boolean) => void;
   setComponentEnabled: (instanceId: InstanceID, isEnabled: boolean) => void;
 
-  setNextPageOfPage: (pageId: PageID, nextPageId: PageID) => void;
-  setPreviousPageOfPage: (pageId: PageID, previousPageId: PageID) => void;
+  setNextPageOfPage: (pageId: PageID, nextPageId: PageID | undefined) => void;
+  setPreviousPageOfPage: (
+    pageId: PageID,
+    previousPageId: PageID | undefined
+  ) => void;
   setActivePage: (pageId: PageID) => void;
 }
 
 export const useRuntimeFormStore = create<RuntimeFormStore>()(
   immer((set, get) => ({
-    formData: null,
-    renderState: null,
+    formData: undefined,
+    renderState: undefined,
 
     initRuntimeForm: (data) => {
       set((state) => {
@@ -79,22 +82,53 @@ export const useRuntimeFormStore = create<RuntimeFormStore>()(
               };
             });
 
+            // pageStates[page.pageId] = {
+            //   pageId: page.pageId,
+            //   pageIndex: index,
+            //   ComponentStates: componentStates,
+            //   previousPageId:
+            //     index > 0 ? data.version.pages[index - 1].pageId : undefined,
+            //   nextPageId:
+            //     index < data.version.pages.length - 1
+            //       ? data.version.pages[index + 1].pageId
+            //       : undefined,
+            //   // Map directly from the static schema values injected by the builder
+            //   // previousPageId: page.defaultPreviousPageId,
+            //   // nextPageId: page.defaultNextPageId,
+            // };
+            // pageStates[page.pageId] = {
+            //   pageId: page.pageId,
+            //   pageIndex: index,
+            //   ComponentStates: componentStates,
+            //   // previousPageId:
+            //   //   index > 0 ? data.version.pages[index - 1].pageId : undefined,
+            //   // nextPageId:
+            //   //   index < data.version.pages.length - 1
+            //   //     ? data.version.pages[index + 1].pageId
+            //   //     : undefined,
+            //   // Map directly from the static schema values injected by the builder
+            //   previousPageId: page.defaultPreviousPageId ? page.defaultPreviousPageId: pageStates[page.pageId].previousPageId,
+            //   nextPageId: page.defaultNextPageId?page.defaultNextPageId : pageStates[page.pageId].nextPageId,
+            // };
+
             pageStates[page.pageId] = {
               pageId: page.pageId,
               pageIndex: index,
               ComponentStates: componentStates,
               previousPageId:
-                index > 0 ? data.version.pages[index - 1].pageId : null,
+                page.defaultPreviousPageId ??
+                (index > 0 ? data.version.pages[index - 1].pageId : undefined),
               nextPageId:
-                index < data.version.pages.length - 1
+                page.defaultNextPageId ??
+                (index < data.version.pages.length - 1
                   ? data.version.pages[index + 1].pageId
-                  : null,
+                  : undefined),
             };
           });
 
           state.renderState = {
             PageStates: pageStates,
-            currentPageId: data.version.pages[0].pageId,
+            currentPageId: data.version.pages[0]?.pageId,
           };
         }
       });

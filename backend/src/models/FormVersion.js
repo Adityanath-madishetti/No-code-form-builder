@@ -179,6 +179,16 @@ const PageSchema = new Schema(
             type: [ComponentSchema],
             default: [],
         },
+
+        defaultPreviousPageId: {
+            type: String,
+            // required: true,
+        },
+
+        defaultNextPageId: {
+            type: String,
+            // required: true,
+        },
     },
     { _id: false }
 );

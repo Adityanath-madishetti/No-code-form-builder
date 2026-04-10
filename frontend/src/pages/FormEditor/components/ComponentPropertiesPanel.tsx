@@ -10,6 +10,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { getComponentPropsRenderer } from '@/form/registry/componentRegistry';
 import { Settings2, EyeOff } from 'lucide-react';
 import { useMemo } from 'react';
+import { inp } from '@/form/components/ComponentRender.Helper';
 
 // function supportsHidden(props: unknown): boolean {
 //   if (!props || typeof props !== 'object') return false;
@@ -169,10 +170,22 @@ function LabelEditor({
 
 function PageProperties({ pageId }: { pageId: string }) {
   const page = useFormStore((s) => s.pages[pageId]);
+  const pages = useFormStore((s) => s.pages);
+
+  const orderedPageIds = useFormStore((s) => s.form?.pages || []);
+
   const updatePageTitle = useFormStore((s) => s.updatePageTitle);
   const updatePageDesc = useFormStore((s) => s.updatePageDesc);
+  const updatePageNextPage = useFormStore((s) => s.updatePageNextPage);
 
   if (!page) return null;
+
+  const currentIndex = orderedPageIds.indexOf(pageId);
+  const isTerminal = page.isTerminal;
+  const sequentialNextId = orderedPageIds[currentIndex + 1];
+  if (!sequentialNextId) {
+    console.log('faaahh!!!');
+  }
 
   return (
     <>
@@ -203,6 +216,45 @@ function PageProperties({ pageId }: { pageId: string }) {
           rows={3}
           className="w-full resize-y border border-border bg-background px-2 py-1.5 text-sm outline-none focus:border-primary"
         />
+      </div>
+      <div className="mt-2 mb-4 flex flex-col gap-1">
+        <label className="text-xs font-medium text-muted-foreground">
+          After this page
+        </label>
+
+        {isTerminal ? (
+          // The last page has no routing options.
+          <div className="w-full cursor-not-allowed border border-border/50 bg-muted/30 px-2 py-1.5 text-sm text-muted-foreground select-none">
+            Submit Form
+          </div>
+        ) : (
+          <select
+            // Fallback to the sequential ID if nextPageId is undefined
+            value={page.defaultNextPageId || sequentialNextId || ''}
+            onChange={(e) => updatePageNextPage(pageId, e.target.value)}
+            className={inp}
+          >
+            {orderedPageIds.map((optId, idx) => {
+              // Prevent a page from logically routing to itself
+              if (optId === pageId) return null;
+
+              const optPage = pages[optId];
+              const fallbackName = `Page ${idx + 1}`;
+              const displayName = optPage?.title || fallbackName;
+
+              // Add a visual indicator in the dropdown for the default sequential path
+              const isSequential = optId === sequentialNextId;
+
+              return (
+                <option key={optId} value={optId}>
+                  {isSequential
+                    ? `Continue to next (${displayName})`
+                    : `Jump to ${displayName}`}
+                </option>
+              );
+            })}
+          </select>
+        )}
       </div>
     </>
   );

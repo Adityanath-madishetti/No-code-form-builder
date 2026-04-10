@@ -176,6 +176,8 @@ export interface FormPage {
   children: InstanceID[];
   isTerminal: boolean;
   themeOverrides?: Partial<FormTheme>;
+  defaultNextPageId?: PageID;
+  defaultPreviousPageId?: PageID;
 }
 
 // ------------------------------------------------------------------------------------------------

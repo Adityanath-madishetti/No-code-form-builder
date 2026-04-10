@@ -30,6 +30,8 @@ export interface PublicPageData {
   title: string;
   description?: string;
   components: PublicComponent[];
+  defaultNextPageId?: string;
+  defaultPreviousPageId?: string;
 }
 
 export interface PublicLogicData {
