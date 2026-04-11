@@ -1,4 +1,4 @@
-import FormEditor from "../pages/FormEditor/FormEditor";
+import FormEditor from "../pages/FormEditor/FormEditorPage";
 import FormPreview from "../pages/FormFill/FormPreview";
 import FormReview from "../pages/FormReview/FormReview";
 

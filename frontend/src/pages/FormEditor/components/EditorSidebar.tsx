@@ -12,12 +12,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 
 export type SidebarPanelId =
   | 'components'
-  | 'templates'
-  | 'theme'
-  | 'logic'
-  | 'workflow'
-  | 'ai'
-  | 'groups';
+  | 'logic';
 
 const NAV_ITEMS: {
   id: SidebarPanelId;
@@ -25,12 +20,7 @@ const NAV_ITEMS: {
   icon: React.ElementType;
 }[] = [
     { id: 'components', label: 'Components', icon: LayoutGrid },
-    // { id: 'templates', label: 'Templates', icon: Layers },
-    // { id: 'theme', label: 'Theme', icon: Palette },
-    // { id: 'groups', label: 'Groups', icon: FolderOpen },
     { id: 'logic', label: 'Logic', icon: Zap },
-    // { id: 'workflow', label: 'Workflow', icon: GitBranch },
-    // { id: 'ai', label: 'AI Assistant', icon: Sparkles },
   ];
 
 interface EditorSidebarProps {

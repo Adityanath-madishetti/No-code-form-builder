@@ -1,0 +1,318 @@
+Date : 2026-04-11 21:12:13
+Directory : /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow
+Total : 217 files,  45743 codes, 2925 comments, 3243 blanks, all 51911 lines
+
+Languages
++--------------------+------------+------------+------------+------------+------------+
+| language           | files      | code       | comment    | blank      | total      |
++--------------------+------------+------------+------------+------------+------------+
+| JSON               |         10 |     18,475 |          4 |         14 |     18,493 |
+| TypeScript JSX     |        124 |     17,602 |      1,216 |      1,628 |     20,446 |
+| TypeScript         |         28 |      4,448 |        647 |        709 |      5,804 |
+| JavaScript         |         39 |      3,624 |        962 |        659 |      5,245 |
+| PostCSS            |          4 |      1,025 |         96 |         88 |      1,209 |
+| Markdown           |          7 |        446 |          0 |        120 |        566 |
+| YAML               |          2 |         76 |          0 |         20 |         96 |
+| HTML               |          1 |         27 |          0 |          3 |         30 |
+| JSON with Comments |          1 |         13 |          0 |          1 |         14 |
+| Ignore             |          1 |          7 |          0 |          1 |          8 |
++--------------------+------------+------------+------------+------------+------------+
+
+Directories
++----------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                                                             | files      | code       | comment    | blank      | total      |
++----------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                                                                |        217 |     45,743 |      2,925 |      3,243 |     51,911 |
+| . (Files)                                                                                                                        |          1 |         46 |          0 |         17 |         63 |
+| .github                                                                                                                          |          2 |         76 |          0 |         20 |         96 |
+| .github/workflows                                                                                                                |          2 |         76 |          0 |         20 |         96 |
+| backend                                                                                                                          |         41 |      8,357 |        962 |        678 |      9,997 |
+| backend (Files)                                                                                                                  |          3 |      4,755 |          0 |         21 |      4,776 |
+| backend/src                                                                                                                      |         38 |      3,602 |        962 |        657 |      5,221 |
+| backend/src (Files)                                                                                                              |          2 |         42 |         36 |         16 |         94 |
+| backend/src/config                                                                                                               |          2 |         68 |         15 |         10 |         93 |
+| backend/src/controllers                                                                                                          |          6 |        331 |          0 |         40 |        371 |
+| backend/src/db                                                                                                                   |          1 |         17 |          0 |          5 |         22 |
+| backend/src/middleware                                                                                                           |          2 |         47 |         26 |         13 |         86 |
+| backend/src/models                                                                                                               |          4 |        660 |         39 |        151 |        850 |
+| backend/src/routes                                                                                                               |          6 |         98 |        724 |         33 |        855 |
+| backend/src/services                                                                                                             |         12 |      1,803 |         71 |        318 |      2,192 |
+| backend/src/services (Files)                                                                                                     |          8 |      1,359 |         71 |        258 |      1,688 |
+| backend/src/services/logicEngine                                                                                                 |          4 |        444 |          0 |         60 |        504 |
+| backend/src/utils                                                                                                                |          3 |        536 |         51 |         71 |        658 |
+| docs                                                                                                                             |          3 |        114 |          0 |         22 |        136 |
+| frontend                                                                                                                         |        170 |     37,150 |      1,963 |      2,506 |     41,619 |
+| frontend (Files)                                                                                                                 |         15 |     14,087 |          5 |         83 |     14,175 |
+| frontend/src                                                                                                                     |        155 |     23,063 |      1,958 |      2,423 |     27,444 |
+| frontend/src (Files)                                                                                                             |          2 |         27 |          0 |          4 |         31 |
+| frontend/src/components                                                                                                          |         23 |      2,488 |        124 |        266 |      2,878 |
+| frontend/src/components (Files)                                                                                                  |          2 |        597 |        122 |         83 |        802 |
+| frontend/src/components/layout                                                                                                   |          1 |         21 |          1 |          5 |         27 |
+| frontend/src/components/ui                                                                                                       |         20 |      1,870 |          1 |        178 |      2,049 |
+| frontend/src/config                                                                                                              |          1 |          3 |          0 |          1 |          4 |
+| frontend/src/contexts                                                                                                            |          1 |         53 |          2 |          9 |         64 |
+| frontend/src/form                                                                                                                |         58 |      8,633 |        901 |      1,065 |     10,599 |
+| frontend/src/form/components                                                                                                     |         38 |      4,784 |        280 |        457 |      5,521 |
+| frontend/src/form/components (Files)                                                                                             |          4 |        525 |        162 |         86 |        773 |
+| frontend/src/form/components/comps                                                                                               |         34 |      4,259 |        118 |        371 |      4,748 |
+| frontend/src/form/components/comps/layout                                                                                        |          6 |        231 |          7 |         29 |        267 |
+| frontend/src/form/components/comps/numeric-input                                                                                 |          2 |        409 |          2 |         34 |        445 |
+| frontend/src/form/components/comps/selection                                                                                     |          3 |        927 |         24 |         81 |      1,032 |
+| frontend/src/form/components/comps/text-input                                                                                    |          2 |        363 |         16 |         26 |        405 |
+| frontend/src/form/components/comps/wip                                                                                           |         21 |      2,329 |         69 |        201 |      2,599 |
+| frontend/src/form/context                                                                                                        |          1 |          5 |          2 |          4 |         11 |
+| frontend/src/form/hooks                                                                                                          |          1 |        407 |         37 |         63 |        507 |
+| frontend/src/form/logic                                                                                                          |          3 |        688 |         80 |        119 |        887 |
+| frontend/src/form/registry                                                                                                       |          1 |        328 |         24 |         53 |        405 |
+| frontend/src/form/renderer                                                                                                       |          7 |      1,386 |        312 |        188 |      1,886 |
+| frontend/src/form/renderer (Files)                                                                                               |          1 |        589 |         66 |         53 |        708 |
+| frontend/src/form/renderer/editRenderer                                                                                          |          3 |        286 |         35 |         35 |        356 |
+| frontend/src/form/renderer/viewRenderer                                                                                          |          3 |        511 |        211 |        100 |        822 |
+| frontend/src/form/store                                                                                                          |          3 |        718 |        140 |        138 |        996 |
+| frontend/src/form/theme                                                                                                          |          3 |        304 |         23 |         40 |        367 |
+| frontend/src/form/utils                                                                                                          |          1 |         13 |          3 |          3 |         19 |
+| frontend/src/lib                                                                                                                 |          5 |        412 |          6 |         51 |        469 |
+| frontend/src/pages                                                                                                               |         56 |     10,329 |        829 |        933 |     12,091 |
+| frontend/src/pages (Files)                                                                                                       |          6 |      1,189 |         17 |         72 |      1,278 |
+| frontend/src/pages/Dashboard                                                                                                     |          9 |      1,435 |        420 |        125 |      1,980 |
+| frontend/src/pages/Dashboard (Files)                                                                                             |          3 |        186 |          4 |         22 |        212 |
+| frontend/src/pages/Dashboard/components                                                                                          |          6 |      1,249 |        416 |        103 |      1,768 |
+| frontend/src/pages/FormEditor                                                                                                    |         33 |      5,651 |        389 |        560 |      6,600 |
+| frontend/src/pages/FormEditor (Files)                                                                                            |          6 |        668 |         40 |         84 |        792 |
+| frontend/src/pages/FormEditor/components                                                                                         |         23 |      4,177 |        293 |        365 |      4,835 |
+| frontend/src/pages/FormEditor/components (Files)                                                                                 |         20 |      4,177 |        293 |        362 |      4,832 |
+| frontend/src/pages/FormEditor/components/wip                                                                                     |          3 |          0 |          0 |          3 |          3 |
+| frontend/src/pages/FormEditor/hooks                                                                                              |          2 |        221 |         20 |         56 |        297 |
+| frontend/src/pages/FormEditor/legacy                                                                                             |          1 |        579 |         36 |         52 |        667 |
+| frontend/src/pages/FormEditor/overlays                                                                                           |          1 |          6 |          0 |          3 |          9 |
+| frontend/src/pages/FormFill                                                                                                      |          5 |      1,602 |          2 |        129 |      1,733 |
+| frontend/src/pages/FormReview                                                                                                    |          1 |        365 |          0 |         34 |        399 |
+| frontend/src/pages/FormSubmit                                                                                                    |          1 |          8 |          0 |          2 |         10 |
+| frontend/src/pages/Login                                                                                                         |          1 |         79 |          1 |         11 |         91 |
+| frontend/src/routes                                                                                                              |          5 |         93 |          0 |          6 |         99 |
+| frontend/src/styles                                                                                                              |          4 |      1,025 |         96 |         88 |      1,209 |
++----------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++----------------------------------------------------------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+
+| filename                                                                                                                         | language           | code       | comment    | blank      | total      |
++----------------------------------------------------------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/.github/workflows/ci-backend.yml                                      | YAML               |         35 |          0 |          9 |         44 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/.github/workflows/ci-frontend.yml                                     | YAML               |         41 |          0 |         11 |         52 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/README.md                                                             | Markdown           |         46 |          0 |         17 |         63 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/README.md                                                     | Markdown           |         74 |          0 |         19 |         93 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/package-lock.json                                             | JSON               |      4,646 |          0 |          1 |      4,647 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/package.json                                                  | JSON               |         35 |          0 |          1 |         36 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/app.js                                                    | JavaScript         |         25 |         36 |         10 |         71 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/config/firebase.js                                        | JavaScript         |         40 |         14 |          7 |         61 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/config/swagger.js                                         | JavaScript         |         28 |          1 |          3 |         32 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/controllers/authController.js                             | JavaScript         |         12 |          0 |          2 |         14 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/controllers/formController.js                             | JavaScript         |         78 |          0 |          9 |         87 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/controllers/formVersionController.js                      | JavaScript         |         81 |          0 |          9 |         90 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/controllers/submissionController.js                       | JavaScript         |         72 |          0 |          8 |         80 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/controllers/userController.js                             | JavaScript         |         29 |          0 |          4 |         33 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/controllers/workflowController.js                         | JavaScript         |         59 |          0 |          8 |         67 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/db/db.js                                                  | JavaScript         |         17 |          0 |          5 |         22 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/middleware/auth.js                                        | JavaScript         |         29 |         12 |          9 |         50 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/middleware/errorHandler.js                                | JavaScript         |         18 |         14 |          4 |         36 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/models/Form.js                                            | JavaScript         |         91 |          3 |         15 |        109 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/models/FormVersion.js                                     | JavaScript         |        444 |         31 |        105 |        580 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/models/Submission.js                                      | JavaScript         |         84 |          5 |         21 |        110 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/models/User.js                                            | JavaScript         |         41 |          0 |         10 |         51 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/routes/authRoutes.js                                      | JavaScript         |          5 |         35 |          4 |         44 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/routes/formRoutes.js                                      | JavaScript         |         34 |        249 |         10 |        293 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/routes/formVersionRoutes.js                               | JavaScript         |         23 |        196 |          6 |        225 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/routes/submissionRoutes.js                                | JavaScript         |         18 |        130 |          5 |        153 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/routes/userRoutes.js                                      | JavaScript         |          8 |         61 |          4 |         73 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/routes/workflowRoutes.js                                  | JavaScript         |         10 |         53 |          4 |         67 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/server.js                                                 | JavaScript         |         17 |          0 |          6 |         23 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/services/authService.js                                   | JavaScript         |         44 |          0 |          8 |         52 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/services/formService.js                                   | JavaScript         |        234 |          0 |         40 |        274 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/services/formVersionService.js                            | JavaScript         |        195 |          0 |         45 |        240 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/services/logicEngine.js                                   | JavaScript         |        219 |          6 |         27 |        252 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/services/logicEngine/conditionTree.js                     | JavaScript         |         45 |          0 |          7 |         52 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/services/logicEngine/formulaParser.js                     | JavaScript         |        228 |          0 |         24 |        252 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/services/logicEngine/helpers.js                           | JavaScript         |         25 |          0 |          3 |         28 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/services/logicEngine/normalizer.js                        | JavaScript         |        146 |          0 |         26 |        172 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/services/submissionService.js                             | JavaScript         |        353 |          0 |         67 |        420 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/services/userService.js                                   | JavaScript         |         50 |          0 |         12 |         62 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/services/workflowEngine.js                                | JavaScript         |        117 |         65 |         26 |        208 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/services/workflowService.js                               | JavaScript         |        147 |          0 |         33 |        180 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/utils/conditionEvaluator.js                               | JavaScript         |         49 |         34 |         17 |        100 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/utils/formPermissions.js                                  | JavaScript         |        226 |          0 |         45 |        271 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/backend/src/utils/validators.js                                       | JavaScript         |        261 |         17 |          9 |        287 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/docs/Logic Panel & Page.md                                            | Markdown           |         21 |          0 |          7 |         28 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/docs/form-properties-test-quickcheck.md                               | Markdown           |         31 |          0 |          6 |         37 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/docs/logic-system-test-quickcheck.md                                  | Markdown           |         62 |          0 |          9 |         71 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/.prettierignore                                              | Ignore             |          7 |          0 |          1 |          8 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/.prettierrc                                                  | JSON               |         11 |          0 |          1 |         12 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/COMPONENT_ADD_GUIDE.md                                       | Markdown           |        139 |          0 |         49 |        188 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/README.md                                                    | Markdown           |         73 |          0 |         13 |         86 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/SCHEMA.json                                                  | JSON               |         22 |          0 |          1 |         23 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/components.json                                              | JSON               |         25 |          0 |          1 |         26 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/eslint.config.js                                             | JavaScript         |         22 |          0 |          2 |         24 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/index.html                                                   | HTML               |         27 |          0 |          3 |         30 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/package-lock.json                                            | JSON               |     13,611 |          0 |          1 |     13,612 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/package.json                                                 | JSON               |         70 |          0 |          1 |         71 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/App.tsx                                                  | TypeScript JSX     |         10 |          0 |          1 |         11 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/components/RichTextEditor.tsx                            | TypeScript JSX     |        413 |        121 |         37 |        571 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/components/layout/ProtectedLayout.tsx                    | TypeScript JSX     |         21 |          1 |          5 |         27 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/components/theme-provider.tsx                            | TypeScript JSX     |        184 |          1 |         46 |        231 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/components/ui/alert-dialog.tsx                           | TypeScript JSX     |        183 |          0 |         15 |        198 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/components/ui/badge.tsx                                  | TypeScript JSX     |         44 |          0 |          6 |         50 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/components/ui/button.tsx                                 | TypeScript JSX     |         62 |          1 |          6 |         69 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/components/ui/card.tsx                                   | TypeScript JSX     |         94 |          0 |         10 |        104 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/components/ui/checkbox.tsx                               | TypeScript JSX     |         28 |          0 |          4 |         32 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/components/ui/context-menu.tsx                           | TypeScript JSX     |        244 |          0 |         18 |        262 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/components/ui/dialog.tsx                                 | TypeScript JSX     |        154 |          0 |         13 |        167 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/components/ui/dropdown-menu.tsx                          | TypeScript JSX     |        250 |          0 |         18 |        268 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/components/ui/field.tsx                                  | TypeScript JSX     |        217 |          0 |         20 |        237 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/components/ui/input.tsx                                  | TypeScript JSX     |         16 |          0 |          4 |         20 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/components/ui/label.tsx                                  | TypeScript JSX     |         19 |          0 |          4 |         23 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/components/ui/popover.tsx                                | TypeScript JSX     |         78 |          0 |         10 |         88 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/components/ui/radio-group.tsx                            | TypeScript JSX     |         38 |          0 |          5 |         43 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/components/ui/select.tsx                                 | TypeScript JSX     |        178 |          0 |         13 |        191 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/components/ui/separator.tsx                              | TypeScript JSX     |         23 |          0 |          4 |         27 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/components/ui/slider.tsx                                 | TypeScript JSX     |         53 |          0 |          5 |         58 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/components/ui/sonner.tsx                                 | TypeScript JSX     |         44 |          0 |          4 |         48 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/components/ui/tabs.tsx                                   | TypeScript JSX     |         81 |          0 |          8 |         89 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/components/ui/textarea.tsx                               | TypeScript JSX     |         15 |          0 |          4 |         19 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/components/ui/tooltip.tsx                                | TypeScript JSX     |         49 |          0 |          7 |         56 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/config/routes.ts                                         | TypeScript         |          3 |          0 |          1 |          4 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/contexts/AuthContext.tsx                                 | TypeScript JSX     |         53 |          2 |          9 |         64 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/ComponentRender.Helper.tsx               | TypeScript JSX     |         30 |          1 |          5 |         36 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/PlaceholderRenderer.tsx                  | TypeScript JSX     |         39 |          7 |          6 |         52 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/allComponents.ts                         | TypeScript         |        289 |         69 |         43 |        401 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/base.ts                                  | TypeScript         |        167 |         85 |         32 |        284 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/comps/layout/Columns.tsx                 | TypeScript JSX     |          0 |          0 |          1 |          1 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/comps/layout/ComponentStack.tsx          | TypeScript JSX     |          0 |          0 |          1 |          1 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/comps/layout/Heading.tsx                 | TypeScript JSX     |         79 |          3 |          9 |         91 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/comps/layout/LineDivider.tsx             | TypeScript JSX     |         83 |          2 |          8 |         93 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/comps/layout/Spacer.tsx                  | TypeScript JSX     |          0 |          0 |          1 |          1 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/comps/layout/TextBox.tsx                 | TypeScript JSX     |         69 |          2 |          9 |         80 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/comps/numeric-input/Decimal.tsx          | TypeScript JSX     |        215 |          1 |         19 |        235 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/comps/numeric-input/Number.tsx           | TypeScript JSX     |        194 |          1 |         15 |        210 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/comps/selection/Checkbox.tsx             | TypeScript JSX     |        354 |          8 |         32 |        394 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/comps/selection/Dropdown.tsx             | TypeScript JSX     |        278 |          3 |         25 |        306 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/comps/selection/Radio.tsx                | TypeScript JSX     |        295 |         13 |         24 |        332 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/comps/text-input/MultiLineText.tsx       | TypeScript JSX     |        154 |         14 |         12 |        180 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/comps/text-input/SingleLineText.tsx      | TypeScript JSX     |        209 |          2 |         14 |        225 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/comps/wip/AddressBlock.tsx               | TypeScript JSX     |        287 |          4 |         23 |        314 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/comps/wip/Captcha.tsx                    | TypeScript JSX     |          0 |          0 |          1 |          1 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/comps/wip/ColorPicker.tsx                | TypeScript JSX     |          0 |          0 |          1 |          1 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/comps/wip/Date.tsx                       | TypeScript JSX     |        175 |         18 |         19 |        212 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/comps/wip/Email.tsx                      | TypeScript JSX     |        195 |          2 |         13 |        210 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/comps/wip/FileUpload.tsx                 | TypeScript JSX     |          0 |          0 |          1 |          1 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/comps/wip/ImageUpload.tsx                | TypeScript JSX     |          0 |          0 |          1 |          1 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/comps/wip/LinearScale.tsx                | TypeScript JSX     |        276 |          1 |         19 |        296 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/comps/wip/Location.tsx                   | TypeScript JSX     |          0 |          0 |          1 |          1 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/comps/wip/MatrixTable.tsx                | TypeScript JSX     |          0 |          0 |          1 |          1 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/comps/wip/MultiChoiceGrid.tsx            | TypeScript JSX     |          0 |          0 |          1 |          1 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/comps/wip/NameBlock.tsx                  | TypeScript JSX     |        237 |          5 |         21 |        263 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/comps/wip/Phone.tsx                      | TypeScript JSX     |        261 |          8 |         23 |        292 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/comps/wip/RatingScale.tsx                | TypeScript JSX     |        241 |          6 |         19 |        266 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/comps/wip/RichTextInput.tsx              | TypeScript JSX     |          0 |          0 |          1 |          1 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/comps/wip/Signature.tsx                  | TypeScript JSX     |          0 |          0 |          1 |          1 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/comps/wip/SingleChoiceGrid.tsx           | TypeScript JSX     |          0 |          0 |          1 |          1 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/comps/wip/Slider.tsx                     | TypeScript JSX     |        264 |          4 |         20 |        288 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/comps/wip/Time.tsx                       | TypeScript JSX     |        193 |          3 |         17 |        213 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/comps/wip/Toggle.tsx                     | TypeScript JSX     |          0 |          0 |          1 |          1 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/components/comps/wip/URL.tsx                        | TypeScript JSX     |        200 |         18 |         16 |        234 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/context/FormModeContext.tsx                         | TypeScript JSX     |          5 |          2 |          4 |         11 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/hooks/useFormDragHandlers.ts                        | TypeScript         |        407 |         37 |         63 |        507 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/logic/formLogicEngine.ts                            | TypeScript         |        237 |         18 |         35 |        290 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/logic/logic.store.ts                                | TypeScript         |        276 |         33 |         48 |        357 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/logic/logicTypes.ts                                 | TypeScript         |        175 |         29 |         36 |        240 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/registry/componentRegistry.ts                       | TypeScript         |        328 |         24 |         53 |        405 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/renderer/SelectableWrapper.tsx                      | TypeScript JSX     |        589 |         66 |         53 |        708 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/renderer/editRenderer/RenderComponent.tsx           | TypeScript JSX     |         51 |          7 |          7 |         65 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/renderer/editRenderer/RenderForm.tsx                | TypeScript JSX     |        151 |         27 |         20 |        198 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/renderer/editRenderer/RenderPage.tsx                | TypeScript JSX     |         84 |          1 |          8 |         93 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/renderer/viewRenderer/FormRunner.tsx                | TypeScript JSX     |        333 |         64 |         54 |        451 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/renderer/viewRenderer/runtimeForm.store.ts          | TypeScript         |        130 |        114 |         36 |        280 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/renderer/viewRenderer/runtimeForm.types.ts          | TypeScript         |         48 |         33 |         10 |         91 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/store/form.store.ts                                 | TypeScript         |        638 |        127 |        126 |        891 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/store/formSerialization.ts                          | TypeScript         |         44 |         12 |          7 |         63 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/store/group.store.ts                                | TypeScript         |         36 |          1 |          5 |         42 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/theme/FormThemeProvider.tsx                         | TypeScript JSX     |        178 |         13 |         25 |        216 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/theme/formTheme.ts                                  | TypeScript         |         78 |          4 |          5 |         87 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/theme/theme.store.ts                                | TypeScript         |         48 |          6 |         10 |         64 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/form/utils/DndUtils.tsx                                  | TypeScript JSX     |         13 |          3 |          3 |         19 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/lib/api.ts                                               | TypeScript         |         39 |          1 |          8 |         48 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/lib/firebase.ts                                          | TypeScript         |         15 |          1 |          4 |         20 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/lib/formApi.ts                                           | TypeScript         |        317 |          2 |         34 |        353 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/lib/frontendBackendCompArray.ts                          | TypeScript         |         36 |          2 |          3 |         41 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/lib/utils.ts                                             | TypeScript         |          5 |          0 |          2 |          7 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/main.tsx                                                 | TypeScript JSX     |         17 |          0 |          3 |         20 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/AccountPage.tsx                                    | TypeScript JSX     |        100 |          3 |         10 |        113 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/ActivityPage.tsx                                   | TypeScript JSX     |        229 |          3 |         15 |        247 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/Dashboard/Dashboard.tsx                            | TypeScript JSX     |        121 |          4 |         15 |        140 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/Dashboard/components/DashboardHeader.tsx           | TypeScript JSX     |         74 |          0 |          5 |         79 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/Dashboard/components/MyFormsTab.tsx                | TypeScript JSX     |        426 |         10 |         26 |        462 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/Dashboard/components/SharedFormsTab.tsx            | TypeScript JSX     |        350 |        304 |         34 |        688 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/Dashboard/components/SubmissionDetails.tsx         | TypeScript JSX     |        131 |         96 |         13 |        240 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/Dashboard/components/SubmissionsTab.tsx            | TypeScript JSX     |        182 |          3 |         16 |        201 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/Dashboard/components/TemplatesSection.tsx          | TypeScript JSX     |         86 |          3 |          9 |         98 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/Dashboard/dashboard.types.ts                       | TypeScript         |         27 |          0 |          3 |         30 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/Dashboard/dashboard.utils.ts                       | TypeScript         |         38 |          0 |          4 |         42 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/EditorThemeTemplatesPage.tsx                       | TypeScript JSX     |         82 |          3 |          7 |         92 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormEditor/FormEditorLayout.tsx                    | TypeScript JSX     |        156 |         13 |         28 |        197 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormEditor/FormEditorLoader.tsx                    | TypeScript JSX     |          9 |          0 |          3 |         12 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormEditor/FormEditorPage.tsx                      | TypeScript JSX     |          6 |          0 |          1 |          7 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormEditor/FormEditorShell.tsx                     | TypeScript JSX     |         21 |          0 |          3 |         24 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormEditor/KeyboardShortcutsHelp.tsx               | TypeScript JSX     |        134 |          0 |          7 |        141 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormEditor/components/ActionRow.tsx                | TypeScript JSX     |         66 |          8 |          9 |         83 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormEditor/components/ComponentCatalogPanel.tsx    | TypeScript JSX     |        199 |         31 |         13 |        243 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormEditor/components/ComponentPropertiesPanel.tsx | TypeScript JSX     |        191 |         45 |         26 |        262 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormEditor/components/ConditionBuilder.tsx         | TypeScript JSX     |        291 |         17 |         27 |        335 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormEditor/components/DebugPanel.tsx               | TypeScript JSX     |         67 |          2 |          7 |         76 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormEditor/components/DependencyGraph.tsx          | TypeScript JSX     |        124 |         12 |         18 |        154 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormEditor/components/EditorSidebar.tsx            | TypeScript JSX     |         62 |          6 |          6 |         74 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormEditor/components/FormCanvas.tsx               | TypeScript JSX     |        121 |          3 |         13 |        137 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormEditor/components/FormPropertiesPanel.tsx      | TypeScript JSX     |        258 |         20 |         23 |        301 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormEditor/components/FormulaEditor.tsx            | TypeScript JSX     |        241 |         11 |         33 |        285 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormEditor/components/GroupCatalogPanel.tsx        | TypeScript JSX     |         83 |          0 |          7 |         90 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormEditor/components/LogicPanel.tsx               | TypeScript JSX     |        540 |          0 |         29 |        569 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormEditor/components/LogicPlayground.tsx          | TypeScript JSX     |        383 |         24 |         24 |        431 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormEditor/components/PageNavigator.tsx            | TypeScript JSX     |         94 |          7 |         11 |        112 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormEditor/components/PreviewPublishPanel.tsx      | TypeScript JSX     |         14 |          1 |          2 |         17 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormEditor/components/RightFloatingPanel.tsx       | TypeScript JSX     |         61 |          9 |          8 |         78 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormEditor/components/TemplateCatalogPanel.tsx     | TypeScript JSX     |         14 |          1 |          2 |         17 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormEditor/components/ThemePanel.tsx               | TypeScript JSX     |         21 |          5 |          2 |         28 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormEditor/components/ThemingPage.tsx              | TypeScript JSX     |      1,003 |         63 |         77 |      1,143 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormEditor/components/Workspaces.tsx               | TypeScript JSX     |        344 |         28 |         25 |        397 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormEditor/components/wip/AIPanel.tsx              | TypeScript JSX     |          0 |          0 |          1 |          1 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormEditor/components/wip/TemplatePanel.tsx        | TypeScript JSX     |          0 |          0 |          1 |          1 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormEditor/components/wip/ThemePanel.tsx           | TypeScript JSX     |          0 |          0 |          1 |          1 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormEditor/hooks/useFormEditorController.ts        | TypeScript         |        159 |         20 |         43 |        222 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormEditor/hooks/useFormEditorHydration.ts         | TypeScript         |         62 |          0 |         13 |         75 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormEditor/legacy/FormEditor.tsx                   | TypeScript JSX     |        579 |         36 |         52 |        667 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormEditor/overlays/EditorDragOverlay.tsx          | TypeScript JSX     |          6 |          0 |          3 |          9 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormEditor/useFormEditorShortcuts.ts               | TypeScript         |        342 |         27 |         42 |        411 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormFill/FillFieldRenderer.tsx                     | TypeScript JSX     |        430 |          0 |         22 |        452 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormFill/FormFill.tsx                              | TypeScript JSX     |        508 |          0 |         48 |        556 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormFill/FormPreview.tsx                           | TypeScript JSX     |        153 |          0 |         15 |        168 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormFill/FormSuccess.tsx                           | TypeScript JSX     |         25 |          1 |          4 |         30 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormFill/runtimeLogic.ts                           | TypeScript         |        486 |          1 |         40 |        527 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormReview/FormReview.tsx                          | TypeScript JSX     |        365 |          0 |         34 |        399 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/FormSubmit/FormSubmit.tsx                          | TypeScript JSX     |          8 |          0 |          2 |         10 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/KeyboardShortcutsPage.tsx                          | TypeScript JSX     |        425 |          0 |         14 |        439 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/Login/page.tsx                                     | TypeScript JSX     |         79 |          1 |         11 |         91 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/NotificationSettingsPage.tsx                       | TypeScript JSX     |        138 |          2 |         13 |        153 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/pages/UserSettingsPage.tsx                               | TypeScript JSX     |        215 |          6 |         13 |        234 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/routes/formRoutes.tsx                                    | TypeScript JSX     |         17 |          0 |          1 |         18 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/routes/index.ts                                          | TypeScript         |          6 |          0 |          1 |          7 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/routes/protectedRoutes.tsx                               | TypeScript JSX     |         21 |          0 |          2 |         23 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/routes/publicRoutes.tsx                                  | TypeScript JSX     |         22 |          0 |          1 |         23 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/routes/settingsRoutes.tsx                                | TypeScript JSX     |         27 |          0 |          1 |         28 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/styles/font-theme.css                                    | PostCSS            |         69 |          5 |          6 |         80 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/styles/form-theme.css                                    | PostCSS            |        557 |         69 |         49 |        675 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/styles/index.css                                         | PostCSS            |        135 |          1 |         12 |        148 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/src/styles/theming-page.css                                  | PostCSS            |        264 |         21 |         21 |        306 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/tsconfig.app.json                                            | JSON               |         28 |          2 |          3 |         33 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/tsconfig.json                                                | JSON with Comments |         13 |          0 |          1 |         14 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/tsconfig.node.json                                           | JSON               |         22 |          2 |          3 |         27 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/vercel.json                                                  | JSON               |          5 |          0 |          1 |          6 |
+| /Users/sathvik/wayne/fox/No-Code-Form-Builder-And-Workflow/frontend/vite.config.ts                                               | TypeScript         |         12 |          1 |          2 |         15 |
+| Total                                                                                                                            |                    |     45,743 |      2,925 |      3,243 |     51,911 |
++----------------------------------------------------------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+

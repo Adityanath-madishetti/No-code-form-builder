@@ -57,52 +57,20 @@ export const ComponentIDs = {
   TextBox: 'Textbox',
   Header: 'Header',
   LineDivider: 'LineDivider',
-  ColumnLayout: 'ColumnLayout',
+  // ColumnLayout: 'ColumnLayout',
 
   // ── Text Inputs ──
   SingleLineInput: 'SingleLineInput',
   MultiLineInput: 'MultiLineInput',
-  Email: 'Email',
-  Phone: 'Phone',
+
+  // ── Numeric ──
   Number: 'Number',
   Decimal: 'Decimal',
-  URL: 'URL',
 
   // ── Selection ──
   Radio: 'Radio',
   Checkbox: 'Checkbox',
   Dropdown: 'Dropdown',
-
-  // ── Date & Time ──
-  Date: 'Date',
-  Time: 'Time',
-
-  // ── File / Media ──
-  FileUpload: 'FileUpload',
-  ImageUpload: 'ImageUpload',
-
-  // ── Selection / Grids ──
-  SingleChoiceGrid: 'SingleChoiceGrid',
-  MultiChoiceGrid: 'MultiChoiceGrid',
-  MatrixTable: 'MatrixTable',
-
-  // ── Scales ──
-  RatingScale: 'RatingScale',
-  LinearScale: 'LinearScale',
-  Slider: 'Slider',
-
-  // ── Composite / Blocks ──
-  AddressBlock: 'AddressBlock',
-  NameBlock: 'NameBlock',
-
-  // ── Specialty ──
-  ColorPicker: 'ColorPicker',
-  Signature: 'Signature',
-  // Payment: 'Payment',
-  Location: 'Location',
-  Toggle: 'Toggle',
-  RichTextInput: 'RichTextInput',
-  Captcha: 'Captcha',
 } as const;
 
 export type ComponentID = (typeof ComponentIDs)[keyof typeof ComponentIDs];

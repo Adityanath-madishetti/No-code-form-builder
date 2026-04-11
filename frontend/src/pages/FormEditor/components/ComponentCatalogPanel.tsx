@@ -1,6 +1,7 @@
 // src/pages/FormEditor/components/ComponentCatalogPanel.tsx
 import { useState, useMemo } from 'react';
 import { useDraggable } from '@dnd-kit/react';
+
 import {
   Search,
   // Layout icons
@@ -43,6 +44,7 @@ import {
   CreditCard,
   ShieldCheck,
 } from 'lucide-react';
+
 import { Input } from '@/components/ui/input';
 import { catalogRegistry } from '@/form/registry/componentRegistry';
 import { useFormStore } from '@/form/store/form.store';
@@ -100,13 +102,8 @@ const COMPONENT_ICONS: Record<string, React.ElementType> = {
 const CATEGORY_ORDER = [
   'Layout',
   'Text Inputs',
+  'Numeric Input',
   'Selection',
-  'Date & Time',
-  'File / Media',
-  'Grids & Tables',
-  'Scales & Sliders',
-  'Blocks',
-  'Specialty',
 ];
 
 function DraggableCatalogItem({
