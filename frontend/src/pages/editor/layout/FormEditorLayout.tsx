@@ -1,47 +1,63 @@
-import { Rnd } from 'react-rnd';
-import { Bug, PanelLeftClose, PanelRightClose, ArrowLeft, LayoutGrid, Zap, Settings2 } from 'lucide-react';
+import { Bug, ArrowLeft, Hammer, Zap, Settings2 } from 'lucide-react';
 
-import { EditorSidebar, type SidebarPanelId } from '../sidebar/EditorSidebar';
 import { RightFloatingPanel } from './RightFloatingPanel';
 import { SaveButton, PreviewButton, PublishButton } from './Workspaces';
 
-// Left Side Panels 
-import { ComponentCatalogPanel } from '../sidebar/ComponentCatalogPanel';
-import { LogicPanel } from '../logic/LogicPanel';
-
 import { FormCanvas } from '../canvas/FormCanvas';
 import { PageNavigator } from '../canvas/PageNavigator';
-import { LogicPlayground } from '../logic/LogicPlayground';
 import { FormPropertiesPanel } from '../properties/FormPropertiesPanel';
 
-// Right Side Panels
+// Right Panel content
 import { ComponentPropertiesPanel } from '../properties/ComponentPropertiesPanel';
+import { LogicPanel } from '../logic/LogicPanel';
 import { DebugPanel } from '../debug/DebugPanel';
 import { KeyboardShortcutsHelp } from '../KeyboardShortcutsHelp';
 
-const PANEL_TITLES: Record<SidebarPanelId, string> = {
-  components: 'Components',
-  logic: 'Logic',
-};
-
-function PanelContent({ panelId }: { panelId: SidebarPanelId }) {
-  switch (panelId) {
-    case 'components':
-      return <ComponentCatalogPanel />;
-
-    case 'logic':
-      return <LogicPanel />;
-
-    default:
-      return null;
+/* ─────────────────────────────
+   Right Panel — contextual content
+───────────────────────────── */
+function RightPanelContent({
+  editorView,
+}: {
+  editorView: string;
+}) {
+  if (editorView === 'logic') {
+    return (
+      <div className="flex h-full flex-col">
+        <div className="flex h-10 shrink-0 items-center border-b border-border px-3">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Logic
+          </span>
+        </div>
+        <div className="flex-1 overflow-y-auto p-3">
+          <LogicPanel />
+        </div>
+      </div>
+    );
   }
+
+  // Default: Builder workspace → Properties
+  return (
+    <div className="flex h-full flex-col">
+      <div className="flex h-10 shrink-0 items-center border-b border-border px-3">
+        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Properties
+        </span>
+      </div>
+      <div className="flex-1 overflow-y-auto">
+        <ComponentPropertiesPanel />
+      </div>
+    </div>
+  );
 }
 
+/* ─────────────────────────────
+   Main Layout
+───────────────────────────── */
 export function FormEditorLayout({ controller }: any) {
   const { state, actions } = controller;
 
-  const { currentPageIndex, editorView, showDebug, totalPages, hasSelection } =
-    state;
+  const { currentPageIndex, editorView, showDebug, totalPages } = state;
 
   const {
     setCurrentPageIndex,
@@ -52,78 +68,53 @@ export function FormEditorLayout({ controller }: any) {
     handleSave,
   } = actions;
 
+  // Show the right panel for builder and logic views (not for formProperties)
+  const showRightPanel = editorView === 'builder' || editorView === 'logic';
+
   return (
     <div className="isolate flex h-screen w-full overflow-hidden bg-neutral-50 dark:bg-neutral-950">
-      
-      {/* LEFT SIDEBAR */}
-      <EditorSidebar
-        activePanel={state.activePanel}
-        onPanelChange={(panel: SidebarPanelId | null) => {
-          // allow only components + logic
-          if (panel === 'components' || panel === 'logic') {
-            actions.setActivePanel(panel);
-          } else {
-            actions.setActivePanel(null);
-          }
-        }}
-      />
 
       <div className="relative flex h-full flex-1 overflow-hidden">
-        
-        {/* LEFT PANEL */}
-        {(state.activePanel === 'components' || state.activePanel === 'logic') && (
-          <Rnd
-            disableDragging
-            enableResizing={{ right: true }}
-            size={{ width: state.leftWidth, height: '100%' }}
-            minWidth="20%"
-            maxWidth="35%"
-            onResize={(_e: any, _dir: any, ref: any) =>
-              actions.setLeftWidth(ref.style.width)
-            }
-            style={{ position: 'relative', transform: 'none' }}
-            className="z-10 shrink-0 border-r border-border bg-background"
-          >
-            <div className="flex h-full flex-col">
-              
-              {/* HEADER */}
-              <div className="flex h-10 items-center border-b px-3">
-                <span className="flex-1 text-xs font-semibold uppercase text-muted-foreground">
-                  {PANEL_TITLES[state.activePanel as SidebarPanelId]}
-                </span>
-                <button
-                  onClick={() => actions.setActivePanel(null)}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  <PanelLeftClose className="h-3.5 w-3.5" />
-                </button>
-              </div>
 
-              {/* CONTENT */}
-              <div className="flex flex-1 overflow-y-auto p-3">
-                <PanelContent panelId={state.activePanel as SidebarPanelId} />
-              </div>
-            </div>
-          </Rnd>
+        {/* LEFT PANEL — contextual */}
+        {showRightPanel && (
+          <div
+            className="h-full shrink-0 border-r border-border bg-background overflow-hidden"
+            style={{ width: state.rightWidth }}
+          >
+            <RightPanelContent editorView={editorView} />
+          </div>
         )}
 
-        {/* CENTER AREA */}
+        {/* CENTER: Top bar + canvas */}
         <div className="relative flex flex-1 flex-col overflow-hidden bg-neutral-100 dark:bg-neutral-900">
 
           {/* TOP BAR */}
           <div className="flex shrink-0 items-center justify-between border-b border-border bg-background px-3 py-[5.5px]">
-            {/* Left: view tabs */}
+            {/* Left: workspace tabs — ordered: Settings, Builder, Logic */}
             <div className="flex items-center gap-1">
               <button
-                onClick={() => setEditorView('canvas')}
+                onClick={() => setEditorView('formProperties')}
                 className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors ${
-                  editorView === 'canvas'
+                  editorView === 'formProperties'
                     ? 'bg-primary text-primary-foreground shadow-sm'
                     : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                 }`}
               >
-                <LayoutGrid className="h-3 w-3" />
-                Canvas
+                <Settings2 className="h-3 w-3" />
+                Settings
+              </button>
+
+              <button
+                onClick={() => setEditorView('builder')}
+                className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors ${
+                  editorView === 'builder'
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                }`}
+              >
+                <Hammer className="h-3 w-3" />
+                Builder
               </button>
 
               <button
@@ -136,18 +127,6 @@ export function FormEditorLayout({ controller }: any) {
               >
                 <Zap className="h-3 w-3" />
                 Logic
-              </button>
-
-              <button
-                onClick={() => setEditorView('formProperties')}
-                className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors ${
-                  editorView === 'formProperties'
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                }`}
-              >
-                <Settings2 className="h-3 w-3" />
-                Settings
               </button>
             </div>
 
@@ -163,8 +142,8 @@ export function FormEditorLayout({ controller }: any) {
             </div>
           </div>
 
-          {/* CANVAS */}
-          {editorView === 'canvas' && (
+          {/* CANVAS — visible for builder and logic views */}
+          {(editorView === 'builder' || editorView === 'logic') && (
             <div className="flex-1 overflow-y-auto" onClick={handleCanvasClick}>
               <FormCanvas currentPageIndex={currentPageIndex} />
 
@@ -193,30 +172,14 @@ export function FormEditorLayout({ controller }: any) {
             </div>
           )}
 
-          {/* LOGIC PLAYGROUND */}
-          {editorView === 'logic' && (
-            <LogicPlayground onClose={() => setEditorView('canvas')} />
-          )}
-
-          {/* FORM PROPERTIES */}
+          {/* FORM PROPERTIES (full width, no right panel) */}
           {editorView === 'formProperties' && (
-            <div className="p-3">
+            <div className="flex-1 overflow-y-auto p-3">
               <FormPropertiesPanel />
             </div>
           )}
         </div>
 
-        {/* RIGHT PROPERTIES PANEL */}
-        {state.showProperties && hasSelection && (
-          <RightFloatingPanel
-            width={state.rightWidth}
-            onWidthChange={actions.setRightWidth}
-            minWidth={280}
-            maxWidth={500}
-          >
-            <ComponentPropertiesPanel />
-          </RightFloatingPanel>
-        )}
 
         {/* DEBUG PANEL */}
         {showDebug && (

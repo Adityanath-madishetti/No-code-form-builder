@@ -14,6 +14,7 @@ import {
   DRAG_CATALOG_GROUP_ID,
 } from '@/form/utils/DndUtils';
 import { RenderComponent } from './RenderComponent';
+import { ComponentAdderButton } from '@/pages/editor/canvas/ComponentAdderButton';
 
 export const RenderPage = ({
   pageId,
@@ -62,21 +63,34 @@ export const RenderPage = ({
           mode === 'edit' ? 'border border-border/30 p-6' : ''
         }`}
       >
-        {componentIds.length === 0 && (
+        {componentIds.length === 0 && mode === 'edit' && (
+          <ComponentAdderButton pageId={pageId} insertIndex={0} />
+        )}
+
+        {componentIds.length === 0 && mode !== 'edit' && (
           <div className="flex min-h-[120px] items-center justify-center text-sm text-muted-foreground/40">
-            Drop components here
+            No components
           </div>
         )}
 
-        <div className="flex w-full flex-col gap-2">
+        <div className="flex w-full flex-col gap-0">
           {components.map((component, idx) => (
-            <RenderComponent
-              key={component.instanceId}
-              component={component}
-              pageId={pageId}
-              index={idx}
-            />
+            <div key={component.instanceId}>
+              {/* Adder button BEFORE this component */}
+              {mode === 'edit' && (
+                <ComponentAdderButton pageId={pageId} insertIndex={idx} />
+              )}
+              <RenderComponent
+                component={component}
+                pageId={pageId}
+                index={idx}
+              />
+            </div>
           ))}
+          {/* Adder button AFTER last component */}
+          {mode === 'edit' && components.length > 0 && (
+            <ComponentAdderButton pageId={pageId} insertIndex={components.length} />
+          )}
         </div>
       </div>
     </div>

@@ -37,15 +37,15 @@ export function useFormEditorController(formId: string) {
   // STATE
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [editorView, setEditorView] = useState<
-    'canvas' | 'logic' | 'workflow' | 'formProperties' | 'theming'
-  >('canvas');
+    'formProperties' | 'builder' | 'logic' | 'workflow' | 'theming'
+  >('builder');
 
-  const [activePanel, setActivePanel] = useState<any>('components');
+  // Sidebar removed — no activePanel needed
 
   const [showDebug, setShowDebug] = useState(false);
   const [showProperties, setShowProperties] = useState(true);
 
-  const [leftWidth, setLeftWidth] = useState<number | string>('20%');
+  // Sidebar removed — no leftWidth needed
   const [rightWidth, setRightWidth] = useState(340);
   const [debugWidth, setDebugWidth] = useState(400);
 
@@ -164,12 +164,10 @@ export function useFormEditorController(formId: string) {
 
       currentPageIndex,
       editorView,
-      activePanel,
 
       showDebug,
       showProperties,
 
-      leftWidth,
       rightWidth,
       debugWidth,
 
@@ -188,10 +186,8 @@ export function useFormEditorController(formId: string) {
       // setters
       setCurrentPageIndex,
       setEditorView,
-      setActivePanel,
       setShowDebug,
       setShowProperties,
-      setLeftWidth,
       setRightWidth,
       setDebugWidth,
       setShortcutsOpen,
@@ -214,7 +210,6 @@ export function useFormEditorController(formId: string) {
       publishing,
       currentPageIndex,
       totalPages,
-      activePanel,
       editorView,
       hasSelection,
     },

@@ -35,9 +35,9 @@ import {
 } from '@/components/ui/tooltip';
 
 interface WorkspacesProps {
-  editorView: 'canvas' | 'logic' | 'workflow' | 'formProperties' | 'theming';
+  editorView: 'formProperties' | 'builder' | 'logic' | 'workflow' | 'theming';
   setEditorView: (
-    view: 'canvas' | 'logic' | 'workflow' | 'formProperties' | 'theming'
+    view: 'formProperties' | 'builder' | 'logic' | 'workflow' | 'theming'
   ) => void;
   setActivePanel: (panel: null) => void;
   logicActiveRuleId: string | null;
@@ -304,9 +304,9 @@ export function Workspaces({
     <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border bg-background px-3 py-[5.5px]">
       <div className="flex items-center gap-1">
         <button
-          onClick={() => setEditorView('canvas')}
+          onClick={() => setEditorView('builder')}
           className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors ${
-            editorView === 'canvas'
+            editorView === 'builder'
               ? 'bg-primary text-primary-foreground shadow-sm'
               : 'text-muted-foreground hover:bg-muted hover:text-foreground'
           }`}

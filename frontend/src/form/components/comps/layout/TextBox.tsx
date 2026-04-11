@@ -23,7 +23,6 @@ export interface TextBoxProps extends BaseComponentProps {
   text: string;
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const createTextBoxComponent = (
   instanceId: string,
   metadata: ComponentMetadata,

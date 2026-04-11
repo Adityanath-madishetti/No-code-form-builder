@@ -1,8 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useFormStore } from '@/form/store/form.store';
-import type { SidebarPanelId } from './components/left/EditorSidebar';
 
-export type FormEditorView = 'canvas' | 'logic' | 'workflow' | 'formProperties' | 'theming';
+export type FormEditorView = 'formProperties' | 'builder' | 'logic' | 'workflow' | 'theming';
 
 function isEditableElement(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
@@ -26,13 +25,6 @@ function isModKey(e: KeyboardEvent): boolean {
   return e.metaKey || e.ctrlKey;
 }
 
-function focusSidebarSearch() {
-  const el = document.querySelector<HTMLInputElement>(
-    '[data-sidebar-search]'
-  );
-  el?.focus();
-  el?.select();
-}
 
 function focusActiveComponentInput(instanceId: string): boolean {
   const root = document.querySelector<HTMLElement>(
@@ -61,8 +53,6 @@ export interface UseFormEditorShortcutsParams {
   currentPageIndex: number;
   totalPages: number;
   setCurrentPageIndex: React.Dispatch<React.SetStateAction<number>>;
-  activePanel: SidebarPanelId | null;
-  setActivePanel: (p: SidebarPanelId | null) => void;
   editorView: FormEditorView;
   setEditorView: (v: FormEditorView) => void;
   setShowDebug: React.Dispatch<React.SetStateAction<boolean>>;
@@ -123,7 +113,7 @@ export function useFormEditorShortcuts(opts: UseFormEditorShortcutsParams) {
 
       // ── Copy component ────────────────────────────────────────────────
       if (mod && !e.shiftKey && (e.key === 'c' || e.key === 'C')) {
-        if (!editable && o.editorView === 'canvas') {
+        if (!editable && o.editorView === 'builder') {
           const id = useFormStore.getState().activeComponentId;
           if (id) {
             const json =
@@ -139,7 +129,7 @@ export function useFormEditorShortcuts(opts: UseFormEditorShortcutsParams) {
 
       // ── Paste component (only when clipboard has our payload) ──────────
       if (mod && !e.shiftKey && (e.key === 'v' || e.key === 'V')) {
-        if (!editable && o.editorView === 'canvas') {
+        if (!editable && o.editorView === 'builder') {
           void navigator.clipboard.readText().then((text) => {
             if (!text.includes('"t":"ncfb"')) return;
             const form = useFormStore.getState().form;
@@ -167,48 +157,31 @@ export function useFormEditorShortcuts(opts: UseFormEditorShortcutsParams) {
         return;
       }
 
-      // ── Toggle left sidebar ───────────────────────────────────────────
+      // ── Toggle sidebar (removed — no sidebar) ─────────────────────────
       if (mod && !e.shiftKey && (e.key === 'b' || e.key === 'B')) {
         if (editable) return;
         e.preventDefault();
-        o.setActivePanel(o.activePanel ? null : 'components');
+        // sidebar removed, no-op
         return;
       }
 
-      // ── Focus sidebar search (open Components if needed) ───────────────
+      // ── Focus search (removed — no sidebar search) ─────────────────────
       if (mod && !e.shiftKey && (e.key === 'f' || e.key === 'F')) {
         if (editable) return;
-        e.preventDefault();
-        if (!o.activePanel) o.setActivePanel('components');
-        else if (o.activePanel !== 'components') o.setActivePanel('components');
-        requestAnimationFrame(() => focusSidebarSearch());
+        // allow default browser find when sidebar is removed
         return;
       }
 
-      // ── Open sidebar panels (Ctrl/Cmd+Shift+*) ────────────────────────
+      // ── Sidebar panel shortcuts (removed — no sidebar) ────────────────
       if (mod && e.shiftKey && !e.altKey) {
-        const k = e.key.toLowerCase();
-        const panelMap: Record<string, SidebarPanelId> = {
-          c: 'components',
-          t: 'templates',
-          m: 'theme',
-          l: 'logic',
-          w: 'workflow',
-        };
-        const panel = panelMap[k];
-        if (panel) {
-          if (editable) return;
-          e.preventDefault();
-          o.setActivePanel(panel);
-          return;
-        }
+        // no-op, sidebar panels removed
       }
 
-      // ── Open AI assistant (Ctrl/Cmd+L) ────────────────────────────────
+      // ── AI assistant shortcut (removed — no sidebar) ──────────────────
       if (mod && !e.shiftKey && !e.altKey && (e.key === 'l' || e.key === 'L')) {
         if (editable) return;
         e.preventDefault();
-        o.setActivePanel('ai');
+        // no-op, sidebar removed
         return;
       }
 
@@ -237,7 +210,7 @@ export function useFormEditorShortcuts(opts: UseFormEditorShortcutsParams) {
         (mod && e.key === '[') ||
         (e.altKey && !mod && !e.shiftKey && e.key === 'ArrowLeft')
       ) {
-        if (editable || o.editorView !== 'canvas' || o.totalPages <= 1) return;
+        if (editable || o.editorView !== 'builder' || o.totalPages <= 1) return;
         e.preventDefault();
         o.setCurrentPageIndex((i) => Math.max(0, i - 1));
         return;
@@ -246,7 +219,7 @@ export function useFormEditorShortcuts(opts: UseFormEditorShortcutsParams) {
         (mod && e.key === ']') ||
         (e.altKey && !mod && !e.shiftKey && e.key === 'ArrowRight')
       ) {
-        if (editable || o.editorView !== 'canvas' || o.totalPages <= 1) return;
+        if (editable || o.editorView !== 'builder' || o.totalPages <= 1) return;
         e.preventDefault();
         o.setCurrentPageIndex((i) => Math.min(o.totalPages - 1, i + 1));
         return;
@@ -257,8 +230,8 @@ export function useFormEditorShortcuts(opts: UseFormEditorShortcutsParams) {
         if (editable) return;
         e.preventDefault();
         const map: Record<string, FormEditorView> = {
-          '1': 'canvas',
-          '2': 'formProperties',
+          '1': 'formProperties',
+          '2': 'builder',
           '3': 'logic',
           '4': 'workflow',
         };
@@ -267,7 +240,7 @@ export function useFormEditorShortcuts(opts: UseFormEditorShortcutsParams) {
       }
 
       // ── Canvas-only component shortcuts ───────────────────────────────
-      if (o.editorView === 'canvas' && !editable) {
+      if (o.editorView === 'builder' && !editable) {
         const store = useFormStore.getState();
         const form = store.form;
         const pageId = form?.pages[o.currentPageIndex];
@@ -391,7 +364,7 @@ export function useFormEditorShortcuts(opts: UseFormEditorShortcutsParams) {
           o.editorView === 'formProperties'
         ) {
           e.preventDefault();
-          o.setEditorView('canvas');
+          o.setEditorView('builder');
           return;
         }
 
