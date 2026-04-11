@@ -11,6 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { DeleteFormDialog } from '@/components/DeleteFormDialog';
+import { useNavigate } from 'react-router-dom';
 // import { RichTextEditor } from '@/components/RichTextEditor';
 
 function toLocalDateTime(iso: string | null): string {
@@ -44,6 +46,13 @@ export function FormPropertiesPanel() {
   const updateFormAccess = useFormStore((s) => s.updateFormAccess);
   const updateFormSettings = useFormStore((s) => s.updateFormSettings);
   const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const [deleteDialog, setDeleteDialog] = useState<{
+    isOpen: boolean;
+    formId: string;
+    formTitle: string;
+  }>({ isOpen: false, formId: '', formTitle: '' });
 
   const ownerLabel = useMemo(() => {
     if (!form) return '';
@@ -63,180 +72,216 @@ export function FormPropertiesPanel() {
   }
 
   return (
-    <div className="flex flex-col gap-5">
-      <Field label="Form Title">
-        <Input
-          value={form.name}
-          onChange={(e) => updateFormName(e.target.value)}
-          placeholder="Untitled Form"
-          className="text-sm"
-        />
-      </Field>
+    <>
+      <div className="mb-10 flex flex-col gap-5">
+        <Field label="Form Title">
+          <Input
+            value={form.name}
+            onChange={(e) => updateFormName(e.target.value)}
+            placeholder="Untitled Form"
+            className="text-sm"
+          />
+        </Field>
 
-      <Field label="Description">
-        <textarea
-          value={form.metadata.description ?? ''}
-          onChange={(e) => updateFormMetadata({ description: e.target.value })}
-          placeholder="Describe what this form is for..."
-          rows={3}
-          className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none"
-        />
-        {/* <RichTextEditor
+        <Field label="Description">
+          <textarea
+            value={form.metadata.description ?? ''}
+            onChange={(e) =>
+              updateFormMetadata({ description: e.target.value })
+            }
+            placeholder="Describe what this form is for..."
+            rows={3}
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+          />
+          {/* <RichTextEditor
           value={form.metadata.description ?? ''}
           placeholder="Description"
           onChange={(newHTML) => updateFormMetadata({ description: newHTML })}
         /> */}
-      </Field>
+        </Field>
 
-      <Field label="Owner">
-        <Input value={ownerLabel} readOnly className="text-sm" />
-      </Field>
+        <Field label="Owner">
+          <Input value={ownerLabel} readOnly className="text-sm" />
+        </Field>
 
-      <EmailChipsField
-        label="Editors"
-        entries={form.access.editors}
-        onChange={(editors) => updateFormAccess({ editors })}
-      />
+        <EmailChipsField
+          label="Editors"
+          entries={form.access.editors}
+          onChange={(editors) => updateFormAccess({ editors })}
+        />
 
-      <EmailChipsField
-        label="Reviewers"
-        entries={form.access.reviewers}
-        onChange={(reviewers) => updateFormAccess({ reviewers })}
-      />
+        <EmailChipsField
+          label="Reviewers"
+          entries={form.access.reviewers}
+          onChange={(reviewers) => updateFormAccess({ reviewers })}
+        />
 
-      <EmailChipsField
-        label="Viewers"
-        entries={form.access.viewers}
-        onChange={(viewers) => updateFormAccess({ viewers })}
-      />
+        <EmailChipsField
+          label="Viewers"
+          entries={form.access.viewers}
+          onChange={(viewers) => updateFormAccess({ viewers })}
+        />
 
-      <Field label="Who Can Fill">
-        <Select
-          value={form.access.visibility}
-          onValueChange={(value: 'public' | 'private' | 'link-only') =>
-            updateFormAccess({ visibility: value })
-          }
-        >
-          <SelectTrigger className="w-full text-sm">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="private">Private</SelectItem>
-            <SelectItem value="link-only">Link-only (allowlisted)</SelectItem>
-            <SelectItem value="public">Public</SelectItem>
-          </SelectContent>
-        </Select>
-      </Field>
+        <Field label="Who Can Fill">
+          <Select
+            value={form.access.visibility}
+            onValueChange={(value: 'public' | 'private' | 'link-only') =>
+              updateFormAccess({ visibility: value })
+            }
+          >
+            <SelectTrigger className="w-full text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="private">Private</SelectItem>
+              <SelectItem value="link-only">Link-only (allowlisted)</SelectItem>
+              <SelectItem value="public">Public</SelectItem>
+            </SelectContent>
+          </Select>
+        </Field>
 
-      <Field label="Response Limit">
-        <Input
-          type="number"
-          placeholder="Unlimited"
-          min={0}
-          className="text-sm"
-          value={form.settings.submissionLimit ?? ''}
-          onChange={(e) =>
-            updateFormSettings({
-              submissionLimit: e.target.value ? Number(e.target.value) : null,
+        <Field label="Response Limit">
+          <Input
+            type="number"
+            placeholder="Unlimited"
+            min={0}
+            className="text-sm"
+            value={form.settings.submissionLimit ?? ''}
+            onChange={(e) =>
+              updateFormSettings({
+                submissionLimit: e.target.value ? Number(e.target.value) : null,
+              })
+            }
+          />
+        </Field>
+
+        <Field label="Deadline">
+          <Input
+            type="datetime-local"
+            value={toLocalDateTime(form.settings.closeDate)}
+            onChange={(e) =>
+              updateFormSettings({
+                closeDate: fromLocalDateTime(e.target.value),
+              })
+            }
+            className="text-sm"
+          />
+        </Field>
+
+        <Field label="Collect Email">
+          <Select
+            value={form.settings.collectEmailMode}
+            onValueChange={(value: 'none' | 'optional' | 'required') =>
+              updateFormSettings({ collectEmailMode: value })
+            }
+          >
+            <SelectTrigger className="w-full text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Anonymous</SelectItem>
+              <SelectItem value="optional">Optional</SelectItem>
+              <SelectItem value="required">Required</SelectItem>
+            </SelectContent>
+          </Select>
+        </Field>
+
+        <Field label="Submission Policy">
+          <Select
+            value={form.settings.submissionPolicy}
+            onValueChange={(
+              value:
+                | 'none'
+                | 'edit_only'
+                | 'resubmit_only'
+                | 'edit_and_resubmit'
+            ) => {
+              updateFormSettings({ submissionPolicy: value });
+              if (value === 'edit_only' || value === 'edit_and_resubmit') {
+                updateFormSettings({ canViewOwnSubmission: true });
+              }
+            }}
+          >
+            <SelectTrigger className="w-full text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Submit once (no edit)</SelectItem>
+              <SelectItem value="edit_only">Edit existing only</SelectItem>
+              <SelectItem value="resubmit_only">Submit again only</SelectItem>
+              <SelectItem value="edit_and_resubmit">
+                Edit existing and submit again
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </Field>
+
+        <Field label="Can Viewer View Their Submission">
+          <Select
+            value={form.settings.canViewOwnSubmission ? 'yes' : 'no'}
+            onValueChange={(value) => {
+              updateFormSettings({ canViewOwnSubmission: value === 'yes' });
+              if (
+                value === 'no' &&
+                form.settings.submissionPolicy === 'edit_only'
+              ) {
+                updateFormSettings({ submissionPolicy: 'none' });
+              } else if (
+                value === 'no' &&
+                form.settings.submissionPolicy === 'edit_and_resubmit'
+              ) {
+                updateFormSettings({ submissionPolicy: 'resubmit_only' });
+              }
+            }}
+          >
+            <SelectTrigger className="w-full text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="yes">Yes</SelectItem>
+              <SelectItem value="no">No</SelectItem>
+            </SelectContent>
+          </Select>
+        </Field>
+
+        <Field label="Confirmation Message">
+          <textarea
+            value={form.settings.confirmationMessage}
+            onChange={(e) =>
+              updateFormSettings({ confirmationMessage: e.target.value })
+            }
+            rows={2}
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+          />
+        </Field>
+        <Button
+          size="icon"
+          variant="destructive"
+          className="w-30"
+          onClick={() =>
+            setDeleteDialog({
+              isOpen: true,
+              formId: form.id,
+              formTitle: form.name,
             })
           }
-        />
-      </Field>
-
-      <Field label="Deadline">
-        <Input
-          type="datetime-local"
-          value={toLocalDateTime(form.settings.closeDate)}
-          onChange={(e) =>
-            updateFormSettings({ closeDate: fromLocalDateTime(e.target.value) })
-          }
-          className="text-sm"
-        />
-      </Field>
-
-      <Field label="Collect Email">
-        <Select
-          value={form.settings.collectEmailMode}
-          onValueChange={(value: 'none' | 'optional' | 'required') =>
-            updateFormSettings({ collectEmailMode: value })
-          }
         >
-          <SelectTrigger className="w-full text-sm">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">Anonymous</SelectItem>
-            <SelectItem value="optional">Optional</SelectItem>
-            <SelectItem value="required">Required</SelectItem>
-          </SelectContent>
-        </Select>
-      </Field>
-
-      <Field label="Submission Policy">
-        <Select
-          value={form.settings.submissionPolicy}
-          onValueChange={(
-            value: 'none' | 'edit_only' | 'resubmit_only' | 'edit_and_resubmit'
-          ) => {
-            updateFormSettings({ submissionPolicy: value });
-            if (value === 'edit_only' || value === 'edit_and_resubmit') {
-              updateFormSettings({ canViewOwnSubmission: true });
-            }
-          }}
-        >
-          <SelectTrigger className="w-full text-sm">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">Submit once (no edit)</SelectItem>
-            <SelectItem value="edit_only">Edit existing only</SelectItem>
-            <SelectItem value="resubmit_only">Submit again only</SelectItem>
-            <SelectItem value="edit_and_resubmit">
-              Edit existing and submit again
-            </SelectItem>
-          </SelectContent>
-        </Select>
-      </Field>
-
-      <Field label="Can Viewer View Their Submission">
-        <Select
-          value={form.settings.canViewOwnSubmission ? 'yes' : 'no'}
-          onValueChange={(value) => {
-            updateFormSettings({ canViewOwnSubmission: value === 'yes' });
-            if (
-              value === 'no' &&
-              form.settings.submissionPolicy === 'edit_only'
-            ) {
-              updateFormSettings({ submissionPolicy: 'none' });
-            } else if (
-              value === 'no' &&
-              form.settings.submissionPolicy === 'edit_and_resubmit'
-            ) {
-              updateFormSettings({ submissionPolicy: 'resubmit_only' });
-            }
-          }}
-        >
-          <SelectTrigger className="w-full text-sm">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="yes">Yes</SelectItem>
-            <SelectItem value="no">No</SelectItem>
-          </SelectContent>
-        </Select>
-      </Field>
-
-      <Field label="Confirmation Message">
-        <textarea
-          value={form.settings.confirmationMessage}
-          onChange={(e) =>
-            updateFormSettings({ confirmationMessage: e.target.value })
-          }
-          rows={2}
-          className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none"
-        />
-      </Field>
-    </div>
+          Delete Form
+        </Button>
+      </div>
+      {/* Delete Form Dialog */}
+      <DeleteFormDialog
+        formId={deleteDialog.formId}
+        formName={deleteDialog.formTitle}
+        open={deleteDialog.isOpen}
+        onOpenChange={(isOpen) =>
+          setDeleteDialog((prev) => ({ ...prev, isOpen }))
+        }
+        onSuccess={async () => {
+          await navigate('/');
+        }}
+      />
+    </>
   );
 }
 

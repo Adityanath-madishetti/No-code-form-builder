@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
@@ -45,6 +45,7 @@ import {
   Inbox,
   ExternalLink,
   Pencil,
+  Trash2,
 } from 'lucide-react';
 
 import type { FormHeader, LayoutMode } from '../dashboard.types';
@@ -53,6 +54,7 @@ import {
   getCreatorLabel,
   matchesDateFilter,
 } from '../dashboard.utils';
+import { DeleteFormDialog } from '@/components/DeleteFormDialog';
 
 const LIST_COLUMNS =
   'grid-cols-[minmax(0,2fr)_minmax(0,1.5fr)_minmax(0,1.5fr)_minmax(0,1fr)_120px]';
@@ -74,6 +76,12 @@ export default function MyFormsTab({ forms, onReload }: Props) {
     formId: string;
     currentTitle: string;
   }>({ isOpen: false, formId: '', currentTitle: '' });
+
+  const [deleteDialog, setDeleteDialog] = useState<{
+    isOpen: boolean;
+    formId: string;
+    formTitle: string;
+  }>({ isOpen: false, formId: '', formTitle: '' });
 
   const [newTitle, setNewTitle] = useState('');
   const [isRenaming, setIsRenaming] = useState(false);
@@ -324,6 +332,29 @@ export default function MyFormsTab({ forms, onReload }: Props) {
                           <p>Rename Form</p>
                         </TooltipContent>
                       </Tooltip>
+
+                      {/* Delete Tooltip */}
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                            onClick={() =>
+                              setDeleteDialog({
+                                isOpen: true,
+                                formId: form.formId,
+                                formTitle: form.title,
+                              })
+                            }
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Delete Form</p>
+                        </TooltipContent>
+                      </Tooltip>
                     </div>
                   </CardFooter>
                 </Card>
@@ -456,6 +487,19 @@ export default function MyFormsTab({ forms, onReload }: Props) {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Form Dialog */}
+      <DeleteFormDialog
+        formId={deleteDialog.formId}
+        formName={deleteDialog.formTitle}
+        open={deleteDialog.isOpen}
+        onOpenChange={(isOpen) =>
+          setDeleteDialog((prev) => ({ ...prev, isOpen }))
+        }
+        onSuccess={async () => {
+          await onReload(); // Re-fetch forms after deletion
+        }}
+      />
     </div>
   );
 }

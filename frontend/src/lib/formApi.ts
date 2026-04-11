@@ -335,6 +335,17 @@ export async function createNewVersion(formId: string): Promise<number> {
   return res.version.version;
 }
 
+export async function deleteForm(formId: string) {
+  try {
+    const res = await api.delete<{ message: string; form: unknown }>(
+      `/api/forms/${formId}`
+    );
+    return res.message; // "Form deleted"
+  } catch (err) {
+    console.error('Failed to delete form:', err);
+    throw err;
+  }
+}
 // ── Workflow ──
 
 export async function loadWorkflow(formId: string): Promise<Workflow> {
