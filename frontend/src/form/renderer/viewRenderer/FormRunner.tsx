@@ -1,7 +1,11 @@
 // src/form/renderer/viewRenderer/FormRunner.tsx
-import { useEffect, useRef, useState } from 'react';
-import { useForm, FormProvider } from 'react-hook-form';
-import { runtimeFormSelector, useRuntimeFormStore } from './runtimeForm.store';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useForm, FormProvider, type UseFormReturn } from 'react-hook-form';
+import {
+  runtimeFormSelector,
+  useRuntimeFormStore,
+  type ComponentRenderState,
+} from './runtimeForm.store';
 import { useShallow } from 'zustand/react/shallow';
 import { backendToFrontend } from '@/lib/frontendBackendCompArray';
 import { getComponentRenderer } from '@/form/registry/componentRegistry';
@@ -9,12 +13,19 @@ import type { ComponentID } from '@/form/components/base';
 import { FormLogicEngine } from '@/form/logic/formLogicEngine';
 import { Button } from '@/components/ui/button';
 
-import type { PublicFormData } from '@/form/renderer/viewRenderer/runtimeForm.types';
+import {
+  type PublicFormData,
+  type SubmissionEntry,
+  DEFAULT_VERSION_SETTINGS,
+  type PublicPageData,
+  type PublicComponent,
+  type VersionSettings,
+} from '@/form/renderer/viewRenderer/runtimeForm.types';
 import { api } from '@/lib/api';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2 } from 'lucide-react';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Pencil } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Send, Loader2 } from 'lucide-react';
 import { sharedProseClasses } from '@/components/RichTextEditor';
 import { Separator } from '@/components/ui/separator';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -32,6 +43,236 @@ export const getGlobalFieldValue = (instanceId: string): unknown => {
   return globalGetValues(instanceId);
 };
 
+function flattenResponses(
+  pages: SubmissionEntry['pages']
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const page of pages || []) {
+    for (const response of page.responses || []) {
+      out[response.componentId] = response.response;
+    }
+  }
+  return out;
+}
+
+type TrueFormProps = {
+  methods: UseFormReturn<
+    Record<string, unknown>,
+    unknown,
+    Record<string, unknown>
+  >;
+  formData: PublicFormData;
+  currentPage: PublicPageData | undefined;
+  componentsData: PublicComponent[];
+  componentsStates: Record<string, ComponentRenderState>;
+  backendToFrontend: Record<string, string>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  getComponentRenderer: (id: ComponentID) => any;
+  handleNext: () => void;
+  handleBack: () => void;
+  handleBackToList: () => void;
+  onSubmit: (data: Record<string, unknown>) => void;
+
+  hasNext: boolean;
+  hasPrevious: boolean;
+
+  submitting: boolean;
+
+  editingSubmissionId?: string;
+  submitDisabledByPolicy: boolean;
+  showBackToList: boolean;
+
+  sharedProseClasses?: string;
+};
+
+export function TrueForm({
+  methods,
+  formData,
+  currentPage,
+  componentsData,
+  componentsStates,
+  backendToFrontend,
+  getComponentRenderer,
+
+  handleNext,
+  handleBack,
+  handleBackToList,
+  onSubmit,
+
+  hasNext,
+  hasPrevious,
+  submitting,
+
+  editingSubmissionId,
+  submitDisabledByPolicy,
+  showBackToList,
+
+  sharedProseClasses = '',
+}: TrueFormProps) {
+  return (
+    <FormProvider {...methods}>
+      <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6">
+        <Card>
+          <CardHeader>
+            <div className="w-full bg-transparent text-5xl font-bold tracking-tight text-foreground outline-none">
+              {formData.form.title}
+            </div>
+          </CardHeader>
+          {formData.version.meta.description && (
+            <CardContent>
+              <div
+                className={sharedProseClasses}
+                dangerouslySetInnerHTML={{
+                  __html: formData.version.meta.description,
+                }}
+              />
+            </CardContent>
+          )}
+        </Card>
+
+        <Separator className="mt-5" />
+
+        {(currentPage?.title || currentPage?.description) && (
+          <Card>
+            <CardHeader>
+              <div className="text-4xl font-semibold tracking-tight">
+                {currentPage?.title}
+              </div>
+            </CardHeader>
+            {currentPage?.description && (
+              <CardContent>
+                <div className={`tracking-tight ${sharedProseClasses}`}>
+                  {currentPage?.description}
+                </div>
+              </CardContent>
+            )}
+          </Card>
+        )}
+
+        {/* Render the components for the active page */}
+
+        <div className="space-y-4">
+          {componentsData.length === 0 ? (
+            <p className="text-gray-500">
+              No components to display on this page.
+            </p>
+          ) : (
+            componentsData.map((comp) => {
+              const frontendId = backendToFrontend[comp.componentType];
+              const Renderer = getComponentRenderer(frontendId as ComponentID);
+
+              const isHidden =
+                componentsStates[comp.componentId]?.isHidden ?? false;
+              if (isHidden) {
+                return null;
+              }
+
+              if (!Renderer) {
+                return (
+                  <div
+                    key={comp.componentId}
+                    className="border bg-red-50 p-4 text-red-500"
+                  >
+                    Unknown component type: {comp.componentType}
+                  </div>
+                );
+              }
+
+              return (
+                // <div
+                //   key={comp.componentId}
+                //   className="rounded-md border bg-gray-50 p-4 shadow-sm"
+                // >
+                //   <p className="text-sm font-medium text-gray-700">
+                //     Label: <span className="font-bold">{comp.label}</span>
+                //   </p>
+                //   <p className="mb-4 text-xs text-gray-500">
+                //     Instance ID: {comp.componentId} | Type:{' '}
+                //     {comp.componentType}
+                //   </p>
+                <Renderer
+                  key={comp.componentId}
+                  metadata={null}
+                  props={comp.props}
+                  validation={comp.validation}
+                  instanceId={comp.componentId}
+                />
+                // </div>
+              );
+            })
+          )}
+        </div>
+        <div className="mt-8 flex items-center justify-between border-t pt-6">
+          <div className="flex items-center gap-2">
+            <Button
+              key="btn-back"
+              type="button"
+              variant="secondary"
+              onClick={handleBack}
+              disabled={!hasPrevious || submitting}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
+            </Button>
+
+            {/* --- UI: Cancel Editing Button --- */}
+            {showBackToList && (
+              <Button
+                key="btn-cancel-edit"
+                type="button"
+                variant="outline"
+                onClick={handleBackToList}
+              >
+                Switch to Submissions
+              </Button>
+            )}
+          </div>
+
+          {hasNext ? (
+            <Button
+              key="btn-next"
+              type="button"
+              onClick={handleNext}
+              disabled={
+                submitting || (submitDisabledByPolicy && !editingSubmissionId)
+              }
+            >
+              Next
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          ) : (
+            <Button
+              key="btn-submit"
+              type="submit"
+              disabled={
+                submitting || (submitDisabledByPolicy && !editingSubmissionId)
+              }
+              className="bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Submitting...
+                </>
+              ) : editingSubmissionId ? (
+                <>
+                  Update Submission
+                  <Pencil className="ml-2 h-4 w-4" />
+                </>
+              ) : (
+                <>
+                  Submit
+                  <Send className="ml-2 h-4 w-4" />
+                </>
+              )}
+            </Button>
+          )}
+        </div>
+      </form>
+    </FormProvider>
+  );
+}
+
 export function FormRunner() {
   const { formId } = useParams<{ formId: string }>();
   const [globalFormError, setGlobalFormError] = useState('');
@@ -39,36 +280,131 @@ export function FormRunner() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [userEmail, setUserEmail] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const logicEngineRef = useRef<FormLogicEngine | null>(null);
 
   const { initRuntimeForm } = useRuntimeFormStore();
 
-  const currentPage = useRuntimeFormStore(runtimeFormSelector.currentPage);
+  const [mySubmissions, setMySubmissions] = useState<SubmissionEntry[]>([]);
+  const [editingSubmissionId, setEditingSubmissionId] = useState<
+    string | undefined
+  >(undefined);
+  const [isCreatingNew, setIsCreatingNew] = useState(false);
 
   useEffect(() => {
     if (!formId) return;
-    api
-      .get<PublicFormData>(`/api/forms/${formId}/public`)
-      .then((res) => {
-        console.log('shitres', res);
+
+    let isMounted = true;
+
+    const loadData = async () => {
+      setGlobalFormLoading(true);
+      setGlobalFormError('');
+
+      try {
+        const res = await api.get<PublicFormData>(
+          `/api/forms/${formId}/public`
+        );
+        if (!isMounted) return;
+
         initRuntimeForm(res);
-        if (user?.email) setUserEmail(user.email);
-      })
-      .catch((err) => setGlobalFormError(err.message || 'Form not found'))
-      .finally(() => setGlobalFormLoading(false));
-  }, [formId, initRuntimeForm, user?.email]);
+
+        const currentEmail = user?.email || '';
+        if (currentEmail) {
+          setUserEmail(currentEmail);
+        }
+
+        const settings = res.version.settings;
+
+        if (settings.collectEmailMode === 'required' && !currentEmail) {
+          throw new Error(
+            'Authentication required: You must be logged in to access this form.'
+          );
+        }
+
+        if (
+          settings.submissionPolicy === 'none' &&
+          !settings.canViewOwnSubmission
+        ) {
+          throw new Error('This form is no longer accepting submissions.');
+        }
+
+        // Only block loading once submissions are ALSO fetched (if allowed)
+        if (settings.canViewOwnSubmission && user) {
+          try {
+            const subRes = await api.get<{ submissions: SubmissionEntry[] }>(
+              `/api/forms/${formId}/submissions/mine`
+            );
+            if (isMounted) setMySubmissions(subRes.submissions || []);
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          } catch (subErr) {
+            if (isMounted) setMySubmissions([]);
+          }
+        }
+      } catch (err) {
+        if (isMounted)
+          setGlobalFormError((err as Error).message || 'Form not found');
+      } finally {
+        if (isMounted) setGlobalFormLoading(false);
+      }
+    };
+
+    loadData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [formId, initRuntimeForm, user, user?.email]);
+
+  const formData = useRuntimeFormStore((state) => state.formData);
+  const currentPage = useRuntimeFormStore(runtimeFormSelector.currentPage);
+  const currentPageId = useRuntimeFormStore(runtimeFormSelector.currentPageId);
+  const renderState = useRuntimeFormStore(runtimeFormSelector.renderState);
+  const setActivePage = useRuntimeFormStore((s) => s.setActivePage);
+
+  // --- Policy Enforcement Derived State ---
+  const settings: VersionSettings = useMemo(
+    () => formData?.version.settings || DEFAULT_VERSION_SETTINGS,
+    [formData?.version.settings]
+  );
+
+  const hasExisting = mySubmissions.length > 0;
+  const canEditSubmission =
+    settings?.submissionPolicy === 'edit_only' ||
+    settings?.submissionPolicy === 'edit_and_resubmit';
+
+  // const canResubmit =
+  //   settings?.submissionPolicy === 'resubmit_only' ||
+  //   settings?.submissionPolicy === 'edit_and_resubmit';
+
+  const submitDisabledByPolicy = useMemo(() => {
+    if (!settings) return false;
+    if (settings.submissionPolicy === 'none') return true;
+    if (!user) return false;
+    if (!hasExisting) return false;
+    if (settings.submissionPolicy === 'edit_only' && !editingSubmissionId) {
+      return true;
+    }
+    return false;
+  }, [settings, user, hasExisting, editingSubmissionId]);
+
+  const showHistoryList = !!(
+    settings?.canViewOwnSubmission &&
+    user &&
+    hasExisting &&
+    !editingSubmissionId &&
+    !isCreatingNew
+  );
+  const showBackToList = !!(
+    settings?.canViewOwnSubmission &&
+    user &&
+    hasExisting
+  );
 
   const methods = useForm<Record<string, unknown>>({
+    mode: 'onTouched',
     shouldUnregister: false,
     defaultValues: {},
   });
-
-  const formData = useRuntimeFormStore((state) => state.formData);
-
-  const logicEngineRef = useRef<FormLogicEngine | null>(null);
-
-  // --- CIRCUIT BREAKER REF ---
-  const cascadeCount = useRef(0);
-  const cascadeResetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const componentsData = useRuntimeFormStore(
     useShallow(runtimeFormSelector.currentPageComponentData)
@@ -78,25 +414,45 @@ export function FormRunner() {
     useShallow(runtimeFormSelector.currentPageComponentStates)
   );
 
-  const currentPageId = useRuntimeFormStore(runtimeFormSelector.currentPageId);
-  const renderState = useRuntimeFormStore(runtimeFormSelector.renderState);
-  const setActivePage = useRuntimeFormStore((s) => s.setActivePage);
-
-  useEffect(() => {
-    const rules = formData?.version.logic?.rules || [];
-    const formulas = formData?.version.logic?.formulas || [];
-    if (rules?.length > 0 || formulas?.length > 0) {
-      logicEngineRef.current = new FormLogicEngine(rules, formulas);
-      triggerLogicEvaluation(methods.getValues());
+  const startEditingSubmission = (submission: SubmissionEntry) => {
+    setEditingSubmissionId(submission.submissionId);
+    setIsCreatingNew(false);
+    const flatValues = flattenResponses(submission.pages);
+    methods.reset(flatValues);
+    if (submission.email) setUserEmail(submission.email);
+    if (formData?.version.pages[0]) {
+      setActivePage(formData.version.pages[0].pageId);
     }
-  });
+  };
+
+  const handleStartNew = () => {
+    setIsCreatingNew(true);
+    setEditingSubmissionId(undefined);
+    methods.reset({});
+    setUserEmail(user?.email || '');
+    if (formData?.version.pages[0]) {
+      setActivePage(formData.version.pages[0].pageId);
+    }
+  };
+
+  const handleBackToList = () => {
+    setIsCreatingNew(false);
+    setEditingSubmissionId(undefined);
+    methods.reset({});
+    setUserEmail(user?.email || '');
+    if (formData?.version.pages[0]) {
+      setActivePage(formData.version.pages[0].pageId);
+    }
+  };
+
+  const cascadeCount = useRef(0);
+  const cascadeResetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const triggerLogicEvaluation = async (
     currentValues: Record<string, unknown>
   ) => {
     if (!logicEngineRef.current) return;
 
-    // --- 1. CIRCUIT BREAKER CHECK ---
     if (cascadeCount.current > 10) {
       console.error(
         'Logic Circuit Breaker Tripped! Infinite loop detected and aborted.'
@@ -109,7 +465,6 @@ export function FormRunner() {
     cascadeResetTimer.current = setTimeout(() => {
       cascadeCount.current = 0; // Reset after things settle down
     }, 100);
-    // --------------------------------
 
     const { actions, computedValues } =
       await logicEngineRef.current.evaluate(currentValues);
@@ -241,13 +596,29 @@ export function FormRunner() {
     }
   };
 
+  // Only re-run if the logic schema actually changes
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/incompatible-library
+    const rules = formData?.version.logic?.rules || [];
+    const formulas = formData?.version.logic?.formulas || [];
+
+    if (rules.length > 0 || formulas.length > 0) {
+      logicEngineRef.current = new FormLogicEngine(rules, formulas);
+      triggerLogicEvaluation(methods.getValues());
+    } else {
+      logicEngineRef.current = null;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData?.version.logic]);
+
+  useEffect(() => {
     const subscription = methods.watch((value) => {
-      triggerLogicEvaluation(value as Record<string, unknown>);
+      if (logicEngineRef.current) {
+        triggerLogicEvaluation(value as Record<string, unknown>);
+      }
     });
     return () => subscription.unsubscribe();
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [methods]);
 
   useEffect(() => {
     globalGetValues = methods.getValues;
@@ -256,8 +627,80 @@ export function FormRunner() {
     };
   }, [methods.getValues]);
 
-  const onSubmit = (data: unknown) => {
-    console.log('Valid Form Data:', data);
+  const onSubmit = async (data: Record<string, unknown>) => {
+    if (!formId || !formData) return;
+    setGlobalFormError(''); // Clear any previous errors
+
+    const settings = formData.version.settings;
+    if (settings.collectEmailMode === 'required' && !userEmail?.trim()) {
+      setGlobalFormError('Email is required for this form.');
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      // 1. Grab the current global states from Zustand
+      const storeState = useRuntimeFormStore.getState();
+      const pageStates = storeState.renderState?.PageStates || {};
+
+      // 2. Build the nested payload structure
+      const pagesPayload = formData.version.pages.map((page) => {
+        // Extract the component states specifically for this page
+        const currentPageState = pageStates[page.pageId];
+        const componentStatesForPage = currentPageState?.ComponentStates || {};
+
+        const activeResponses = page.components
+          .filter((comp) => comp.componentType !== 'heading') // Ignore visual components
+          .filter((comp) => {
+            const state = componentStatesForPage[comp.componentId];
+
+            // Use the new nested schema properties
+            if (state?.isHidden) return false;
+            if (state?.isEnabled === false) return false;
+
+            return true;
+          })
+          .filter(
+            (comp) =>
+              data[comp.componentId] !== undefined &&
+              data[comp.componentId] !== ''
+          )
+          .map((comp) => ({
+            componentId: comp.componentId,
+            response: data[comp.componentId],
+          }));
+
+        return {
+          pageNo: page.pageNo,
+          responses: activeResponses,
+        };
+      });
+
+      const payload = {
+        email: settings.collectEmailMode === 'none' ? undefined : userEmail,
+        pages: pagesPayload,
+      };
+
+      // Branch to PATCH if updating, POST if new
+      if (editingSubmissionId) {
+        await api.patch(
+          `/api/forms/${formId}/submissions/${editingSubmissionId}/mine`,
+          payload
+        );
+      } else {
+        await api.post(`/api/forms/${formId}/submissions`, payload);
+      }
+
+      // 4. Redirect on success
+      navigate(`/forms/${formId}/success`);
+    } catch (err) {
+      setGlobalFormError(
+        (err as Error).message || 'Submission failed. Please try again.'
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const currentPageState =
@@ -266,7 +709,8 @@ export function FormRunner() {
   const hasPrevious = !!currentPageState?.previousPageId;
   const hasNext = !!currentPageState?.nextPageId;
 
-  const handleNext = async () => {
+  const handleNext = async (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
     const currentInstanceIds = componentsData.map((comp) => comp.componentId);
     const isPageValid = await methods.trigger(currentInstanceIds);
     if (!isPageValid) {
@@ -279,7 +723,8 @@ export function FormRunner() {
     }
   };
 
-  const handleBack = () => {
+  const handleBack = (e?: React.MouseEvent) => {
+    if (e) e.preventDefault(); // Stop any default button behavior
     if (currentPageState?.previousPageId) {
       setActivePage(currentPageState.previousPageId);
     }
@@ -341,128 +786,84 @@ export function FormRunner() {
 
   return (
     <div className="mx-auto mt-15 mb-15 max-w-3xl">
-      <FormProvider {...methods}>
-        <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6">
-          <div>
-            <Card>
-              <CardHeader>
-                <div className="w-full bg-transparent text-5xl font-bold tracking-tight text-foreground outline-none">
-                  {formData.form.title}
+      {showHistoryList ? (
+        <>
+          <Card className="mb-8">
+            <CardHeader className="flex flex-row items-center justify-between pb-3">
+              <h2 className="text-lg font-semibold">Your Submissions</h2>
+              {!submitDisabledByPolicy && (
+                <Button size="sm" onClick={handleStartNew}>
+                  New Submission
+                </Button>
+              )}
+            </CardHeader>
+            <CardContent>
+              {mySubmissions.length === 0 ? (
+                <div className="text-xs text-muted-foreground">Loading...</div>
+              ) : (
+                <div className="space-y-2">
+                  {mySubmissions.map((submission) => (
+                    <div
+                      key={submission.submissionId}
+                      className="flex items-center justify-between rounded border border-border px-3 py-2"
+                    >
+                      <div className="text-sm font-medium text-muted-foreground">
+                        {new Date(submission.createdAt).toLocaleString()}
+                      </div>
+                      {canEditSubmission && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => startEditingSubmission(submission)}
+                        >
+                          <Pencil className="mr-1.5 h-3.5 w-3.5" />
+                          Edit
+                        </Button>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              </CardHeader>
-              <CardContent>
-                {formData.version.meta.description && (
-                  <div
-                    className={sharedProseClasses}
-                    dangerouslySetInnerHTML={{
-                      __html: formData.version.meta.description,
-                    }}
-                  />
-                )}
-              </CardContent>
-            </Card>
+              )}
+            </CardContent>
+          </Card>
 
-            <Separator className="mt-5" />
-          </div>
-
-          {(currentPage?.title || currentPage?.description) && (
-            <Card>
-              <CardHeader>
-                <div className="text-4xl font-semibold tracking-tight">
-                  {currentPage?.title}
-                </div>
-              </CardHeader>
-              <CardContent>
-                {currentPage?.description && (
-                  <div className={`tracking-tight ${sharedProseClasses}`}>
-                    {currentPage?.description}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+          {submitDisabledByPolicy && (
+            <div className="mb-6 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+              New submissions are disabled by form policy. Edit an existing
+              submission above.
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          {submitDisabledByPolicy && !editingSubmissionId && (
+            <div className="mb-6 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+              New submissions are disabled by form policy.
+            </div>
           )}
 
-          {/* Render the components for the active page */}
-
-          <div className="space-y-4">
-            {componentsData.length === 0 ? (
-              <p className="text-gray-500">
-                No components to display on this page.
-              </p>
-            ) : (
-              componentsData.map((comp) => {
-                const frontendId = backendToFrontend[comp.componentType];
-                const Renderer = getComponentRenderer(
-                  frontendId as ComponentID
-                );
-
-                const isHidden =
-                  componentsStates[comp.componentId]?.isHidden ?? false;
-                if (isHidden) {
-                  return null;
-                }
-
-                if (!Renderer) {
-                  return (
-                    <div
-                      key={comp.componentId}
-                      className="border bg-red-50 p-4 text-red-500"
-                    >
-                      Unknown component type: {comp.componentType}
-                    </div>
-                  );
-                }
-
-                return (
-                  // <div
-                  //   key={comp.componentId}
-                  //   className="rounded-md border bg-gray-50 p-4 shadow-sm"
-                  // >
-                  //   <p className="text-sm font-medium text-gray-700">
-                  //     Label: <span className="font-bold">{comp.label}</span>
-                  //   </p>
-                  //   <p className="mb-4 text-xs text-gray-500">
-                  //     Instance ID: {comp.componentId} | Type:{' '}
-                  //     {comp.componentType}
-                  //   </p>
-                  <Renderer
-                    key={comp.componentId}
-                    metadata={null}
-                    props={comp.props}
-                    validation={comp.validation}
-                    instanceId={comp.componentId}
-                  />
-                  // </div>
-                );
-              })
-            )}
-          </div>
-          {/* --- Pagination Controls --- */}
-          <div className="mt-8 flex items-center justify-between border-t pt-6">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={handleBack}
-              disabled={!hasPrevious}
-            >
-              Back
-            </Button>
-
-            {hasNext ? (
-              <Button type="button" onClick={handleNext} className="">
-                Next
-              </Button>
-            ) : (
-              <Button
-                type="submit"
-                className="bg-green-600 text-white hover:bg-green-700"
-              >
-                Submit
-              </Button>
-            )}
-          </div>
-        </form>
-      </FormProvider>
+          <TrueForm
+            methods={methods}
+            formData={formData}
+            currentPage={currentPage}
+            componentsData={componentsData}
+            componentsStates={componentsStates}
+            backendToFrontend={backendToFrontend}
+            getComponentRenderer={getComponentRenderer}
+            handleNext={handleNext}
+            handleBack={handleBack}
+            handleBackToList={handleBackToList}
+            onSubmit={onSubmit}
+            hasNext={hasNext}
+            hasPrevious={hasPrevious}
+            submitting={submitting}
+            editingSubmissionId={editingSubmissionId}
+            submitDisabledByPolicy={submitDisabledByPolicy}
+            showBackToList={showBackToList}
+            sharedProseClasses={sharedProseClasses}
+          />
+        </>
+      )}
     </div>
   );
 }

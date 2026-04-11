@@ -4,7 +4,7 @@ import { type PublicFormData } from './runtimeForm.types';
 
 import { type InstanceID, type PageID } from '@/form/components/base';
 
-interface ComponentRenderState {
+export interface ComponentRenderState {
   instanceId: InstanceID;
   isHidden: boolean;
   isEnabled: boolean;

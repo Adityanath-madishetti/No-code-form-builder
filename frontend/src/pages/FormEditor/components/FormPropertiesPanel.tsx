@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+// import { RichTextEditor } from '@/components/RichTextEditor';
 
 function toLocalDateTime(iso: string | null): string {
   if (!iso) return '';
@@ -38,8 +39,8 @@ function normalizeEmail(email: string): string {
 
 export function FormPropertiesPanel() {
   const form = useFormStore(formSelectors.form);
-  // const updateFormName = useFormStore((s) => s.updateFormName);
-  // const updateFormMetadata = useFormStore((s) => s.updateFormMetadata);
+  const updateFormName = useFormStore((s) => s.updateFormName);
+  const updateFormMetadata = useFormStore((s) => s.updateFormMetadata);
   const updateFormAccess = useFormStore((s) => s.updateFormAccess);
   const updateFormSettings = useFormStore((s) => s.updateFormSettings);
   const { user } = useAuth();
@@ -63,7 +64,7 @@ export function FormPropertiesPanel() {
 
   return (
     <div className="flex flex-col gap-5">
-      {/* <Field label="Form Title">
+      <Field label="Form Title">
         <Input
           value={form.name}
           onChange={(e) => updateFormName(e.target.value)}
@@ -80,7 +81,12 @@ export function FormPropertiesPanel() {
           rows={3}
           className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none"
         />
-      </Field> */}
+        {/* <RichTextEditor
+          value={form.metadata.description ?? ''}
+          placeholder="Description"
+          onChange={(newHTML) => updateFormMetadata({ description: newHTML })}
+        /> */}
+      </Field>
 
       <Field label="Owner">
         <Input value={ownerLabel} readOnly className="text-sm" />
@@ -171,7 +177,12 @@ export function FormPropertiesPanel() {
           value={form.settings.submissionPolicy}
           onValueChange={(
             value: 'none' | 'edit_only' | 'resubmit_only' | 'edit_and_resubmit'
-          ) => updateFormSettings({ submissionPolicy: value })}
+          ) => {
+            updateFormSettings({ submissionPolicy: value });
+            if (value === 'edit_only' || value === 'edit_and_resubmit') {
+              updateFormSettings({ canViewOwnSubmission: true });
+            }
+          }}
         >
           <SelectTrigger className="w-full text-sm">
             <SelectValue />
@@ -190,9 +201,20 @@ export function FormPropertiesPanel() {
       <Field label="Can Viewer View Their Submission">
         <Select
           value={form.settings.canViewOwnSubmission ? 'yes' : 'no'}
-          onValueChange={(value) =>
-            updateFormSettings({ canViewOwnSubmission: value === 'yes' })
-          }
+          onValueChange={(value) => {
+            updateFormSettings({ canViewOwnSubmission: value === 'yes' });
+            if (
+              value === 'no' &&
+              form.settings.submissionPolicy === 'edit_only'
+            ) {
+              updateFormSettings({ submissionPolicy: 'none' });
+            } else if (
+              value === 'no' &&
+              form.settings.submissionPolicy === 'edit_and_resubmit'
+            ) {
+              updateFormSettings({ submissionPolicy: 'resubmit_only' });
+            }
+          }}
         >
           <SelectTrigger className="w-full text-sm">
             <SelectValue />
@@ -249,9 +271,7 @@ function EmailChipsField({
               <button
                 type="button"
                 onClick={() =>
-                  onChange(
-                    entries.filter((item) => item.email !== entry.email)
-                  )
+                  onChange(entries.filter((item) => item.email !== entry.email))
                 }
                 className="text-muted-foreground hover:text-foreground"
               >
@@ -290,10 +310,18 @@ function EmailChipsField({
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-xs font-medium text-muted-foreground">{label}</label>
+      <label className="text-xs font-medium text-muted-foreground">
+        {label}
+      </label>
       {children}
     </div>
   );

@@ -4,7 +4,7 @@ import type {
   ComponentShuffleStack,
 } from '@/form/logic/logicTypes';
 
-interface VersionSettings {
+export interface VersionSettings {
   collectEmailMode: 'none' | 'optional' | 'required';
   submissionPolicy:
     | 'none'
@@ -59,6 +59,23 @@ export interface PublicFormData {
     logic?: PublicLogicData;
   };
 }
+
+export interface SubmissionEntry {
+  submissionId: string;
+  email?: string | null;
+  status: string;
+  createdAt: string;
+  pages: Array<{
+    pageNo: number;
+    responses: Array<{ componentId: string; response: unknown }>;
+  }>;
+}
+
+export const DEFAULT_VERSION_SETTINGS: VersionSettings = {
+  collectEmailMode: 'none',
+  submissionPolicy: 'none',
+  canViewOwnSubmission: false,
+};
 
 // export interface RuntimeComponent {
 //   componentId: string;

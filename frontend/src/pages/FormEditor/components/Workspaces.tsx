@@ -13,6 +13,7 @@ import {
   Globe,
   Copy,
   Check,
+  ExternalLink,
 } from 'lucide-react';
 import { useFormStore } from '@/form/store/form.store';
 
@@ -20,6 +21,7 @@ import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -277,6 +279,18 @@ export function PublishButton({
               )}
             </Button>
           </div>
+          {/* Footer */}
+          <DialogFooter className="flex justify-end pt-4">
+            <a
+              href={shareLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
+            >
+              Open Form
+              <ExternalLink className="h-4 w-4" />
+            </a>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>

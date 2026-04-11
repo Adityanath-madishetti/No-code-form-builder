@@ -12,8 +12,13 @@ import {
   DRAG_CATALOG_GROUP_ID,
 } from '@/form/utils/DndUtils';
 import { LayoutGrid } from 'lucide-react';
-import { RichTextEditor } from '@/components/RichTextEditor';
+import {
+  RichTextEditor,
+  sharedProseClasses,
+} from '@/components/RichTextEditor';
 import { SelectablePage } from '@/form/renderer/SelectableWrapper';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 
 interface FormCanvasProps {
   currentPageIndex: number;
@@ -70,6 +75,8 @@ export function FormCanvas({ currentPageIndex }: FormCanvasProps) {
         <div className="mx-auto w-full max-w-3xl px-8 py-6">
           {/* Editable form title on first page */}
           <FormHeader />
+          <Separator className="mt-5" />
+
           <PageHeader pageId={pageId} pageNumber={currentPageIndex + 1} />
 
           {/* Components or empty drop zone */}
@@ -86,18 +93,35 @@ export function FormCanvas({ currentPageIndex }: FormCanvasProps) {
 
 function FormHeader() {
   const formName = useFormStore((s) => s.form?.name ?? '');
-  const updateFormName = useFormStore((s) => s.updateFormName);
+  // const updateFormName = useFormStore((s) => s.updateFormName);
   const formDescription = useFormStore(
     (s) => s.form?.metadata.description ?? ''
   );
-  const updateFormMetadata = useFormStore((s) => s.updateFormMetadata);
-  const updateFormDescription = (description: string) => {
-    updateFormMetadata({ description: description });
-  };
+  // const updateFormMetadata = useFormStore((s) => s.updateFormMetadata);
+  // const updateFormDescription = (description: string) => {
+  //   updateFormMetadata({ description: description });
+  // };
 
   return (
     <div>
-      <input
+      <Card>
+        <CardHeader>
+          <div className="w-full bg-transparent text-5xl font-bold tracking-tight text-foreground outline-none">
+            {formName}
+          </div>
+        </CardHeader>
+        {formDescription && (
+          <CardContent>
+            <div
+              className={sharedProseClasses}
+              dangerouslySetInnerHTML={{
+                __html: formDescription,
+              }}
+            />
+          </CardContent>
+        )}
+      </Card>
+      {/* <input
         value={formName}
         onChange={(e) => updateFormName(e.target.value)}
         placeholder="Untitled Form"
@@ -107,7 +131,7 @@ function FormHeader() {
         value={formDescription}
         placeholder="Description"
         onChange={(newHTML) => updateFormDescription(newHTML)}
-      />
+      /> */}
       {/* <textarea
         value={formDescription}
         onChange={(e) => updateFormDescription(e.target.value)}
@@ -127,15 +151,39 @@ function PageHeader({
 }) {
   const page = useFormStore((s) => s.pages[pageId]);
   const updatePageTitle = useFormStore((s) => s.updatePageTitle);
+  const setActivePage = useFormStore((s) => s.setActivePage);
+  const setActiveComponent = useFormStore((s) => s.setActiveComponent);
 
   return (
-    <div className="mb-5">
-      <input
+    <div className="mt-5 mb-5">
+      {(page?.title || page?.description) && (
+        <Card
+          onClick={(e) => {
+            e.stopPropagation();
+            setActivePage(pageId);
+            setActiveComponent(null);
+          }}
+        >
+          <CardHeader>
+            <div className="text-4xl font-semibold tracking-tight">
+              {page?.title}
+            </div>
+          </CardHeader>
+          {page?.description && (
+            <CardContent>
+              <div className={`tracking-tight ${sharedProseClasses}`}>
+                {page?.description}
+              </div>
+            </CardContent>
+          )}
+        </Card>
+      )}
+      {/* <input
         value={page?.title ?? ''}
         onChange={(e) => updatePageTitle(pageId, e.target.value)}
         placeholder={`Page ${pageNumber}`}
         className="w-full bg-transparent text-xl font-semibold tracking-tight text-foreground outline-none placeholder:text-muted-foreground/20"
-      />
+      /> */}
     </div>
   );
 }
