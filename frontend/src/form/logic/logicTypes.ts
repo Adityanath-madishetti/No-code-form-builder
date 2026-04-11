@@ -13,6 +13,8 @@
  * ────────────────────────────────────────────────────────────────────
  */
 
+import { nanoid } from 'nanoid';
+
 // ── Comparison Operators ──
 
 export const COMPARISON_OPS = [
@@ -199,7 +201,7 @@ export function createRuleAction(type: ActionType = 'SHOW'): RuleAction {
 }
 
 export function createLogicRule(
-  name = 'New Rule',
+  name = `New Rule ${nanoid(12)}`,
   ruleType: RuleType = 'field'
 ): LogicRule {
   const now = new Date().toISOString();
@@ -215,7 +217,9 @@ export function createLogicRule(
   };
 }
 
-export function createFormulaRule(name = 'New Formula'): FormulaRule {
+export function createFormulaRule(
+  name = `New Formula ${nanoid(12)}`
+): FormulaRule {
   const now = new Date().toISOString();
   return {
     ruleId: crypto.randomUUID(),
@@ -231,7 +235,7 @@ export function createFormulaRule(name = 'New Formula'): FormulaRule {
 export function createComponentShuffleStack(): ComponentShuffleStack {
   return {
     stackId: crypto.randomUUID(),
-    name: 'New Stack',
+    name: `New Stack ${nanoid(12)}`,
     pageId: '',
     componentIds: [],
     enabled: true,

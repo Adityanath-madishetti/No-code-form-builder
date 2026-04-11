@@ -354,3 +354,119 @@ export function getDependencyEdges(
 
   return edges;
 }
+
+export interface OverlappingRulesPair {
+  ruleA: { id: string; name: string; type: 'logic' | 'formula' };
+  ruleB: { id: string; name: string; type: 'logic' | 'formula' };
+  sharedComponentIds: string[];
+}
+
+/** * Finds pairs of rules/formulas that share one or more of the same components
+ * (either checking them in conditions or modifying them in actions/targets).
+ */
+export function findOverlappingRules(
+  rules: LogicRule[],
+  formulas: FormulaRule[] = []
+): OverlappingRulesPair[] {
+  const footprints: Array<{
+    id: string;
+    name: string;
+    type: 'logic' | 'formula';
+    components: Set<string>;
+  }> = [];
+
+  // Helper to extract component IDs from a condition tree
+  function extractConditionIds(
+    condition?: Condition,
+    set = new Set<string>()
+  ): Set<string> {
+    if (!condition) return set;
+    if (condition.type === 'leaf') {
+      if (condition.instanceId) set.add(condition.instanceId);
+    } else {
+      condition.conditions.forEach((cond) => extractConditionIds(cond, set));
+    }
+    return set;
+  }
+
+  // Helper to extract component IDs from actions (including nested conditionals)
+  function extractActionIds(
+    actions: RuleAction[],
+    set = new Set<string>()
+  ): Set<string> {
+    for (const action of actions) {
+      // Add target component if it's a standard target (ignore the dummy nested block ID)
+      if (action.targetId && action.targetId !== 'NESTED_LOGIC_BLOCK') {
+        set.add(action.targetId);
+      }
+      // Recursively dig into nested conditional actions
+      if (action.type === 'CONDITIONAL') {
+        extractConditionIds(action.condition, set);
+        if (action.thenActions) extractActionIds(action.thenActions, set);
+        if (action.elseActions) extractActionIds(action.elseActions, set);
+      }
+    }
+    return set;
+  }
+
+  // 1. Calculate component footprint for Logic Rules
+  for (const rule of rules) {
+    const components = new Set<string>();
+    extractConditionIds(rule.condition, components);
+    extractActionIds(rule.thenActions, components);
+    extractActionIds(rule.elseActions, components);
+
+    footprints.push({
+      id: rule.ruleId,
+      name: rule.name,
+      type: 'logic',
+      components,
+    });
+  }
+
+  // 2. Calculate component footprint for Formula Rules
+  for (const formula of formulas) {
+    const components = new Set<string>(formula.referencedFields || []);
+    if (formula.targetId) components.add(formula.targetId);
+
+    footprints.push({
+      id: formula.ruleId,
+      name: formula.name,
+      type: 'formula',
+      components,
+    });
+  }
+
+  // 3. Cross-reference all footprints to find pairwise overlaps
+  const overlaps: OverlappingRulesPair[] = [];
+
+  for (let i = 0; i < footprints.length; i++) {
+    for (let j = i + 1; j < footprints.length; j++) {
+      const footprintA = footprints[i];
+      const footprintB = footprints[j];
+
+      // Find intersection of the two sets
+      const shared = [...footprintA.components].filter((id) =>
+        footprintB.components.has(id)
+      );
+
+      if (shared.length > 0) {
+        overlaps.push({
+          ruleA: {
+            id: footprintA.id,
+            name: footprintA.name,
+            type: footprintA.type,
+          },
+          ruleB: {
+            id: footprintB.id,
+            name: footprintB.name,
+            type: footprintB.type,
+          },
+          sharedComponentIds: shared,
+        });
+      }
+    }
+  }
+
+  return overlaps;
+}

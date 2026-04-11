@@ -34,7 +34,7 @@ interface VersionData {
 export default function FormPreview() {
   const { formId } = useParams<{ formId: string }>();
   const logicEngineRef = useRef<FormLogicEngine | null>(null);
-  
+
   // State for loading and error handling
   const [globalFormError, setGlobalFormError] = useState('');
   const [globalFormLoading, setGlobalFormLoading] = useState(true);
@@ -79,7 +79,9 @@ export default function FormPreview() {
       .catch((err) => {
         // Generic network/API error handling
         setGlobalFormError(
-          err.response?.data?.message || err.message || 'Failed to load form preview. Please check your connection.'
+          err.response?.data?.message ||
+            err.message ||
+            'Failed to load form preview. Please check your connection.'
         );
       })
       .finally(() => {
@@ -293,7 +295,7 @@ export default function FormPreview() {
   };
 
   // --- Render Branches for Loading and Error ---
-  
+
   if (globalFormLoading) {
     return (
       <div className="flex min-h-[400px] flex-col items-center justify-center gap-3">
@@ -336,7 +338,7 @@ export default function FormPreview() {
 
   // --- Main Form Render ---
   return (
-    <div className="mx-auto mt-15 mb-15 max-w-3xl">
+    <div className="mx-auto mt-15 mb-15 max-w-3xl min-w-3xl">
       <div className="mb-4 flex items-center justify-center gap-2 rounded-md bg-blue-50 py-2 text-sm font-medium text-blue-700">
         <Eye className="h-4 w-4" />
         Preview Mode

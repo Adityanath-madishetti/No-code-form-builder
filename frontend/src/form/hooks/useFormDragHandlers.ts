@@ -230,22 +230,6 @@ export function useFormDragHandlers() {
         `[DND-Over] Native Move Check: SourcePageId: ${currentPageId}, TargetPageId: ${targetPageId}`
       );
 
-      // if (targetPageId && currentPageId !== targetPageId) {
-      //   const finalIndex =
-      //     targetIndex !== -1
-      //       ? targetIndex
-      //       : pages[targetPageId].children.length;
-      //   console.log(
-      //     `[DND-Over] Moving component ${instanceId} across pages: Page ${currentPageId} -> Page ${targetPageId} at index ${finalIndex}`
-      //   );
-
-      //   moveComponent(currentPageId, currentIndex, targetPageId, finalIndex);
-      // } else {
-      //   console.log(
-      //     '[DND-Over] Component is staying on the same page during over phase. Handling in onDragEnd if dropped.'
-      //   );
-      // }
-
       if (targetPageId) {
         const finalIndex =
           targetIndex !== -1

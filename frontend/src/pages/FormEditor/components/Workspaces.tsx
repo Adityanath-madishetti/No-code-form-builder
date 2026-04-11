@@ -17,10 +17,11 @@ import {
 } from 'lucide-react';
 import { useFormStore } from '@/form/store/form.store';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -35,26 +36,90 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import {
+  useLogicStore,
+  findOverlappingRules,
+  type OverlappingRulesPair,
+} from '@/form/logic/logic.store';
 
-interface WorkspacesProps {
-  editorView: 'canvas' | 'logic' | 'workflow' | 'formProperties' | 'theming';
-  setEditorView: (
-    view: 'canvas' | 'logic' | 'workflow' | 'formProperties' | 'theming'
-  ) => void;
-  setActivePanel: (panel: null) => void;
-  logicActiveRuleId: string | null;
-  logicActiveFormulaId: string | null;
-  showProperties: boolean;
-  showDebug: boolean;
-  rightWidth: number | string;
-  debugWidth: number | string;
-  editorTheme: 'dark' | 'light' | 'system' | string;
-  setEditorTheme: (theme: 'dark' | 'light' | 'system') => void;
-  saving: boolean;
-  handleSave: () => Promise<boolean>;
-  formId?: string;
-  publishing: boolean;
-  setPublishing: (pub: boolean) => void;
+interface RulesWarningDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  overlapData: OverlappingRulesPair[];
+  onConfirm: () => void;
+  isProcessing: boolean;
+  actionText: string;
+  loadingText: string;
+  descriptionText: string;
+}
+
+export function RulesWarningDialog({
+  open,
+  onOpenChange,
+  overlapData,
+  onConfirm,
+  isProcessing,
+  actionText,
+  loadingText,
+  descriptionText,
+}: RulesWarningDialogProps) {
+  const components = useFormStore((s) => s.components);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="min-w-xl gap-0 sm:max-w-xl">
+        <DialogHeader className="mb-3">
+          <DialogTitle>Overlapping Rules Detected</DialogTitle>
+          <DialogDescription>{descriptionText}</DialogDescription>
+        </DialogHeader>
+
+        <div className="-mx-4 no-scrollbar max-h-[50vh] overflow-y-auto border-t px-4 pt-4">
+          {overlapData.map((overlap, index) => (
+            <div
+              key={index}
+              className="mb-4 rounded-md border bg-muted/50 p-3 text-sm leading-normal"
+            >
+              <p>
+                <strong>{overlap.ruleA.name}</strong> and{' '}
+                <strong>{overlap.ruleB.name}</strong> share components:
+              </p>
+              <ul className="mt-1 font-mono text-xs text-muted-foreground">
+                {overlap.sharedComponentIds.map((id) => (
+                  <li key={id}>
+                    {components[id]?.metadata.label} ({id})
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        <DialogFooter className="gap-2 sm:gap-2">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isProcessing}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={onConfirm}
+            disabled={isProcessing}
+          >
+            {isProcessing ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {loadingText}
+              </>
+            ) : (
+              actionText
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 interface ThemeToggleButtonProps {
@@ -89,7 +154,13 @@ interface SaveButtonProps {
 }
 
 export function SaveButton({ handleSave, saving }: SaveButtonProps) {
-  const onSaveClick = async () => {
+  const rules = useLogicStore((s) => s.rules);
+  const formulas = useLogicStore((s) => s.formulas);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [overlapData, setOverlapData] = useState<OverlappingRulesPair[]>([]);
+
+  const executeSave = async () => {
+    setIsDialogOpen(false);
     const isSuccess = await handleSave();
 
     if (isSuccess) {
@@ -105,9 +176,7 @@ export function SaveButton({ handleSave, saving }: SaveButtonProps) {
         } as React.CSSProperties,
       });
     } else {
-      // TODO: use the message from the handleSave()
       toast.error('Failed to save form', {
-        description: 'Please check your connection and try again.',
         position: 'top-center',
         style: {
           '--normal-bg':
@@ -119,29 +188,52 @@ export function SaveButton({ handleSave, saving }: SaveButtonProps) {
     }
   };
 
+  const onSaveClick = async () => {
+    const overlaps = findOverlappingRules(rules, formulas);
+    if (overlaps && overlaps.length > 0) {
+      setOverlapData(overlaps);
+      setIsDialogOpen(true);
+    } else {
+      await executeSave();
+    }
+  };
+
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <button
-          onClick={onSaveClick}
-          disabled={saving}
-          className={`flex h-7 w-7 items-center justify-center rounded-sm border shadow-sm transition-colors ${
-            saving
-              ? 'cursor-wait border-primary/40 bg-primary/10 text-primary'
-              : 'border-primary/60 bg-primary text-primary-foreground hover:bg-primary/90'
-          }`}
-        >
-          {saving ? (
-            <Loader2 className="h-3 w-3 animate-spin" />
-          ) : (
-            <Save className="h-3 w-3" />
-          )}
-        </button>
-      </TooltipTrigger>
-      <TooltipContent>
-        <p>Save form</p>
-      </TooltipContent>
-    </Tooltip>
+    <>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            onClick={onSaveClick}
+            disabled={saving}
+            className={`flex h-7 w-7 items-center justify-center rounded-sm border shadow-sm transition-colors ${
+              saving
+                ? 'cursor-wait border-primary/40 bg-primary/10 text-primary'
+                : 'border-primary/60 bg-primary text-primary-foreground hover:bg-primary/90'
+            }`}
+          >
+            {saving ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <Save className="h-3 w-3" />
+            )}
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Save form</p>
+        </TooltipContent>
+      </Tooltip>
+
+      <RulesWarningDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        overlapData={overlapData}
+        onConfirm={executeSave}
+        isProcessing={saving}
+        actionText="Save Anyway"
+        loadingText="Saving..."
+        descriptionText="Some rules share the same components. Are you sure you want to save anyway?"
+      />
+    </>
   );
 }
 
@@ -184,14 +276,67 @@ export function PublishButton({
   const [publishing, setPublishing] = useState(false);
   const [isPublishDialogOpen, setIsPublishDialogOpen] = useState(false);
   const [hasCopied, setHasCopied] = useState(false);
+  const rules = useLogicStore((s) => s.rules);
+  const formulas = useLogicStore((s) => s.formulas);
+  const [isOverlapDialogOpen, setIsOverlapDialogOpen] = useState(false);
+  const [overlapData, setOverlapData] = useState<OverlappingRulesPair[]>([]);
 
   const shareLink = formId ? `${window.location.origin}/forms/s/${formId}` : '';
+  const components = useFormStore((s) => s.components);
 
   const handleCopy = async () => {
     if (!shareLink) return;
     await navigator.clipboard.writeText(shareLink);
     setHasCopied(true);
-    setTimeout(() => setHasCopied(false), 2000); // Reset icon after 2s
+    setTimeout(() => setHasCopied(false), 2000);
+  };
+
+  const executePublish = async () => {
+    if (!formId) return;
+    setIsOverlapDialogOpen(false);
+    setPublishing(true);
+
+    try {
+      const isSaveSuccess = await handleSave();
+      if (!isSaveSuccess) {
+        setPublishing(false);
+        return;
+      }
+
+      const { api: apiClient } = await import('@/lib/api');
+      await apiClient.post(`/api/forms/${formId}/publish`);
+      setIsPublishDialogOpen(true);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      console.error('Publish failed:', err);
+      const errorMessage =
+        err?.response?.data?.message ||
+        err?.message ||
+        'Please check your connection and try again.';
+      toast.error('Failed to publish form', {
+        description: errorMessage,
+        position: 'top-center',
+        style: {
+          '--normal-bg':
+            'color-mix(in oklab, var(--destructive) 10%, var(--background))',
+          '--normal-text': 'var(--destructive)',
+          '--normal-border': 'var(--destructive)',
+        } as React.CSSProperties,
+      });
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  const onPublishClick = async () => {
+    const overlaps = findOverlappingRules(rules, formulas);
+
+    if (overlaps && overlaps.length > 0) {
+      setOverlapData(overlaps);
+      setIsOverlapDialogOpen(true);
+    } else {
+      await executePublish();
+    }
   };
 
   return (
@@ -200,38 +345,7 @@ export function PublishButton({
         <Tooltip>
           <TooltipTrigger asChild>
             <button
-              onClick={async () => {
-                if (!formId) return;
-                setPublishing(true);
-                try {
-                  await handleSave();
-                  const { api: apiClient } = await import('@/lib/api');
-                  await apiClient.post(`/api/forms/${formId}/publish`);
-
-                  setIsPublishDialogOpen(true);
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                } catch (err: any) {
-                  console.error('Publish failed:', err);
-
-                  const errorMessage =
-                    err?.response?.data?.message ||
-                    err?.message ||
-                    'Please check your connection and try again.';
-
-                  toast.error('Failed to publish form', {
-                    description: errorMessage,
-                    position: 'top-center',
-                    style: {
-                      '--normal-bg':
-                        'color-mix(in oklab, var(--destructive) 10%, var(--background))',
-                      '--normal-text': 'var(--destructive)',
-                      '--normal-border': 'var(--destructive)',
-                    } as React.CSSProperties,
-                  });
-                } finally {
-                  setPublishing(false);
-                }
-              }}
+              onClick={onPublishClick}
               disabled={publishing || saving}
               className={`flex h-7 w-7 items-center justify-center rounded-sm border shadow-sm transition-colors ${
                 publishing
@@ -252,6 +366,16 @@ export function PublishButton({
         </Tooltip>
       </TooltipProvider>
 
+      <RulesWarningDialog
+        open={isOverlapDialogOpen}
+        onOpenChange={setIsOverlapDialogOpen}
+        overlapData={overlapData}
+        onConfirm={executePublish}
+        isProcessing={publishing || saving}
+        actionText="Publish Anyway"
+        loadingText="Publishing..."
+        descriptionText="Some rules share the same components. Are you sure you want to publish anyway?"
+      />
       <Dialog open={isPublishDialogOpen} onOpenChange={setIsPublishDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -279,7 +403,6 @@ export function PublishButton({
               )}
             </Button>
           </div>
-          {/* Footer */}
           <DialogFooter className="flex justify-end pt-4">
             <a
               href={shareLink}
@@ -296,6 +419,28 @@ export function PublishButton({
     </>
   );
 }
+
+interface WorkspacesProps {
+  editorView: 'canvas' | 'logic' | 'workflow' | 'formProperties' | 'theming';
+  setEditorView: (
+    view: 'canvas' | 'logic' | 'workflow' | 'formProperties' | 'theming'
+  ) => void;
+  setActivePanel: (panel: null) => void;
+  logicActiveRuleId: string | null;
+  logicActiveFormulaId: string | null;
+  showProperties: boolean;
+  showDebug: boolean;
+  rightWidth: number | string;
+  debugWidth: number | string;
+  editorTheme: 'dark' | 'light' | 'system' | string;
+  setEditorTheme: (theme: 'dark' | 'light' | 'system') => void;
+  saving: boolean;
+  handleSave: () => Promise<boolean>;
+  formId?: string;
+  publishing: boolean;
+  setPublishing: (pub: boolean) => void;
+}
+
 export function Workspaces({
   editorView,
   setEditorView,

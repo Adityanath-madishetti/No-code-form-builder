@@ -23,18 +23,17 @@ import {
 } from '@/form/logic/logicTypes';
 import { useFormStore } from '@/form/store/form.store';
 import { DependencyGraph } from './DependencyGraph';
+import { nanoid } from 'nanoid';
 
 type RuleFilter = 'all' | RuleType | 'formula';
 type RuleSort = 'updated_desc' | 'updated_asc' | 'name_asc' | 'name_desc';
 
-type ContextMenuState =
-  | {
-      kind: 'rule' | 'formula';
-      id: string;
-      x: number;
-      y: number;
-    }
-  | null;
+type ContextMenuState = {
+  kind: 'rule' | 'formula';
+  id: string;
+  x: number;
+  y: number;
+} | null;
 
 const RULE_LABELS: Record<RuleType, string> = {
   field: 'Field',
@@ -101,10 +100,14 @@ export function LogicPanel() {
         case 'name_desc':
           return b.name.localeCompare(a.name);
         case 'updated_asc':
-          return new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
+          return (
+            new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime()
+          );
         case 'updated_desc':
         default:
-          return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+          return (
+            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+          );
       }
     });
 
@@ -152,7 +155,8 @@ export function LogicPanel() {
           variant="outline"
           size="sm"
           className="h-6 text-[11px]"
-          onClick={() => addRule(`New ${RULE_LABELS[newRuleType]} Rule`, newRuleType)}
+          onClick={() => addRule(`New Rule ${nanoid(12)}`, newRuleType)}
+          //${RULE_LABELS[newRuleType]}
         >
           <Zap className="mr-1 h-3 w-3" />
           Add Rule
@@ -230,7 +234,7 @@ export function LogicPanel() {
 
       {filteredRules.length > 0 && (
         <div>
-          <h4 className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+          <h4 className="mb-1.5 text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
             Rules ({filteredRules.length})
           </h4>
           <div className="space-y-1">
@@ -261,7 +265,7 @@ export function LogicPanel() {
                         isActive ? 'text-amber-500' : 'text-muted-foreground'
                       }`}
                     />
-                    <span className="flex-1 min-w-0 truncate text-xs font-medium">
+                    <span className="min-w-0 flex-1 truncate text-xs font-medium">
                       {rule.name}
                     </span>
                     <span className="shrink-0 rounded bg-muted px-1 py-0 text-[9px]">
@@ -309,7 +313,7 @@ export function LogicPanel() {
 
       {filteredFormulas.length > 0 && (
         <div>
-          <h4 className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+          <h4 className="mb-1.5 text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
             Formulas ({filteredFormulas.length})
           </h4>
           <div className="space-y-1">
@@ -340,7 +344,7 @@ export function LogicPanel() {
                         isActive ? 'text-violet-500' : 'text-muted-foreground'
                       }`}
                     />
-                    <span className="flex-1 min-w-0 truncate text-xs font-medium">
+                    <span className="min-w-0 flex-1 truncate text-xs font-medium">
                       {formula.name}
                     </span>
                     <button
@@ -360,7 +364,7 @@ export function LogicPanel() {
                     </button>
                   </div>
                   {formula.expression && (
-                    <p className="mt-0.5 truncate text-[10px] font-mono text-muted-foreground">
+                    <p className="mt-0.5 truncate font-mono text-[10px] text-muted-foreground">
                       {formula.expression}
                     </p>
                   )}
@@ -373,7 +377,7 @@ export function LogicPanel() {
 
       <div className="border-t border-border pt-2">
         <div className="mb-1 flex items-center justify-between">
-          <h4 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+          <h4 className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
             Component Shuffle Stacks ({stacks.length})
           </h4>
           <Button
@@ -392,7 +396,10 @@ export function LogicPanel() {
               ? pages[stack.pageId]?.children || []
               : [];
             return (
-              <div key={stack.stackId} className="rounded border border-border p-2">
+              <div
+                key={stack.stackId}
+                className="rounded border border-border p-2"
+              >
                 <div className="mb-1 flex items-center gap-1">
                   <input
                     value={stack.name}
@@ -406,7 +413,9 @@ export function LogicPanel() {
                       type="checkbox"
                       checked={stack.enabled}
                       onChange={(e) =>
-                        updateStack(stack.stackId, { enabled: e.target.checked })
+                        updateStack(stack.stackId, {
+                          enabled: e.target.checked,
+                        })
                       }
                     />
                     On
@@ -422,7 +431,10 @@ export function LogicPanel() {
                 <select
                   value={stack.pageId}
                   onChange={(e) =>
-                    updateStack(stack.stackId, { pageId: e.target.value, componentIds: [] })
+                    updateStack(stack.stackId, {
+                      pageId: e.target.value,
+                      componentIds: [],
+                    })
                   }
                   className="mb-1 h-6 w-full rounded border border-input bg-background px-1.5 text-[11px]"
                 >
@@ -446,7 +458,9 @@ export function LogicPanel() {
                           onChange={(e) => {
                             const next = e.target.checked
                               ? [...stack.componentIds, componentId]
-                              : stack.componentIds.filter((id) => id !== componentId);
+                              : stack.componentIds.filter(
+                                  (id) => id !== componentId
+                                );
                             updateStack(stack.stackId, { componentIds: next });
                           }}
                         />
@@ -470,7 +484,7 @@ export function LogicPanel() {
         <div className="border-t border-border pt-2">
           <button
             onClick={() => setShowGraph(!showGraph)}
-            className="flex w-full items-center gap-1.5 rounded px-1 py-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+            className="flex w-full items-center gap-1.5 rounded px-1 py-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
             <GitBranch className="h-3 w-3" />
             <span className="flex-1 text-left">Dependency Graph</span>
