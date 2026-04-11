@@ -7,7 +7,10 @@
 
 import { useFormStore } from '@/form/store/form.store';
 import { useShallow } from 'zustand/react/shallow';
-import { getComponentPropsRenderer } from '@/form/registry/componentRegistry';
+import {
+  getComponentDisplayName,
+  getComponentPropsRenderer,
+} from '@/form/registry/componentRegistry.helpers';
 import { Settings2, EyeOff } from 'lucide-react';
 import { useMemo } from 'react';
 import { inp } from '@/form/components/ComponentRender.Helper';
@@ -30,6 +33,11 @@ export function ComponentPropertiesPanel() {
   const SettingsRenderer = useMemo(() => {
     if (!component) return null;
     return getComponentPropsRenderer(component.id);
+  }, [component]);
+
+  const componentDisplayName = useMemo(() => {
+    if (!component) return '';
+    return getComponentDisplayName(component.id);
   }, [component]);
 
   // Nothing selected
@@ -65,7 +73,7 @@ export function ComponentPropertiesPanel() {
       {/* Component type badge */}
       <div className="flex items-center gap-2 border-b border-border pb-3">
         <span className="text-[10px] font-bold tracking-widest text-muted-foreground/50 uppercase">
-          {component.metadata.label}
+          {componentDisplayName}
         </span>
       </div>
 

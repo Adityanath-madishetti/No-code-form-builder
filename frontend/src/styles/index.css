@@ -8,8 +8,6 @@
 @import './form-theme.css';
 @import './theming-page.css';
 
-@import '@heroui/styles';
-
 @custom-variant dark (&:is(.dark *));
 
 :root {

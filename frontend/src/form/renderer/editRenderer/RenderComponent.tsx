@@ -1,8 +1,6 @@
 // src/form/renderer/editRenderer/RenderComponent.tsx
-import {
-  componentRenderers,
-  type AnyFormComponent,
-} from '@/form/registry/componentRegistry';
+import type { AnyFormComponent } from '@/form/registry/componentRegistry';
+import { componentRenderers } from '@/form/registry/componentRegistry.helpers';
 import { useFormMode } from '@/form/context/FormModeContext';
 import { SelectableComponent } from '@/form/renderer/SelectableWrapper';
 import type { PageID } from '@/form/components/base';

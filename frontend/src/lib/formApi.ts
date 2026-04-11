@@ -16,7 +16,7 @@ import type {
 } from '@/form/logic/logicTypes';
 import type { Workflow } from '@/form/workflow/workflowTypes';
 import type { AnyFormComponent } from '@/form/registry/componentRegistry';
-import { deserializeComponent } from '@/form/registry/componentRegistry';
+import { deserializeComponent } from '@/form/registry/componentRegistry.helpers';
 import type { ComponentID } from '@/form/components/base';
 
 import {

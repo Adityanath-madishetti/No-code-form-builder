@@ -5,7 +5,7 @@ import { useForm, FormProvider } from 'react-hook-form';
 import { runtimeFormSelector, useRuntimeFormStore } from './runtimeForm.store';
 import { useShallow } from 'zustand/react/shallow';
 import { backendToFrontend } from '@/lib/frontendBackendCompArray';
-import { getComponentRenderer } from '@/form/registry/componentRegistry';
+import { getComponentRenderer } from '@/form/registry/componentRegistry.helpers';
 import type { ComponentID } from '@/form/components/base';
 import { FormLogicEngine } from '@/form/logic/formLogicEngine';
 import { Button } from '@/components/ui/button';

@@ -1,6 +1,5 @@
 // src/form/registry/componentRegistry.ts
 
-import type { ComponentType } from 'react';
 import {
   ComponentIDs,
   type ComponentID,
@@ -128,13 +127,13 @@ export type ComponentValidationMap = {
    HELPERS
 ───────────────────────────── */
 
-type TypedFormComponent<K extends ComponentID> = FormComponent<
+export type TypedFormComponent<K extends ComponentID> = FormComponent<
   K,
   ComponentPropsMap[K],
   ComponentValidationMap[K]
 >;
 
-type TypedSerializedComponent<K extends ComponentID> = SerializedComponent<
+export type TypedSerializedComponent<K extends ComponentID> = SerializedComponent<
   K,
   ComponentPropsMap[K],
   ComponentValidationMap[K]
@@ -149,7 +148,7 @@ type SettingsRenderer<K extends ComponentID> = React.ComponentType<{
   onChange: (props: ComponentPropsMap[K]) => void;
 }>;
 
-type RegistryEntry<K extends ComponentID> = {
+export type RegistryEntry<K extends ComponentID> = {
   id: K;
   catalog: {
     label: string;
@@ -168,7 +167,7 @@ type RegistryEntry<K extends ComponentID> = {
   deserialize: (json: TypedSerializedComponent<K>) => TypedFormComponent<K>;
 };
 
-type Registry = {
+export type Registry = {
   [K in ComponentID]: RegistryEntry<K>;
 };
 
@@ -199,7 +198,7 @@ function makeEntry<K extends ComponentID>(
 /* ─────────────────────────────
    REGISTRY
 ───────────────────────────── */
-const registry: Registry = {
+export const registry: Registry = {
   [ComponentIDs.TextBox]: makeEntry(
     ComponentIDs.TextBox,
     'Text Box',
@@ -232,7 +231,7 @@ const registry: Registry = {
 
   [ComponentIDs.SingleLineInput]: makeEntry(
     ComponentIDs.SingleLineInput,
-    'Single Line',
+    'Single Line\nText',
     'Single line text input',
     'Text',
     (id) => createSingleLineInputComponent(id, { label: 'Text' }),
@@ -242,7 +241,7 @@ const registry: Registry = {
 
   [ComponentIDs.MultiLineInput]: makeEntry(
     ComponentIDs.MultiLineInput,
-    'Multi Line',
+    'Multi Line\nText',
     'Textarea input',
     'Text',
     (id) => createMultiLineInputComponent(id, { label: 'Textarea' }),
@@ -302,68 +301,6 @@ const registry: Registry = {
 };
 
 /* ─────────────────────────────
-   REGISTRY ACCESSORS
-───────────────────────────── */
-
-export function getComponentRenderer<K extends ComponentID>(
-  id: K
-): ComponentRenderer<ComponentPropsMap[K], ComponentValidationMap[K]> | null {
-  return registry[id].renderers.main;
-}
-
-export function getComponentPropsRenderer<K extends ComponentID>(
-  id: K
-):
-  | ComponentRenderer<ComponentPropsMap[K], ComponentValidationMap[K]>
-  | ComponentType<unknown>
-  | null {
-  return registry[id].renderers.settings;
-}
-
-export function createComponent<K extends ComponentID>(
-  id: K,
-  instanceId: string
-): TypedFormComponent<K> {
-  return registry[id].create(instanceId);
-}
-
-export function serializeComponent<K extends ComponentID>(
-  component: TypedFormComponent<K>
-): TypedSerializedComponent<K> {
-  return {
-    id: component.id,
-    instanceId: component.instanceId,
-    metadata: component.metadata,
-    props: component.props,
-    validation: component.validation,
-  };
-}
-
-export function deserializeComponent<K extends ComponentID>(
-  json: TypedSerializedComponent<K>
-): TypedFormComponent<K> {
-  return registry[json.id].deserialize(json);
-}
-
-/* ─────────────────────────────
-   FLAT RENDERER MAP
-───────────────────────────── */
-
-export const componentRenderers: {
-  [K in ComponentID]: ComponentRenderer<
-    ComponentPropsMap[K],
-    ComponentValidationMap[K]
-  > | null;
-} = Object.fromEntries(
-  Object.entries(registry).map(([key, entry]) => [key, entry.renderers.main])
-) as {
-  [K in ComponentID]: ComponentRenderer<
-    ComponentPropsMap[K],
-    ComponentValidationMap[K]
-  > | null;
-};
-
-/* ─────────────────────────────
    CATALOG
 ───────────────────────────── */
 
@@ -374,6 +311,13 @@ export interface CatalogEntry<K extends ComponentID = ComponentID> {
   category: string;
   create: (instanceId: string) => TypedFormComponent<K>;
 }
+
+export type AnyFormComponent = FormComponent<ComponentID, unknown, unknown>;
+export type AnySerializedComponent = SerializedComponent<
+  ComponentID,
+  unknown,
+  unknown
+>;
 
 // ── IDs of components currently enabled in the catalog ──
 const ENABLED_CATALOG_IDS: ReadonlySet<ComponentID> = new Set<ComponentID>([

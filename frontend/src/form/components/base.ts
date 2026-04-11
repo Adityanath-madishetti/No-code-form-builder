@@ -162,53 +162,6 @@ export interface FormMetadata {
   version?: number;
 }
 
-import type {
-  formFontName,
-  formThemeColor,
-  formThemeMode,
-} from '../theme/formTheme';
-
-export interface Font {
-  family: formFontName;
-}
-
-// ── Extended theme types ──
-
-export interface FormThemeBackground {
-  type: 'solid' | 'gradient' | 'image' | 'pattern';
-  solidColor?: string;
-  gradient?: { from: string; to: string; angle: number };
-  imageUrl?: string;
-  pattern?: 'dots' | 'grid' | 'diagonal' | 'waves' | 'noise';
-  blur?: boolean;
-  overlayOpacity?: number; // 0–100
-  fixed?: boolean; // fixed vs scroll
-}
-
-export interface FormThemeLayout {
-  formWidth: '600px' | '800px' | 'full';
-  cardStyle: 'flat' | 'elevated' | 'glassmorphism';
-  spacing: 'compact' | 'comfortable' | 'spacious';
-}
-
-export interface FormThemeComponentProps {
-  shadow: 'none' | 'sm' | 'md' | 'lg';
-  borderRadius: 'none' | 'sm' | 'md' | 'lg' | 'full';
-  borderWidth: '0' | '1' | '2';
-}
-
-export interface FormTheme {
-  color: formThemeColor;
-  mode: formThemeMode;
-  headingFont: Font;
-  bodyFont: Font;
-  primaryColor?: string;
-  textColor?: string;
-  background?: FormThemeBackground;
-  layout?: FormThemeLayout;
-  componentProps?: FormThemeComponentProps;
-}
-
 export interface AccessIdentity {
   uid?: string;
   email: string;
@@ -237,7 +190,6 @@ export interface FormSettings {
 export interface Form {
   readonly id: FormID;
   name: string;
-  theme: FormTheme | null;
   metadata: FormMetadata;
   access: FormAccess;
   settings: FormSettings;
