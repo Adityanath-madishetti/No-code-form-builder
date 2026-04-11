@@ -14,7 +14,7 @@ import {
   DRAG_CATALOG_GROUP_ID,
 } from '@/form/utils/DndUtils';
 import { RenderComponent } from './RenderComponent';
-import { ComponentAdderButton } from '@/pages/editor/canvas/ComponentAdderButton';
+import { ComponentAdderButton } from '@/pages/editor/builder/ComponentAdderButton';
 
 export const RenderPage = ({
   pageId,
@@ -35,7 +35,11 @@ export const RenderPage = ({
 
   const { ref: contentDropRef } = useDroppable({
     id: `content-drop-${pageId}`,
-    accept: [DRAG_COMPONENT_ID, DRAG_CATALOG_COMPONENT_ID, DRAG_CATALOG_GROUP_ID],
+    accept: [
+      DRAG_COMPONENT_ID,
+      DRAG_CATALOG_COMPONENT_ID,
+      DRAG_CATALOG_GROUP_ID,
+    ],
     data: { type: DRAG_PAGE_ID, pageId: pageId },
   });
 
@@ -89,7 +93,10 @@ export const RenderPage = ({
           ))}
           {/* Adder button AFTER last component */}
           {mode === 'edit' && components.length > 0 && (
-            <ComponentAdderButton pageId={pageId} insertIndex={components.length} />
+            <ComponentAdderButton
+              pageId={pageId}
+              insertIndex={components.length}
+            />
           )}
         </div>
       </div>

@@ -27,7 +27,7 @@ import type {
 
 import { RULE_TYPES } from '@/form/logic/logicTypes';
 import { ConditionBuilder } from './ConditionBuilder';
-import { ActionRow } from '../canvas/ActionRow';
+import { ActionRow } from '../builder/ActionRow';
 import { FormulaEditor } from './FormulaEditor';
 
 // ── Recursive Action List Component ──
