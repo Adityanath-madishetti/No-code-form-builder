@@ -1,23 +1,23 @@
 import { Rnd } from 'react-rnd';
 import { Bug, PanelLeftClose, PanelRightClose, ArrowLeft, LayoutGrid, Zap, Settings2 } from 'lucide-react';
 
-import { EditorSidebar, type SidebarPanelId } from './components/EditorSidebar';
-import { RightFloatingPanel } from './components/RightFloatingPanel';
-import { SaveButton, PreviewButton, PublishButton } from './components/Workspaces';
+import { EditorSidebar, type SidebarPanelId } from '../sidebar/EditorSidebar';
+import { RightFloatingPanel } from './RightFloatingPanel';
+import { SaveButton, PreviewButton, PublishButton } from './Workspaces';
 
 // Left Side Panels 
-import { ComponentCatalogPanel } from './components/ComponentCatalogPanel';
-import { LogicPanel } from './components/LogicPanel';
+import { ComponentCatalogPanel } from '../sidebar/ComponentCatalogPanel';
+import { LogicPanel } from '../logic/LogicPanel';
 
-import { FormCanvas } from './components/FormCanvas';
-import { PageNavigator } from './components/PageNavigator';
-import { LogicPlayground } from './components/LogicPlayground';
-import { FormPropertiesPanel } from './components/FormPropertiesPanel';
+import { FormCanvas } from '../canvas/FormCanvas';
+import { PageNavigator } from '../canvas/PageNavigator';
+import { LogicPlayground } from '../logic/LogicPlayground';
+import { FormPropertiesPanel } from '../properties/FormPropertiesPanel';
 
 // Right Side Panels
-import { ComponentPropertiesPanel } from './components/ComponentPropertiesPanel';
-import { DebugPanel } from './components/DebugPanel';
-import { KeyboardShortcutsHelp } from './KeyboardShortcutsHelp';
+import { ComponentPropertiesPanel } from '../properties/ComponentPropertiesPanel';
+import { DebugPanel } from '../debug/DebugPanel';
+import { KeyboardShortcutsHelp } from '../KeyboardShortcutsHelp';
 
 const PANEL_TITLES: Record<SidebarPanelId, string> = {
   components: 'Components',

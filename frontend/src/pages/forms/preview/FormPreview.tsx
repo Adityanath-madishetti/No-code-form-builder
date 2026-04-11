@@ -3,13 +3,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Loader2, ArrowLeft, Eye, ArrowRight } from 'lucide-react';
-import { FillFieldRenderer } from './FillFieldRenderer';
+import { FillFieldRenderer } from '../fill/FillFieldRenderer';
+
 import {
   evaluateRuntimeLogic,
   getComponentOrderForPage,
   type RuntimeLogicPayload,
   type RuntimePage,
-} from './runtimeLogic';
+} from '../fill/runtimeLogic';
 
 interface VersionData {
   formId: string;

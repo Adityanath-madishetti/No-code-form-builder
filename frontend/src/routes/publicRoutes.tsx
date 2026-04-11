@@ -1,7 +1,7 @@
-import Login from "../pages/Login/page";
-import FormFill from "../pages/FormFill/FormFill";
-import FormSuccess from "../pages/FormFill/FormSuccess";
-import FormSubmit from "../pages/FormSubmit/FormSubmit";
+import Login from "../pages/auth/LoginPage";
+import FormFill from "../pages/forms/fill/FormFill";
+import FormSuccess from "../pages/forms/fill/FormSuccess";
+import FormSubmit from "../pages/forms/submit/FormSubmit";
 
 export const publicRoutes = [
   {

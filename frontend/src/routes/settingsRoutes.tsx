@@ -1,8 +1,8 @@
-import UserSettingsPage from "../pages/UserSettingsPage";
-import AccountPage from "../pages/AccountPage";
-import EditorThemeTemplatesPage from "../pages/EditorThemeTemplatesPage";
-import ActivityPage from "../pages/ActivityPage";
-import NotificationSettingsPage from "../pages/NotificationSettingsPage";
+import UserSettingsPage from "../pages/settings/UserSettingsPage";
+import AccountPage from "../pages/settings/AccountPage";
+import EditorThemeTemplatesPage from "../pages/settings/EditorThemeTemplatesPage";
+import ActivityPage from "../pages/settings/ActivityPage";
+import NotificationSettingsPage from "../pages/settings/NotificationSettingsPage";
 
 export const settingsRoutes = [
   {

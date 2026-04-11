@@ -1,8 +1,8 @@
 import { DragDropProvider, DragOverlay } from '@dnd-kit/react';
 import { useFormDragHandlers } from '@/form/hooks/useFormDragHandlers';
-import { FormEditorLayout } from './FormEditorLayout';
-import { EditorDragOverlay } from './overlays/EditorDragOverlay';
-import { useFormEditorController } from './hooks/useFormEditorController';
+import { FormEditorLayout } from '../layout/FormEditorLayout';
+import { EditorDragOverlay } from '../overlays/EditorDragOverlay';
+import { useFormEditorController } from '../hooks/useFormEditorController';
 
 export function FormEditorShell({ formId }: { formId: string }) {
   const controller = useFormEditorController(formId);

@@ -9,6 +9,7 @@ import { ArrowLeft, Plus, Calculator, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLogicStore } from '@/form/logic/logic.store';
 import { useFormStore } from '@/form/store/form.store';
+
 import {
   createRuleAction,
   createConditionGroup,
@@ -16,15 +17,17 @@ import {
   ACTION_TYPE_LABELS,
   ACTION_TYPE_COLORS,
 } from '@/form/logic/logicTypes';
+
 import type {
   Condition,
   RuleAction,
   RuleType,
   ActionType,
 } from '@/form/logic/logicTypes';
+
 import { RULE_TYPES } from '@/form/logic/logicTypes';
 import { ConditionBuilder } from './ConditionBuilder';
-import { ActionRow } from './ActionRow';
+import { ActionRow } from '../canvas/ActionRow';
 import { FormulaEditor } from './FormulaEditor';
 
 // ── Recursive Action List Component ──

@@ -1,5 +1,5 @@
 import { FormEditorShell } from './FormEditorShell';
-import { useFormEditorHydration } from './hooks/useFormEditorHydration';
+import { useFormEditorHydration } from '../hooks/useFormEditorHydration';
 
 export function FormEditorLoader({ formId }: { formId: string }) {
   const { formLoaded } = useFormEditorHydration(formId);

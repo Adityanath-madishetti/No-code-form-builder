@@ -1,6 +1,6 @@
-import FormEditor from "../pages/FormEditor/FormEditorPage";
-import FormPreview from "../pages/FormFill/FormPreview";
-import FormReview from "../pages/FormReview/FormReview";
+import FormEditor from "../pages/editor/page/FormEditorPage";
+import FormPreview from "../pages/forms/preview/FormPreview";
+import FormReview from "../pages/forms/review/FormReview";
 
 export const formRoutes = [
   {
