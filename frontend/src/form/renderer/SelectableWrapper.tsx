@@ -30,13 +30,8 @@ import {
 import {
   ContextMenu,
   ContextMenuContent,
-  ContextMenuItem,
-  // ContextMenuSeparator,
-  ContextMenuShortcut,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
-import { Layers } from 'lucide-react';
-// import { Layers, CopyX, Files } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 
 interface Props {
