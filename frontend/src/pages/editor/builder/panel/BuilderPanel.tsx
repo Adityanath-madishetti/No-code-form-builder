@@ -15,6 +15,7 @@ export function BuilderSidePanel({ currentPageIndex }: BuilderSidePanelProps) {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
+  const [isResizing, setIsResizing] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -23,10 +24,10 @@ export function BuilderSidePanel({ currentPageIndex }: BuilderSidePanelProps) {
     };
   }, []);
 
-  /* ── Drag-to-resize ── */
   const onDividerMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     dragging.current = true;
+    setIsResizing(true);
 
     const onMouseMove = (ev: MouseEvent) => {
       if (!dragging.current || !containerRef.current) return;
@@ -34,8 +35,8 @@ export function BuilderSidePanel({ currentPageIndex }: BuilderSidePanelProps) {
       const rect = containerRef.current.getBoundingClientRect();
       const y = ev.clientY - rect.top;
 
-      const availableHeight = rect.height - 32 - 6 - 32; // Total minus headers and divider
-      const offsetTop = y - 32; // Distance from top of available space
+      const availableHeight = rect.height - 32 - 6 - 32;
+      const offsetTop = y - 32;
       const ratio = Math.max(0.15, Math.min(0.85, offsetTop / availableHeight));
 
       setSplitRatio(ratio);
@@ -43,6 +44,7 @@ export function BuilderSidePanel({ currentPageIndex }: BuilderSidePanelProps) {
 
     const stopDragging = () => {
       dragging.current = false;
+      setIsResizing(false);
 
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', stopDragging);
@@ -66,7 +68,11 @@ export function BuilderSidePanel({ currentPageIndex }: BuilderSidePanelProps) {
   return (
     <div
       ref={containerRef}
-      className="grid h-full transition-[grid-template-rows] duration-300 ease-in-out"
+      className={`grid h-full ${
+        !isResizing
+          ? 'transition-[grid-template-rows] duration-300 ease-in-out'
+          : ''
+      }`}
       style={{
         gridTemplateRows: `32px ${compFr}fr 6px 32px ${propFr}fr`,
       }}

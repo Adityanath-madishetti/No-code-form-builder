@@ -28,9 +28,6 @@ export function useFormDragHandlers() {
     const sourceData = source.data;
     const targetData = target.data;
 
-    // ==========================================
-    // MOVE EXISTING COMPONENTS OVER CANAVAS
-    // ==========================================
     if (sourceData?.type === DRAG_COMPONENT_ID) {
       const instanceId = sourceData.instanceId;
       const currentPage = Object.values(pages).find((p) =>
