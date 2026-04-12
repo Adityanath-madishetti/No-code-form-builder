@@ -1,7 +1,7 @@
 // src/form/renderer/SelectableWrapper.tsx
 import { useState } from 'react';
 import { formSelectors, useFormStore } from '@/form/store/form.store';
-import { useGroupStore } from '@/form/store/group.store';
+
 import type { PageID } from '@/form/components/base';
 // import { TEMP_PAGE_PLACEHOLDER_ID } from '@/form/utils/DndUtils';
 
@@ -564,40 +564,6 @@ export const SelectableComponent = ({
         </div>
       </ContextMenuTrigger>
       <ContextMenuContent className="w-56 rounded-none shadow-none">
-        <ContextMenuItem
-          className="rounded-none"
-          onClick={(e) => {
-            e.stopPropagation();
-            let componentsToGroup = [];
-            if (isSelected) {
-              componentsToGroup = selectedComponents;
-            } else {
-              componentsToGroup = [component];
-            }
-            if (componentsToGroup.length > 0) {
-              const groupName = window.prompt(
-                `Enter a name for the new group containing ${componentsToGroup.length} component(s):`,
-                'New Group'
-              );
-              if (groupName) {
-                const { addGroup } = useGroupStore.getState();
-                addGroup(groupName, componentsToGroup);
-                clearSelectedComponents();
-              }
-            }
-          }}
-        >
-          <Layers className="mr-2 h-4 w-4" />
-          <span>Save as Group</span>
-          {isSelected && selectedComponents.length > 1 && (
-            <ContextMenuShortcut>
-              {selectedComponents.length} items
-            </ContextMenuShortcut>
-          )}
-        </ContextMenuItem>
-
-        {/* <ContextMenuSeparator /> */}
-
         {/* <ContextMenuItem
           onClick={(e) => {
             e.stopPropagation();
@@ -669,7 +635,7 @@ export const SelectablePage = ({
 
   const isActive = activePageID === pageId;
 
-  // TODO: handle the hover issue. 
+  // TODO: handle the hover issue.
 
   return (
     <div
