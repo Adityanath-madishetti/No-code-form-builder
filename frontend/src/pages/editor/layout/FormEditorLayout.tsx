@@ -1,4 +1,13 @@
-import { Bug, ArrowLeft, Hammer, Zap, Settings2 } from 'lucide-react';
+import { useState } from 'react';
+import {
+  Bug,
+  ArrowLeft,
+  Hammer,
+  Zap,
+  Settings2,
+  PanelLeftClose,
+  PanelLeft,
+} from 'lucide-react';
 
 import { RightFloatingPanel } from './RightFloatingPanel';
 import { SaveButton, PreviewButton, PublishButton } from './WorkspaceBar';
@@ -8,38 +17,21 @@ import { PageNavigator } from '../builder/PageNavigator';
 import { FormPropertiesPanel } from '../settings/FormSettingsPage';
 
 // Left Panel content
-import { ComponentPropertiesPanel } from '../builder/ComponentPropertiesPanel';
+import { BuilderSidePanel } from '../builder/panel/BuilderPanel';
 import { LogicPanel } from '../logic/LogicPanel';
 import { DebugPanel } from '../debug/DebugPanel';
 import { KeyboardShortcutsHelp } from '../KeyboardShortcutsHelp';
 
-/* ─────────────────────────────
-   Left Panel — contextual content
-───────────────────────────── */
-function LeftPanelContent({ editorView }: { editorView: string }) {
-  if (editorView === 'logic') {
-    return (
-      <div className="flex h-full flex-col">
-        <div className="flex-1 overflow-y-auto p-3">
-          <LogicPanel />
-        </div>
-      </div>
-    );
-  }
-
-  // Default: Builder workspace → Properties
+function LogicLeftPanel() {
   return (
     <div className="flex h-full flex-col">
-      <div className="flex-1 overflow-y-auto">
-        <ComponentPropertiesPanel />
+      <div className="flex-1 overflow-y-auto p-3">
+        <LogicPanel />
       </div>
     </div>
   );
 }
 
-/* ─────────────────────────────
-   Main Layout
-───────────────────────────── */
 export function FormEditorLayout({ controller }: any) {
   const { state, actions } = controller;
 
@@ -54,15 +46,31 @@ export function FormEditorLayout({ controller }: any) {
     handleSave,
   } = actions;
 
-  // Show the left panel for builder and logic views (not for formProperties)
+  // Panel visibility
   const showLeftPanel = editorView === 'builder' || editorView === 'logic';
+  const [leftPanelOpen, setLeftPanelOpen] = useState(true);
 
   return (
     <div className="isolate flex h-screen w-full flex-col overflow-hidden bg-neutral-50 dark:bg-neutral-950">
       {/* WORKSPACE BAR — full width, always on top */}
       <div className="flex shrink-0 items-center justify-between border-b border-border bg-background px-3 py-[5.5px]">
-        {/* Left: workspace tabs */}
+        {/* Left: panel toggle + workspace tabs */}
         <div className="flex items-center gap-1">
+          {/* Panel toggle button */}
+          {showLeftPanel && (
+            <button
+              onClick={() => setLeftPanelOpen((prev: boolean) => !prev)}
+              className="mr-1 flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              title={leftPanelOpen ? 'Close panel' : 'Open panel'}
+            >
+              {leftPanelOpen ? (
+                <PanelLeftClose className="h-3.5 w-3.5" />
+              ) : (
+                <PanelLeft className="h-3.5 w-3.5" />
+              )}
+            </button>
+          )}
+
           <button
             onClick={() => setEditorView('formProperties')}
             className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors ${
@@ -114,13 +122,16 @@ export function FormEditorLayout({ controller }: any) {
 
       {/* BODY — panels below workspace bar */}
       <div className="relative flex flex-1 overflow-hidden">
-        {/* LEFT PANEL — contextual */}
-        {showLeftPanel && (
+        {/* LEFT PANEL — contextual, collapsible */}
+        {showLeftPanel && leftPanelOpen && (
           <div
             className="h-full shrink-0 overflow-hidden border-r border-border bg-background"
             style={{ width: state.rightWidth }}
           >
-            <LeftPanelContent editorView={editorView} />
+            {editorView === 'builder' && (
+              <BuilderSidePanel currentPageIndex={currentPageIndex} />
+            )}
+            {editorView === 'logic' && <LogicLeftPanel />}
           </div>
         )}
 
@@ -156,7 +167,7 @@ export function FormEditorLayout({ controller }: any) {
             </div>
           )}
 
-          {/* FORM PROPERTIES (full width, no right panel) */}
+          {/* FORM PROPERTIES (full width, no left panel) */}
           {editorView === 'formProperties' && (
             <div className="flex-1 overflow-y-auto p-3">
               <FormPropertiesPanel />
