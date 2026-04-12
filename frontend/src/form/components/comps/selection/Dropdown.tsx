@@ -15,7 +15,6 @@ import { Plus, Trash2 } from 'lucide-react';
 
 import { useFormContext } from 'react-hook-form';
 import { useFormMode } from '@/form/context/FormModeContext';
-import { nanoid } from 'nanoid';
 
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -48,7 +47,6 @@ export const createDropdownComponent = (
   metadata: ComponentMetadata,
   props?: Partial<DropdownProps>
 ): FormComponent<'Dropdown', DropdownProps, BasicValidation> => {
-  metadata.label = `${metadata.label} ${nanoid(12)}`;
   return createComponent(
     ComponentIDs.Dropdown,
     instanceId,

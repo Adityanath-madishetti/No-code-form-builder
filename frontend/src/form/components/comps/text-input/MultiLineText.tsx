@@ -10,7 +10,6 @@ import type { RendererProps } from '../../base';
 import { useFormStore } from '@/form/store/form.store';
 
 import { inp, lbl } from '../../ComponentRender.Helper';
-import { nanoid } from 'nanoid';
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -31,7 +30,6 @@ export const createMultiLineInputComponent = (
   metadata: ComponentMetadata,
   props?: Partial<MultiLineInputProps>
 ) => {
-  metadata.label = `${metadata.label} ${nanoid(12)}`;
   return createComponent(
     ComponentIDs.MultiLineInput,
     instanceId,

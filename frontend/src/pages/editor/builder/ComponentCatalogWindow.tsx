@@ -18,6 +18,7 @@ import { TbDecimal } from 'react-icons/tb';
 import { catalogRegistry } from '@/form/registry/componentRegistry';
 import { useFormStore } from '@/form/store/form.store';
 import type { PageID } from '@/form/components/base';
+import { getLeastUnoccupiedLabel } from '@/form/utils/LabelGenerator';
 
 /* ── Icon map ── */
 export const COMPONENT_ICONS: Record<string, React.ElementType> = {
@@ -192,6 +193,15 @@ export function ComponentWindow({
 
     const instanceId = `${entry.id}-${crypto.randomUUID()}`;
     const component = entry.create(instanceId);
+
+    if (component.metadata.label) {
+      const allComps = Object.values(useFormStore.getState().components);
+      component.metadata.label = getLeastUnoccupiedLabel(
+        allComps,
+        component.metadata.label
+      );
+    }
+
     addComponent(pageId, component, insertIndex);
 
     // Select the newly inserted component

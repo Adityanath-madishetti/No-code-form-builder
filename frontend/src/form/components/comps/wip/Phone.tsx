@@ -10,7 +10,6 @@ import { ComponentIDs, createComponent } from '../base';
 import { inp, lbl } from '../ComponentRender.Helper';
 import { Controller, useFormContext } from 'react-hook-form';
 import { useFormMode } from '@/form/context/FormModeContext';
-import { nanoid } from 'nanoid';
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -55,7 +54,6 @@ export const createPhoneComponent = (
   metadata: ComponentMetadata,
   props?: Partial<PhoneProps>
 ) => {
-  metadata.label = `${metadata.label} ${nanoid(12)}`;
   return createComponent(
     ComponentIDs.Phone,
     instanceId,

@@ -15,7 +15,6 @@ import { Plus, Trash2 } from 'lucide-react';
 
 import { useFormContext, Controller } from 'react-hook-form';
 import { useFormMode } from '@/form/context/FormModeContext';
-import { nanoid } from 'nanoid';
 
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -46,7 +45,6 @@ export const createCheckboxComponent = (
   metadata: ComponentMetadata,
   props?: Partial<CheckboxProps>
 ): FormComponent<'Checkbox', CheckboxProps, CheckboxValidation> => {
-  metadata.label = `${metadata.label} ${nanoid(12)}`;
   return createComponent(
     ComponentIDs.Checkbox,
     instanceId,

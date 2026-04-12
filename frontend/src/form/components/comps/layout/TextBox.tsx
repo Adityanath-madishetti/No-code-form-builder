@@ -16,7 +16,6 @@ import {
   sharedProseClasses,
 } from '@/components/RichTextEditor';
 
-import { nanoid } from 'nanoid';
 import { Card, CardContent } from '@/components/ui/card';
 
 export interface TextBoxProps extends BaseComponentProps {
@@ -28,7 +27,6 @@ export const createTextBoxComponent = (
   metadata: ComponentMetadata,
   props?: Partial<TextBoxProps>
 ): FormComponent<'Textbox', TextBoxProps, BasicValidation> => {
-  metadata.label = `${metadata.label} ${nanoid(12)}`;
   return createComponent(
     ComponentIDs.TextBox,
     instanceId,

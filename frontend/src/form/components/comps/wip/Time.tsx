@@ -10,7 +10,6 @@ import type { BaseComponentProps } from '../base';
 import { inp, lbl, Card, Q } from '../ComponentRender.Helper';
 import { useFormContext } from 'react-hook-form';
 import { useFormMode } from '@/form/context/FormModeContext';
-import { nanoid } from 'nanoid';
 
 export interface TimeProps extends BaseComponentProps {
   questionText: string;
@@ -30,7 +29,6 @@ export const createTimeComponent = (
   metadata: ComponentMetadata,
   props?: Partial<TimeProps>
 ) => {
-  metadata.label = `${metadata.label} ${nanoid(12)}`;
   return createComponent(
     ComponentIDs.Time,
     instanceId,

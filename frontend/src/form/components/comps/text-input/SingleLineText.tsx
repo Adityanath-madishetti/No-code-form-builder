@@ -12,7 +12,6 @@ import { useFormMode } from '@/form/context/FormModeContext';
 import { inp, lbl } from '../../ComponentRender.Helper';
 
 import { useFormContext } from 'react-hook-form';
-import { nanoid } from 'nanoid';
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -31,7 +30,6 @@ export const createSingleLineInputComponent = (
   metadata: ComponentMetadata,
   props?: Partial<SingleLineInputProps>
 ) => {
-  metadata.label = `${metadata.label} ${nanoid(12)}`;
   return createComponent(
     ComponentIDs.SingleLineInput,
     instanceId,

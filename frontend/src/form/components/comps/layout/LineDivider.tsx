@@ -1,5 +1,4 @@
 // src/form/components/textBox.ts
-import { nanoid } from 'nanoid';
 import type {
   BaseComponentProps,
   ComponentMetadata,
@@ -24,7 +23,6 @@ export const createLineDividerComponent = (
   metadata: ComponentMetadata,
   props?: Partial<LineDividerProps>
 ) => {
-  metadata.label = `${metadata.label} ${nanoid(12)}`;
   return createComponent(
     ComponentIDs.LineDivider,
     instanceId,

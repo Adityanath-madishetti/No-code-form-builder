@@ -10,7 +10,6 @@ import { ComponentIDs, createComponent } from '../../base';
 import { inp, lbl } from '../../ComponentRender.Helper';
 import { useFormContext } from 'react-hook-form';
 import { useFormMode } from '@/form/context/FormModeContext';
-import { nanoid } from 'nanoid';
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -30,7 +29,6 @@ export const createAddressBlockComponent = (
   metadata: ComponentMetadata,
   props?: Partial<AddressBlockProps>
 ) => {
-  metadata.label = `${metadata.label} ${nanoid(12)}`;
   return createComponent(
     ComponentIDs.AddressBlock,
     instanceId,

@@ -14,7 +14,6 @@ import { Circle, Heart, Star } from 'lucide-react';
 import { useFormMode } from '@/form/context/FormModeContext';
 import { useFormContext } from 'react-hook-form';
 import { useState } from 'react';
-import { nanoid } from 'nanoid';
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -36,7 +35,6 @@ export const createRatingScaleComponent = (
   metadata: ComponentMetadata,
   props?: Partial<RatingScaleProps>
 ) => {
-  metadata.label = `${metadata.label} ${nanoid(12)}`;
   return createComponent(
     ComponentIDs.RatingScale,
     instanceId,

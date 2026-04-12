@@ -4,7 +4,6 @@ import { ComponentIDs, createComponent } from '../../base';
 
 import type { BaseComponentProps, NoValidation } from '../../base';
 import { inp, lbl } from '../../ComponentRender.Helper';
-import { nanoid } from 'nanoid';
 import type { JSX } from 'react';
 
 export interface HeaderProps extends BaseComponentProps {
@@ -18,7 +17,6 @@ export const createHeaderComponent = (
   metadata: ComponentMetadata,
   props?: Partial<HeaderProps>
 ) => {
-  metadata.label = `${metadata.label} ${nanoid(12)}`;
   return createComponent(
     ComponentIDs.Header,
     instanceId,

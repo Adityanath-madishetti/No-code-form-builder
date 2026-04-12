@@ -10,7 +10,6 @@ import { ComponentIDs, createComponent } from '../../base';
 import { inp, lbl } from '../../ComponentRender.Helper';
 import { useFormContext } from 'react-hook-form';
 import { useFormMode } from '@/form/context/FormModeContext';
-import { nanoid } from 'nanoid';
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -36,7 +35,6 @@ export const createSliderComponent = (
   metadata: ComponentMetadata,
   props?: Partial<SliderProps>
 ) => {
-  metadata.label = `${metadata.label} ${nanoid(12)}`;
   return createComponent(
     ComponentIDs.Slider,
     instanceId,

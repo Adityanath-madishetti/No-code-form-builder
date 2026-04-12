@@ -10,7 +10,6 @@ import { ComponentIDs, createComponent } from '../../base';
 import { inp, lbl } from '../../ComponentRender.Helper';
 import { useFormContext } from 'react-hook-form';
 import { useFormMode } from '@/form/context/FormModeContext';
-import { nanoid } from 'nanoid';
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -34,7 +33,6 @@ export const createLinearScaleComponent = (
   metadata: ComponentMetadata,
   props?: Partial<LinearScaleProps>
 ) => {
-  metadata.label = `${metadata.label} ${nanoid(12)}`;
   return createComponent(
     ComponentIDs.LinearScale,
     instanceId,
