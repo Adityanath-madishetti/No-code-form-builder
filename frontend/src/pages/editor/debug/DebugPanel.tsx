@@ -16,7 +16,10 @@ export function DebugPanel() {
     try {
       if (!form) throw new Error('No form loaded');
       const serialized = serializeFormFromState({ form, pages, components });
-      return { json: JSON.stringify(serialized, null, 2), error: null as string | null };
+      return {
+        json: JSON.stringify(serialized, null, 2),
+        error: null as string | null,
+      };
     } catch (e) {
       return { json: '', error: String(e) };
     }
@@ -29,10 +32,10 @@ export function DebugPanel() {
   };
 
   return (
-    <div className="flex h-full flex-col gap-3">
+    <div className="flex h-full flex-col gap-3 pt-2">
       {/* Header actions */}
       <div className="flex items-center gap-2">
-        <span className="flex-1 text-xs font-medium uppercase tracking-widest text-muted-foreground">
+        <span className="flex-1 pl-2 text-xs font-medium tracking-widest text-muted-foreground uppercase">
           Form JSON
         </span>
         <button
@@ -56,20 +59,16 @@ export function DebugPanel() {
       </div>
 
       {error ? (
-        <div className="rounded-md bg-destructive/10 p-3 text-xs text-destructive">
+        <div className="bg-destructive/10 p-3 text-xs text-destructive">
           {error}
         </div>
       ) : (
-        <div className="min-h-0 flex-1 overflow-auto rounded-lg bg-muted/60 p-3">
-          <pre className="text-[11px] leading-relaxed text-foreground/80 whitespace-pre-wrap break-all">
+        <div className="min-h-0 flex-1 overflow-auto bg-muted/60 p-3">
+          <pre className="text-[11px] leading-relaxed break-all whitespace-pre-wrap text-foreground/80">
             {json}
           </pre>
         </div>
       )}
-
-      <p className="text-center text-[10px] text-muted-foreground/50">
-        Debug only — removed at release
-      </p>
     </div>
   );
 }

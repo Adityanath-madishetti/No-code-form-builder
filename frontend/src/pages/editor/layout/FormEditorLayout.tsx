@@ -17,11 +17,56 @@ import { PageNavigator } from '../builder/PageNavigator';
 import { FormPropertiesPanel } from '../settings/FormSettingsPage';
 
 // Left Panel content
-import { BuilderSidePanel } from '../builder/panel/BuilderPanel';
+import { ComponentPropertiesPanel } from '../builder/panel/ComponentProperties';
+import { ComponentListPanel } from '../builder/panel/ComponentList';
 import { LogicPanel } from '../logic/LogicPanel';
 import { DebugPanel } from '../debug/DebugPanel';
 import { KeyboardShortcutsHelp } from '../KeyboardShortcutsHelp';
 
+import { useFormStore } from '@/form/store/form.store';
+
+/* ─────────────────────────────
+   Left Panel — Builder view (split sections)
+───────────────────────────── */
+function BuilderLeftPanel({ currentPageIndex }: { currentPageIndex: number }) {
+  const form = useFormStore((s) => s.form);
+  const currentPageId = form?.pages[currentPageIndex] ?? null;
+
+  return (
+    <div className="flex h-full flex-col">
+      {/* Top section: Component List */}
+      <div
+        className="flex shrink-0 flex-col border-b border-border"
+        style={{ height: '33%' }}
+      >
+        <div className="flex h-8 shrink-0 items-center px-3">
+          <span className="text-[10px] font-semibold tracking-wider text-muted-foreground/50 uppercase">
+            Components
+          </span>
+        </div>
+        <div className="flex-1 overflow-y-auto">
+          <ComponentListPanel pageId={currentPageId} />
+        </div>
+      </div>
+
+      {/* Bottom section: Component Properties */}
+      <div className="flex min-h-0 flex-1 flex-col">
+        <div className="flex h-8 shrink-0 items-center px-3">
+          <span className="text-[10px] font-semibold tracking-wider text-muted-foreground/50 uppercase">
+            Properties
+          </span>
+        </div>
+        <div className="flex-1 overflow-y-auto">
+          <ComponentPropertiesPanel />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────
+   Left Panel — Logic view
+───────────────────────────── */
 function LogicLeftPanel() {
   return (
     <div className="flex h-full flex-col">
@@ -32,6 +77,9 @@ function LogicLeftPanel() {
   );
 }
 
+/* ─────────────────────────────
+   Main Layout
+───────────────────────────── */
 export function FormEditorLayout({ controller }: any) {
   const { state, actions } = controller;
 
@@ -129,7 +177,7 @@ export function FormEditorLayout({ controller }: any) {
             style={{ width: state.rightWidth }}
           >
             {editorView === 'builder' && (
-              <BuilderSidePanel currentPageIndex={currentPageIndex} />
+              <BuilderLeftPanel currentPageIndex={currentPageIndex} />
             )}
             {editorView === 'logic' && <LogicLeftPanel />}
           </div>
@@ -189,12 +237,26 @@ export function FormEditorLayout({ controller }: any) {
       </div>
 
       {/* FLOATING BUTTONS */}
-      <div className="fixed right-4 bottom-4 flex gap-1">
-        <button onClick={actions.navigateHome}>
+      <div className="fixed right-4 bottom-4 z-40 flex items-center gap-1.5">
+        <button
+          onClick={actions.navigateHome}
+          title="Back to Dashboard"
+          className="flex h-7 w-7 items-center justify-center rounded-sm border border-border bg-background text-muted-foreground shadow-sm transition-colors hover:bg-muted hover:text-foreground"
+          aria-label="Back to Dashboard"
+        >
           <ArrowLeft className="h-3 w-3" />
         </button>
 
-        <button onClick={() => setShowDebug((p: boolean) => !p)}>
+        <button
+          onClick={() => setShowDebug((p: boolean) => !p)}
+          title={showDebug ? 'Hide Debug Panel' : 'Show Debug Panel'}
+          className={`flex h-7 w-7 items-center justify-center rounded-sm border shadow-sm transition-colors ${
+            showDebug
+              ? 'border-primary/60 bg-primary/10 text-primary hover:bg-primary/15'
+              : 'border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground'
+          }`}
+          aria-label="Toggle debug panel"
+        >
           <Bug className="h-3 w-3" />
         </button>
 

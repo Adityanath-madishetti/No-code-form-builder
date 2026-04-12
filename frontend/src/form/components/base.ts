@@ -154,6 +154,43 @@ export interface FormPage {
 //
 // ------------------------------------------------------------------------------------------------
 
+export interface FormThemeBackground {
+  color?: string;
+  image?: string;
+  gradient?: string;
+  overlayOpacity?: number;
+  blur?: number | string;
+}
+
+export interface FormThemeLayout {
+  width?: number | string;
+  formWidth?: string | number;
+  alignment?: 'left' | 'center' | 'right';
+  padding?: number | string;
+  spacing?: string | number;
+}
+
+export interface FormThemeComponentProps {
+  borderRadius?: number | string;
+  borderWidth?: number | string;
+  primaryColor?: string;
+  shadow?: string;
+}
+
+export interface FormTheme {
+  mode?: 'light' | 'dark' | 'system';
+  color?: string;
+  primaryColor?: string;
+  textColor?: string;
+  background: FormThemeBackground;
+  layout: FormThemeLayout;
+  components?: FormThemeComponentProps;
+  componentProps?: FormThemeComponentProps;
+  fontFamily?: string;
+  headingFont?: { family?: string };
+  bodyFont?: { family?: string };
+}
+
 export interface FormMetadata {
   description?: string;
   createdAt: string;
@@ -194,6 +231,7 @@ export interface Form {
   access: FormAccess;
   settings: FormSettings;
   pages: PageID[];
+  theme: FormTheme | null;
 }
 
 //------------------------------------------------------------------------------------------------

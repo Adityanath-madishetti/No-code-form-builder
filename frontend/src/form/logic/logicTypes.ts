@@ -67,8 +67,8 @@ export type Condition = ConditionLeaf | ConditionGroup;
 export const ACTION_TYPES = [
   'SHOW',
   'HIDE',
-  // 'ENABLE',
-  // 'DISABLE',
+  'ENABLE',
+  'DISABLE',
   'SET_VALUE',
   'SKIP_PAGE',
   'CONDITIONAL',
@@ -79,8 +79,8 @@ export type ActionType = (typeof ACTION_TYPES)[number];
 export const ACTION_TYPE_LABELS: Record<ActionType, string> = {
   SHOW: 'Show',
   HIDE: 'Hide',
-  // ENABLE: 'Enable',
-  // DISABLE: 'Disable',
+  ENABLE: 'Enable',
+  DISABLE: 'Disable',
   SET_VALUE: 'Set value',
   SKIP_PAGE: 'Skip page',
   CONDITIONAL: 'If / Then',
@@ -89,8 +89,8 @@ export const ACTION_TYPE_LABELS: Record<ActionType, string> = {
 export const ACTION_TYPE_COLORS: Record<ActionType, string> = {
   SHOW: 'text-green-600',
   HIDE: 'text-red-500',
-  // ENABLE: 'text-blue-500',
-  // DISABLE: 'text-orange-500',
+  ENABLE: 'text-blue-500',
+  DISABLE: 'text-orange-500',
   SET_VALUE: 'text-violet-500',
   SKIP_PAGE: 'text-amber-600',
   CONDITIONAL: 'text-purple-600',

@@ -25,7 +25,7 @@ export interface SerializedForm {
 export function loadFromJSON(json: SerializedForm) {
   // Force TS to retain the strict union type during the map iteration
   const components = json.components.map(
-    (c) => deserializeComponent(c) as AnyFormComponent
+    (c) => deserializeComponent(c as any) as AnyFormComponent
   );
   useFormStore.getState().loadForm(json.form, json.pages, components);
 }
@@ -53,7 +53,7 @@ export function serializeFormFromState(state: {
       state.pages[pageId].children.map(
         // Force TS to retain the strict serialized union type
         (id) =>
-          serializeComponent(state.components[id]) as AnySerializedComponent
+          serializeComponent(state.components[id] as any) as AnySerializedComponent
       )
     ),
   };

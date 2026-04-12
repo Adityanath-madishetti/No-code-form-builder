@@ -1,4 +1,4 @@
-import { FormRunner } from '@/form/renderer/viewRenderer/FormRunner';
+import { FormRunner } from '@/form/renderer/view-renderer/FormRunner';
 
 export default function FormSubmit() {
   return (

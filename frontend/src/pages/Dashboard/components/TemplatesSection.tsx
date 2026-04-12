@@ -28,7 +28,8 @@ export default function TemplatesSection() {
         title: 'Untitled Form',
       });
       navigate(`/form-builder/${res.form.formId}`);
-    } catch {
+    } catch (err) {
+      console.error('Failed to create form:', err);
       setCreating(false);
     }
   };
@@ -46,9 +47,10 @@ export default function TemplatesSection() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 pl-3">
         <Card
-          className="group relative flex flex-col overflow-hidden transition-all hover:border-primary/50"
+          className="group relative flex cursor-pointer flex-col overflow-hidden transition-all hover:border-primary/50"
           role="button"
           tabIndex={0}
+          onClick={handleCreate}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();

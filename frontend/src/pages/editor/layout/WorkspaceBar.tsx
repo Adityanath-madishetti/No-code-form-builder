@@ -2,9 +2,7 @@
 import {
   Settings2,
   LayoutGrid,
-  Palette,
   Zap,
-  GitBranch,
   Sun,
   Moon,
   Save,
@@ -39,20 +37,13 @@ interface WorkspacesProps {
   setEditorView: (
     view: 'formProperties' | 'builder' | 'logic' | 'workflow' | 'theming'
   ) => void;
-  setActivePanel: (panel: null) => void;
   logicActiveRuleId: string | null;
   logicActiveFormulaId: string | null;
-  showProperties: boolean;
-  showDebug: boolean;
-  rightWidth: number | string;
-  debugWidth: number | string;
   editorTheme: 'dark' | 'light' | 'system' | string;
   setEditorTheme: (theme: 'dark' | 'light' | 'system') => void;
   saving: boolean;
   handleSave: () => Promise<boolean>;
   formId?: string;
-  publishing: boolean;
-  setPublishing: (pub: boolean) => void;
 }
 
 interface ThemeToggleButtonProps {
@@ -285,20 +276,13 @@ export function PublishButton({
 export function Workspaces({
   editorView,
   setEditorView,
-  setActivePanel,
   logicActiveRuleId,
   logicActiveFormulaId,
-  showProperties,
-  showDebug,
-  rightWidth,
-  debugWidth,
   editorTheme,
   setEditorTheme,
   saving,
   handleSave,
   formId,
-  publishing,
-  setPublishing,
 }: WorkspacesProps) {
   return (
     <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border bg-background px-3 py-[5.5px]">

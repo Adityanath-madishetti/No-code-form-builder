@@ -2,7 +2,7 @@
 import { useFormStore } from '@/form/store/form.store';
 import { FormModeProvider } from '@/form/context/FormModeContext';
 import { FormThemeProvider } from '@/form/theme/FormThemeProvider';
-import { RenderPage } from '@/form/renderer/editRenderer/RenderPage';
+import { RenderPage } from '@/form/renderer/edit-renderer/RenderPage';
 import { LayoutGrid } from 'lucide-react';
 
 interface FormCanvasProps {
