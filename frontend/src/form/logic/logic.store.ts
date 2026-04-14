@@ -40,7 +40,11 @@ interface LogicState {
 
 interface LogicActions {
   // Rules
-  addRule: (name?: string, ruleType?: RuleType) => string;
+  addRule: (
+    name?: string,
+    ruleType?: RuleType,
+    initialFieldId?: string
+  ) => string;
   updateRule: (
     ruleId: string,
     updates: Partial<Omit<LogicRule, 'ruleId'>>
@@ -55,7 +59,7 @@ interface LogicActions {
   updateRuleElseActions: (ruleId: string, actions: RuleAction[]) => void;
 
   // Formulas
-  addFormula: (name?: string) => string;
+  addFormula: (name?: string, initialFieldId?: string) => string;
   updateFormula: (
     ruleId: string,
     updates: Partial<Omit<FormulaRule, 'ruleId'>>
@@ -104,8 +108,8 @@ export const useLogicStore = create<LogicStore>()(
 
     // ── Rules ──
 
-    addRule: (name, ruleType = 'field') => {
-      const rule = createLogicRule(name, ruleType);
+    addRule: (name, ruleType = 'field', initialFieldId) => {
+      const rule = createLogicRule(name, ruleType, initialFieldId);
       set((state) => {
         state.rules.push(rule);
         state.activeRuleId = rule.ruleId;
@@ -182,8 +186,8 @@ export const useLogicStore = create<LogicStore>()(
 
     // ── Formulas ──
 
-    addFormula: (name) => {
-      const formula = createFormulaRule(name);
+    addFormula: (name, initialFieldId) => {
+      const formula = createFormulaRule(name, initialFieldId);
       set((state) => {
         state.formulas.push(formula);
         state.activeFormulaId = formula.ruleId;

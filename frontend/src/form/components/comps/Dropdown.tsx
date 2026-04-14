@@ -105,7 +105,6 @@ export function DropdownComponentRenderer({
             render={({ field }) => (
               <Select
                 onValueChange={field.onChange}
-                // Radix Select uses `undefined` to trigger the placeholder when no value is selected
                 value={field.value || undefined}
                 defaultValue={props.defaultValue || undefined}
               >
@@ -116,8 +115,12 @@ export function DropdownComponentRenderer({
                 </SelectTrigger>
                 <SelectContent>
                   {shuffledOptions.map((option) => (
-                    <SelectItem key={option.id} value={option.value}>
-                      {option.value}
+                    // FIX: Fallback to ID if value is empty
+                    <SelectItem
+                      key={option.id}
+                      value={option.value || option.id}
+                    >
+                      {option.value || '(Empty Option)'}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -149,8 +152,9 @@ export function DropdownComponentRenderer({
           </SelectTrigger>
           <SelectContent>
             {(props.options || []).map((option) => (
-              <SelectItem key={option.id} value={option.value}>
-                {option.value}
+              // FIX: Fallback to ID if value is empty
+              <SelectItem key={option.id} value={option.value || option.id}>
+                {option.value || '(Empty Option)'}
               </SelectItem>
             ))}
           </SelectContent>
@@ -264,8 +268,9 @@ export function DropdownComponentPropsRenderer({
         >
           <option value="none">None</option>
           {(props.options || []).map((opt) => (
-            <option key={opt.id} value={opt.value}>
-              {opt.value}
+            // FIX: Fallback to ID for the value to prevent empty string selection issues
+            <option key={opt.id} value={opt.value || opt.id}>
+              {opt.value || '(Empty Option)'}
             </option>
           ))}
         </select>

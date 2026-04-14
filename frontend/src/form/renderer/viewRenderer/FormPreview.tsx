@@ -8,7 +8,6 @@ import { getComponentRenderer } from '@/form/registry/componentRegistry';
 import type { ComponentID } from '@/form/components/base';
 import { FormLogicEngine } from '@/form/logic/formLogicEngine';
 import { Button } from '@/components/ui/button';
-// Added Loader2 and AlertCircle for the error/loading states
 import { ArrowLeft, ArrowRight, Eye, Loader2, AlertCircle } from 'lucide-react';
 import { sharedProseClasses } from '@/components/RichTextEditor';
 import { Separator } from '@/components/ui/separator';
@@ -46,7 +45,11 @@ export default function FormPreview() {
   const currentPage = useRuntimeFormStore(runtimeFormSelector.currentPage);
   const currentPageId = useRuntimeFormStore(runtimeFormSelector.currentPageId);
   const renderState = useRuntimeFormStore(runtimeFormSelector.renderState);
+
   const setActivePage = useRuntimeFormStore((s) => s.setActivePage);
+  const pageStack = useRuntimeFormStore((s) => s.pageStack);
+  const pushPageStack = useRuntimeFormStore((s) => s.pushPageStack);
+  const popPageStack = useRuntimeFormStore((s) => s.popPageStack);
 
   useEffect(() => {
     if (!formId) return;
@@ -182,10 +185,11 @@ export default function FormPreview() {
         const pages = formData.version.pages;
 
         pages.forEach((page, index) => {
-          const prevId = index > 0 ? pages[index - 1].pageId : undefined;
+          // FIX: Respect the defaultNextPageId if it exists in the schema
           const nextId =
-            index < pages.length - 1 ? pages[index + 1].pageId : undefined;
-          store.setPreviousPageOfPage(page.pageId, prevId);
+            page.defaultNextPageId ??
+            (index < pages.length - 1 ? pages[index + 1].pageId : null);
+
           store.setNextPageOfPage(page.pageId, nextId);
         });
 
@@ -232,7 +236,6 @@ export default function FormPreview() {
               );
               if (sourcePage) {
                 store.setNextPageOfPage(sourcePage.pageId, action.targetId);
-                store.setPreviousPageOfPage(action.targetId, sourcePage.pageId);
               }
             }
           }
@@ -269,7 +272,7 @@ export default function FormPreview() {
   const currentPageState =
     currentPageId && renderState ? renderState.PageStates[currentPageId] : null;
 
-  const hasPrevious = !!currentPageState?.previousPageId;
+  const hasPrevious = pageStack.length > 0;
   const hasNext = !!currentPageState?.nextPageId;
 
   const handleNext = async (e?: React.MouseEvent) => {
@@ -278,15 +281,17 @@ export default function FormPreview() {
     const isPageValid = await methods.trigger(currentInstanceIds);
     if (!isPageValid) return;
 
-    if (currentPageState?.nextPageId) {
+    if (currentPageState?.nextPageId && currentPageId) {
+      pushPageStack(currentPageId); // Push current page to stack before navigating
       setActivePage(currentPageState.nextPageId);
     }
   };
 
   const handleBack = (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
-    if (currentPageState?.previousPageId) {
-      setActivePage(currentPageState.previousPageId);
+    const prevPageId = popPageStack();
+    if (prevPageId) {
+      setActivePage(prevPageId);
     }
   };
 

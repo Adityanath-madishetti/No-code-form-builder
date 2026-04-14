@@ -150,7 +150,6 @@ function PageHeader({
   pageNumber: number;
 }) {
   const page = useFormStore((s) => s.pages[pageId]);
-  const updatePageTitle = useFormStore((s) => s.updatePageTitle);
   const setActivePage = useFormStore((s) => s.setActivePage);
   const setActiveComponent = useFormStore((s) => s.setActiveComponent);
 

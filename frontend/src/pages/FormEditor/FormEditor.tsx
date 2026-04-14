@@ -91,6 +91,8 @@ export default function FormEditor() {
   const addPage = useFormStore((s) => s.addPage);
   const setActiveComponent = useFormStore((s) => s.setActiveComponent);
   const setActivePage = useFormStore((s) => s.setActivePage);
+  const currentPageIndex = useFormStore((s) => s.currentPageIndex);
+  const setCurrentPageIndex = useFormStore((s) => s.setCurrentPageIndex);
   const { user } = useAuth();
 
   const clearSelectedComponents = useFormStore(
@@ -105,7 +107,7 @@ export default function FormEditor() {
   const pageIds = useFormStore(useShallow((s) => s.form?.pages ?? []));
   const totalPages = pageIds.length;
 
-  const [currentPageIndex, setCurrentPageIndex] = useState(0);
+  // const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [activePanel, setActivePanel] = useState<SidebarPanelId | null>(
     'components'
   );
@@ -224,7 +226,7 @@ export default function FormEditor() {
     if (totalPages > 0 && currentPageIndex >= totalPages) {
       setCurrentPageIndex(totalPages - 1);
     }
-  }, [currentPageIndex, totalPages]);
+  }, [currentPageIndex, setCurrentPageIndex, totalPages]);
 
   // Update tab title with form name
   useEffect(() => {
@@ -248,16 +250,16 @@ export default function FormEditor() {
   }, [showPropertiesPanel]);
 
   // Auto-switch to logic view when a rule/formula is activated
-  useEffect(() => {
-    if (logicActiveRuleId || logicActiveFormulaId) {
-      setEditorView('logic');
-    }
-  }, [logicActiveRuleId, logicActiveFormulaId]);
+  // useEffect(() => {
+  //   if (logicActiveRuleId || logicActiveFormulaId) {
+  //     setEditorView('logic');
+  //   }
+  // }, [logicActiveRuleId, logicActiveFormulaId]);
 
   const handleAddPage = useCallback(() => {
     addPage();
     setCurrentPageIndex(totalPages);
-  }, [addPage, totalPages]);
+  }, [addPage, setCurrentPageIndex, totalPages]);
 
   const handleNavigate = (page: number) => {
     setCurrentPageIndex(page - 1);
@@ -425,7 +427,7 @@ export default function FormEditor() {
                   >
                     <FormCanvas currentPageIndex={currentPageIndex} />
                   </div>
-                  {totalPages > 0 && (
+                  {/* {totalPages > 0 && (
                     <PageNavigator
                       currentPage={currentPageIndex + 1}
                       totalPages={totalPages}
@@ -446,7 +448,7 @@ export default function FormEditor() {
                         + Add your first page
                       </button>
                     </div>
-                  )}
+                  )} */}
                   {/* 3. Right Area: The Sidebar */}
                   <div className="z-10 flex shrink-0">
                     <SidebarLayout />

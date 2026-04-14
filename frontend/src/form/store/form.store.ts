@@ -172,6 +172,8 @@ interface FormUIState {
   activePageId: PageID | null;
   activeDragData: FormDragData | null;
 
+  currentPageIndex: number;
+
   activeSidePanelTab: string;
   showPropertiesPanel: boolean;
 
@@ -277,6 +279,8 @@ interface FormUIActions {
   setActivePage: (pageId: PageID | null) => void;
   setActiveDragData: (data: FormDragData | null) => void;
 
+  setCurrentPageIndex: (newPageIndex: number) => void;
+
   setActiveSidePanelTab: (tab: string) => void;
 
   refreshCatalog: () => void;
@@ -326,21 +330,27 @@ function syncPageOrdering(state: {
   pagesArray.forEach((id, i) => {
     const page = state.pages[id];
     const isLast = i === pagesArray.length - 1;
+    const sequentialNextId = pagesArray[i + 1];
 
     page.isTerminal = isLast;
 
     if (isLast) {
-      // The terminal page has nowhere to go forward.
       page.defaultNextPageId = undefined;
     } else {
-      // If there is an explicit jump, but the target page was deleted,
-      // revert it to undefined (which restores implicit sequential flow).
-      if (page.defaultNextPageId && !state.pages[page.defaultNextPageId]) {
-        page.defaultNextPageId = undefined;
+      if (page.defaultNextPageId) {
+        if (page.defaultNextPageId === '_submit') {
+          // Valid early termination path, keep it intact.
+        } else if (!state.pages[page.defaultNextPageId]) {
+          // Target was deleted, revert to implicit sequential flow.
+          page.defaultNextPageId = undefined;
+        } else if (page.defaultNextPageId === sequentialNextId) {
+          // Target is now the sequential next page (e.g., due to reordering).
+          // Revert to undefined to enforce the sparse schema.
+          page.defaultNextPageId = undefined;
+        }
       }
     }
 
-    // Wipe reverse pointers to prepare for clean reconstruction
     page.defaultPreviousPageId = undefined;
   });
 
@@ -349,9 +359,7 @@ function syncPageOrdering(state: {
     const page = state.pages[id];
     const nextId = page.defaultNextPageId;
 
-    // If there is an explicit forward jump, wire up the explicit reverse pointer.
-    // If nextId is undefined, no explicit reverse pointer is created.
-    if (nextId && state.pages[nextId]) {
+    if (nextId && nextId !== '_submit' && state.pages[nextId]) {
       state.pages[nextId].defaultPreviousPageId = id;
     }
   });
@@ -438,6 +446,8 @@ export const useFormStore = create<FormStore>()(
     activeComponentId: null,
     activePageId: null,
     activeDragData: null,
+
+    currentPageIndex: 0,
 
     activeSidePanelTab: 'overview',
     showPropertiesPanel: false,
@@ -773,6 +783,9 @@ export const useFormStore = create<FormStore>()(
 
     setActiveDragData: (data) => set({ activeDragData: data }),
     // setPendingCatalogItem: (item) => set({ pendingCatalogItem: item }),
+
+    setCurrentPageIndex: (newPageIndex) =>
+      set({ currentPageIndex: newPageIndex }),
 
     setActiveSidePanelTab: (tab) => set({ activeSidePanelTab: tab }),
 

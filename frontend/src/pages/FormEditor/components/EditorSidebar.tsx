@@ -1,6 +1,7 @@
 // src/pages/FormEditor/components/EditorSidebar.tsx
 import {
   LayoutGrid,
+  Zap,
   // Layers,
   // Palette,
   // Zap,
@@ -28,7 +29,7 @@ const NAV_ITEMS: {
     // { id: 'templates', label: 'Templates', icon: Layers },
     // { id: 'theme', label: 'Theme', icon: Palette },
     // { id: 'groups', label: 'Groups', icon: FolderOpen },
-    // { id: 'logic', label: 'Logic', icon: Zap },
+    { id: 'logic', label: 'Logic', icon: Zap },
     // { id: 'workflow', label: 'Workflow', icon: GitBranch },
     // { id: 'ai', label: 'AI Assistant', icon: Sparkles },
   ];

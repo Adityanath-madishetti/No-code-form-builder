@@ -162,6 +162,8 @@ export interface DependencyNode {
 
 // ── Helpers ──
 
+// ── Helpers ──
+
 export function createConditionLeaf(fieldId = ''): ConditionLeaf {
   return {
     type: 'leaf',
@@ -173,13 +175,14 @@ export function createConditionLeaf(fieldId = ''): ConditionLeaf {
 }
 
 export function createConditionGroup(
-  operator: LogicalOp = 'AND'
+  operator: LogicalOp = 'AND',
+  initialFieldId?: string
 ): ConditionGroup {
   return {
     type: 'group',
     id: crypto.randomUUID(),
     operator,
-    conditions: [createConditionLeaf()],
+    conditions: [createConditionLeaf(initialFieldId)],
   };
 }
 
@@ -202,7 +205,8 @@ export function createRuleAction(type: ActionType = 'SHOW'): RuleAction {
 
 export function createLogicRule(
   name = `New Rule ${nanoid(12)}`,
-  ruleType: RuleType = 'field'
+  ruleType: RuleType = 'field',
+  initialFieldId?: string
 ): LogicRule {
   const now = new Date().toISOString();
   return {
@@ -211,14 +215,15 @@ export function createLogicRule(
     enabled: true,
     ruleType,
     updatedAt: now,
-    condition: createConditionGroup('AND'),
+    condition: createConditionGroup('AND', initialFieldId),
     thenActions: [createRuleAction('SHOW')],
     elseActions: [],
   };
 }
 
 export function createFormulaRule(
-  name = `New Formula ${nanoid(12)}`
+  name = `New Formula ${nanoid(12)}`,
+  initialFieldId?: string
 ): FormulaRule {
   const now = new Date().toISOString();
   return {
@@ -227,7 +232,7 @@ export function createFormulaRule(
     enabled: true,
     targetId: '',
     expression: '',
-    referencedFields: [],
+    referencedFields: initialFieldId ? [initialFieldId] : [],
     updatedAt: now,
   };
 }

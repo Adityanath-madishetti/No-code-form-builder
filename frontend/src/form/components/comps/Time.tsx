@@ -72,7 +72,7 @@ export function TimeRenderer({
 
     return (
       <Card>
-        <CardContent className="space-y-3 pt-6">
+        <CardContent className="space-y-3">
           <Label
             htmlFor={instanceId}
             className="block text-base font-semibold"
@@ -111,7 +111,7 @@ export function TimeRenderer({
   // --- Builder Mode (Static/Preview) ---
   return (
     <Card>
-      <CardContent className="space-y-3 pt-6">
+      <CardContent className="space-y-3">
         <Label
           className="block text-base font-semibold"
           dangerouslySetInnerHTML={{ __html: props.questionText }}

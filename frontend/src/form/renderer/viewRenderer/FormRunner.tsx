@@ -430,7 +430,11 @@ export function FormRunner() {
   const currentPage = useRuntimeFormStore(runtimeFormSelector.currentPage);
   const currentPageId = useRuntimeFormStore(runtimeFormSelector.currentPageId);
   const renderState = useRuntimeFormStore(runtimeFormSelector.renderState);
+
   const setActivePage = useRuntimeFormStore((s) => s.setActivePage);
+  const pageStack = useRuntimeFormStore((s) => s.pageStack);
+  const pushPageStack = useRuntimeFormStore((s) => s.pushPageStack);
+  const popPageStack = useRuntimeFormStore((s) => s.popPageStack);
 
   // --- Policy Enforcement Derived State ---
   const settings: VersionSettings = useMemo(
@@ -600,10 +604,11 @@ export function FormRunner() {
         // Step A: Reset all pages to their default sequential routing.
         // This automatically "reverts" navigation if a skip condition is no longer met.
         pages.forEach((page, index) => {
-          const prevId = index > 0 ? pages[index - 1].pageId : null;
+          // FIX: Respect the defaultNextPageId if it exists in the schema
           const nextId =
-            index < pages.length - 1 ? pages[index + 1].pageId : null;
-          store.setPreviousPageOfPage(page.pageId, prevId);
+            page.defaultNextPageId ??
+            (index < pages.length - 1 ? pages[index + 1].pageId : null);
+
           store.setNextPageOfPage(page.pageId, nextId);
         });
 
@@ -658,7 +663,7 @@ export function FormRunner() {
               // 4. Overwrite pointers for the origin page specifically
               if (sourcePage) {
                 store.setNextPageOfPage(sourcePage.pageId, action.targetId);
-                store.setPreviousPageOfPage(action.targetId, sourcePage.pageId);
+                // store.setPreviousPageOfPage(action.targetId, sourcePage.pageId);
               }
             }
           }
@@ -771,7 +776,7 @@ export function FormRunner() {
   const currentPageState =
     currentPageId && renderState ? renderState.PageStates[currentPageId] : null;
 
-  const hasPrevious = !!currentPageState?.previousPageId;
+  const hasPrevious = pageStack.length > 0;
   const hasNext = !!currentPageState?.nextPageId;
 
   const handleNext = async (e?: React.MouseEvent) => {
@@ -783,15 +788,17 @@ export function FormRunner() {
       return;
     }
 
-    if (currentPageState?.nextPageId) {
+    if (currentPageState?.nextPageId && currentPageId) {
+      pushPageStack(currentPageId); // Push current page to stack before navigating
       setActivePage(currentPageState.nextPageId);
     }
   };
 
   const handleBack = (e?: React.MouseEvent) => {
-    if (e) e.preventDefault(); // Stop any default button behavior
-    if (currentPageState?.previousPageId) {
-      setActivePage(currentPageState.previousPageId);
+    if (e) e.preventDefault();
+    const prevPageId = popPageStack();
+    if (prevPageId) {
+      setActivePage(prevPageId);
     }
   };
 

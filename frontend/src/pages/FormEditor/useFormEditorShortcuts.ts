@@ -60,7 +60,7 @@ export interface UseFormEditorShortcutsParams {
   publishing: boolean;
   currentPageIndex: number;
   totalPages: number;
-  setCurrentPageIndex: React.Dispatch<React.SetStateAction<number>>;
+  setCurrentPageIndex: (newPageIndex: number) => void;
   activePanel: SidebarPanelId | null;
   setActivePanel: (p: SidebarPanelId | null) => void;
   editorView: FormEditorView;
@@ -233,24 +233,26 @@ export function useFormEditorShortcuts(opts: UseFormEditorShortcutsParams) {
       }
 
       // ── Multi-page navigation ─────────────────────────────────────────
-      if (
-        (mod && e.key === '[') ||
-        (e.altKey && !mod && !e.shiftKey && e.key === 'ArrowLeft')
-      ) {
-        if (editable || o.editorView !== 'canvas' || o.totalPages <= 1) return;
-        e.preventDefault();
-        o.setCurrentPageIndex((i) => Math.max(0, i - 1));
-        return;
-      }
-      if (
-        (mod && e.key === ']') ||
-        (e.altKey && !mod && !e.shiftKey && e.key === 'ArrowRight')
-      ) {
-        if (editable || o.editorView !== 'canvas' || o.totalPages <= 1) return;
-        e.preventDefault();
-        o.setCurrentPageIndex((i) => Math.min(o.totalPages - 1, i + 1));
-        return;
-      }
+
+      // TODO: correct this
+      // if (
+      //   (mod && e.key === '[') ||
+      //   (e.altKey && !mod && !e.shiftKey && e.key === 'ArrowLeft')
+      // ) {
+      //   if (editable || o.editorView !== 'canvas' || o.totalPages <= 1) return;
+      //   e.preventDefault();
+      //   o.setCurrentPageIndex((i) => Math.max(0, i - 1));
+      //   return;
+      // }
+      // if (
+      //   (mod && e.key === ']') ||
+      //   (e.altKey && !mod && !e.shiftKey && e.key === 'ArrowRight')
+      // ) {
+      //   if (editable || o.editorView !== 'canvas' || o.totalPages <= 1) return;
+      //   e.preventDefault();
+      //   o.setCurrentPageIndex((i) => Math.min(o.totalPages - 1, i + 1));
+      //   return;
+      // }
 
       // ── Editor views: 1=Builder 2=Properties 3=Logic 4=Workflow ───────
       if (mod && !e.shiftKey && !e.altKey && ['1', '2', '3', '4'].includes(e.key)) {

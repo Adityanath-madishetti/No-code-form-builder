@@ -73,7 +73,7 @@ function ActivityBar({
 }) {
   return (
     <aside className="z-20 flex w-14 shrink-0 flex-col items-center border-l bg-background py-2">
-      <div className="flex w-full flex-col items-center gap-3 px-2">
+      <div className="flex w-full flex-col items-center gap-[6px] px-2">
         {tabs.map((tab) => {
           const isActive = activeTabId === tab.id && isOpen;
           return (
@@ -115,12 +115,12 @@ const TABS_DATA: TabItem[] = [
     icon: Form,
     content: <FormFileExplorer/>,
   },
-  {
-    id: 'componentProperties',
-    title: 'Component Properties',
-    icon: Component,
-    content: <ComponentsSidePanel />,
-  },
+  // {
+  //   id: 'componentProperties',
+  //   title: 'Component Properties',
+  //   icon: Component,
+  //   content: <ComponentsSidePanel />,
+  // },
   {
     id: 'formSettings',
     title: 'Form Settings',

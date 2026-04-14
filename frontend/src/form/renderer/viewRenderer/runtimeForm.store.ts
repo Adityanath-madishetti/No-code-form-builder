@@ -14,7 +14,6 @@ interface PageRenderState {
   pageId: PageID;
   pageIndex: number;
   ComponentStates: Record<InstanceID, ComponentRenderState>;
-  previousPageId: PageID | null;
   nextPageId: PageID | null;
 }
 
@@ -56,6 +55,7 @@ export const runtimeFormSelector = {
 interface RuntimeFormStore {
   formData: PublicFormData | undefined;
   renderState: FormRenderState | undefined;
+  pageStack: PageID[];
 
   initRuntimeForm: (data: PublicFormData) => void;
 
@@ -63,11 +63,10 @@ interface RuntimeFormStore {
   setComponentEnabled: (instanceId: InstanceID, isEnabled: boolean) => void;
 
   setNextPageOfPage: (pageId: PageID, nextPageId: PageID | null) => void;
-  setPreviousPageOfPage: (
-    pageId: PageID,
-    previousPageId: PageID | null
-  ) => void;
   setActivePage: (pageId: PageID) => void;
+
+  pushPageStack: (pageId: PageID) => void;
+  popPageStack: () => PageID | undefined;
 }
 
 export const useRuntimeFormStore = create<RuntimeFormStore>()(
@@ -75,9 +74,13 @@ export const useRuntimeFormStore = create<RuntimeFormStore>()(
     formData: undefined,
     renderState: undefined,
 
+    pageStack: [],
+
     initRuntimeForm: (data) => {
       set((state) => {
         state.formData = data;
+        state.pageStack = [];
+
         if (data.version.pages.length > 0) {
           const pageStates: Record<PageID, PageRenderState> = {};
           data.version.pages.forEach((page, index) => {
@@ -95,9 +98,6 @@ export const useRuntimeFormStore = create<RuntimeFormStore>()(
               pageId: page.pageId,
               pageIndex: index,
               ComponentStates: componentStates,
-              previousPageId:
-                page.defaultPreviousPageId ??
-                (index > 0 ? data.version.pages[index - 1].pageId : null),
               nextPageId:
                 page.defaultNextPageId ??
                 (index < data.version.pages.length - 1
@@ -142,18 +142,33 @@ export const useRuntimeFormStore = create<RuntimeFormStore>()(
         }
       }),
 
-    setPreviousPageOfPage: (pageId, previousPageId) =>
-      set((state) => {
-        if (state.renderState?.PageStates[pageId]) {
-          state.renderState.PageStates[pageId].previousPageId = previousPageId;
-        }
-      }),
-
     setActivePage: (pageId) =>
       set((state) => {
         if (state.renderState?.PageStates[pageId]) {
           state.renderState.currentPageId = pageId;
         }
       }),
+
+    pushPageStack: (pageId: PageID) => {
+      set((state) => {
+        state.pageStack.push(pageId);
+      });
+    },
+
+    popPageStack: () => {
+      const currentStack = get().pageStack;
+
+      if (currentStack.length === 0) {
+        return undefined;
+      }
+
+      const pid = currentStack[currentStack.length - 1];
+
+      set((state) => {
+        state.pageStack.pop();
+      });
+
+      return pid;
+    },
   }))
 );

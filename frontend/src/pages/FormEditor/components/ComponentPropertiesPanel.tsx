@@ -229,6 +229,7 @@ function PageProperties({ pageId }: { pageId: string }) {
                 </option>
               );
             })}
+            {/* <option value="_submit">Submit Form</option> */}
           </select>
         )}
       </div>

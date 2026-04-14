@@ -561,7 +561,7 @@ export function Workspaces({
       </div>
 
       <div className="flex items-center gap-1">
-        <ThemeToggleButton
+        {/* <ThemeToggleButton
           isDark={editorTheme === 'dark'}
           onToggle={() => {
             const isDark = document.documentElement.classList.contains('dark');
@@ -575,7 +575,7 @@ export function Workspaces({
               document.documentElement.classList.remove('dark');
             }
           }}
-        />
+        /> */}
 
         <SaveButton handleSave={handleSave} saving={saving} />
         <PreviewButton formId={formId} />

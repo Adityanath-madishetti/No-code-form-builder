@@ -653,7 +653,6 @@ export const SelectablePage = ({
   const setActivePage = useFormStore((s) => s.setActivePage);
   const setActiveComponent = useFormStore((s) => s.setActiveComponent);
   const removePage = useFormStore((s) => s.removePage);
-  const activePageID = useFormStore((s) => s.activePageId);
 
   const { ref, isDragging } = useSortable({
     id: pageId,
@@ -667,10 +666,6 @@ export const SelectablePage = ({
     },
   });
 
-  const isActive = activePageID === pageId;
-
-  // TODO: handle the hover issue. 
-
   return (
     <div
       ref={ref}
@@ -681,11 +676,7 @@ export const SelectablePage = ({
       }}
       className={`group relative !overflow-visible transition-all duration-100 ${
         isDragging ? 'opacity-40' : 'opacity-100'
-      } ${
-        isActive
-          ? 'ring-2 ring-primary/50 ring-offset-1 ring-offset-background'
-          : 'hover:ring-1 hover:ring-border'
-      } `}
+      }`}
     >
       <div className="absolute top-1 -right-9 z-20">
         <button
