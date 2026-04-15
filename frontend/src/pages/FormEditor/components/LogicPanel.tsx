@@ -9,57 +9,72 @@ import {
   ChevronDown,
   ChevronRight,
   Search,
-  Filter,
   Plus,
   MoreHorizontal,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { nanoid } from 'nanoid';
+
+// --- shadcn/ui imports ---
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+
+// --- Store & Type imports ---
 import { useLogicStore } from '@/form/logic/logic.store';
 import {
   ACTION_TYPE_LABELS,
   ACTION_TYPE_COLORS,
-  RULE_TYPES,
-  type RuleType,
 } from '@/form/logic/logicTypes';
 import { useFormStore } from '@/form/store/form.store';
 import { DependencyGraph } from './DependencyGraph';
-import { nanoid } from 'nanoid';
 
-type RuleFilter = 'all' | RuleType | 'formula';
 type RuleSort = 'updated_desc' | 'updated_asc' | 'name_asc' | 'name_desc';
-
-type ContextMenuState = {
-  kind: 'rule' | 'formula';
-  id: string;
-  x: number;
-  y: number;
-} | null;
-
-const RULE_LABELS: Record<RuleType, string> = {
-  field: 'Field',
-  validation: 'Validation',
-  navigation: 'Navigation',
-};
 
 export function LogicPanel() {
   const rules = useLogicStore((s) => s.rules);
   const formulas = useLogicStore((s) => s.formulas);
   const stacks = useLogicStore((s) => s.componentShuffleStacks);
 
-  const activeRuleId = useLogicStore((s) => s.activeRuleId);
-  const activeFormulaId = useLogicStore((s) => s.activeFormulaId);
-
   const addRule = useLogicStore((s) => s.addRule);
   const removeRule = useLogicStore((s) => s.removeRule);
   const duplicateRule = useLogicStore((s) => s.duplicateRule);
   const toggleRule = useLogicStore((s) => s.toggleRule);
-  const setActiveRule = useLogicStore((s) => s.setActiveRule);
   const updateRule = useLogicStore((s) => s.updateRule);
 
   const addFormula = useLogicStore((s) => s.addFormula);
   const removeFormula = useLogicStore((s) => s.removeFormula);
-  const setActiveFormula = useLogicStore((s) => s.setActiveFormula);
+  const updateFormula = useLogicStore((s) => s.updateFormula);
+
+  const openPopoutRule = useLogicStore((s) => s.openPopoutRule);
 
   const addStack = useLogicStore((s) => s.addComponentShuffleStack);
   const updateStack = useLogicStore((s) => s.updateComponentShuffleStack);
@@ -71,25 +86,12 @@ export function LogicPanel() {
 
   const [showGraph, setShowGraph] = useState(false);
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<RuleFilter>('all');
   const [sort, setSort] = useState<RuleSort>('updated_desc');
-  const [newRuleType, setNewRuleType] = useState<RuleType>('field');
-  const [contextMenu, setContextMenu] = useState<ContextMenuState>(null);
-
-  useEffect(() => {
-    if (!contextMenu) return;
-    const close = () => setContextMenu(null);
-    window.addEventListener('click', close);
-    return () => window.removeEventListener('click', close);
-  }, [contextMenu]);
 
   const filteredRules = useMemo(() => {
     const q = search.trim().toLowerCase();
-
     let out = [...rules];
-    if (filter !== 'all' && filter !== 'formula') {
-      out = out.filter((rule) => rule.ruleType === filter);
-    }
+
     if (q) {
       out = out.filter((rule) => rule.name.toLowerCase().includes(q));
     }
@@ -113,15 +115,16 @@ export function LogicPanel() {
     });
 
     return out;
-  }, [rules, filter, search, sort]);
+  }, [rules, search, sort]);
 
   const filteredFormulas = useMemo(() => {
     const q = search.trim().toLowerCase();
     let out = [...formulas];
-    if (filter !== 'all' && filter !== 'formula') return [];
+
     if (q) {
       out = out.filter((formula) => formula.name.toLowerCase().includes(q));
     }
+
     out.sort((a, b) => {
       switch (sort) {
         case 'name_asc':
@@ -140,87 +143,83 @@ export function LogicPanel() {
       }
     });
     return out;
-  }, [formulas, filter, search, sort]);
+  }, [formulas, search, sort]);
 
   const hasContent = rules.length > 0 || formulas.length > 0;
-
   const pageOptions = formPageIds.map((pageId, idx) => ({
     pageId,
     label: pages[pageId]?.title || `Page ${idx + 1}`,
   }));
 
+  const handleRename = (
+    id: string,
+    currentName: string,
+    type: 'rule' | 'formula'
+  ) => {
+    const next = window.prompt('Rename', currentName);
+    if (!next?.trim()) return;
+    if (type === 'rule') {
+      updateRule(id, { name: next.trim() });
+    } else {
+      updateFormula(id, { name: next.trim() });
+    }
+  };
+
   return (
-    <div className="relative flex h-full flex-col gap-3">
-      <div className="grid grid-cols-2 gap-1.5">
+    <div className="relative flex h-full flex-col gap-3 p-4">
+      {/* Action Buttons */}
+      <div className="grid grid-cols-2 gap-2">
         <Button
           variant="outline"
           size="sm"
-          className="h-6 text-[11px]"
-          onClick={() => addRule(`New Rule ${nanoid(12)}`, newRuleType)}
-          //${RULE_LABELS[newRuleType]}
+          className="h-7 text-xs"
+          onClick={() => addRule(`New Rule ${nanoid(12)}`, 'field')}
         >
-          <Zap className="mr-1 h-3 w-3" />
+          <Zap className="mr-1 h-3.5 w-3.5" />
           Add Rule
         </Button>
         <Button
           variant="outline"
           size="sm"
-          className="h-6 text-[11px]"
+          className="h-7 text-xs"
           onClick={() => addFormula()}
         >
-          <Calculator className="mr-1 h-3 w-3" />
+          <Calculator className="mr-1 h-3.5 w-3.5" />
           Add Formula
         </Button>
       </div>
 
-      <div className="grid grid-cols-4 gap-1">
-        <select
-          value={newRuleType}
-          onChange={(e) => setNewRuleType(e.target.value as RuleType)}
-          className="col-span-1 h-5 border border-input bg-background px-1 text-[10px]"
-        >
-          {RULE_TYPES.map((type) => (
-            <option key={type} value={type}>
-              {RULE_LABELS[type]}
-            </option>
-          ))}
-        </select>
-        <div className="col-span-3 flex items-center gap-1 border border-input bg-background px-1.5">
-          <Search className="h-2.5 w-2.5 text-muted-foreground" />
-          <input
+      {/* Search and Sort */}
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute top-2 left-2 h-3 w-3 text-muted-foreground" />
+          <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search rule name..."
-            className="h-5 w-full bg-transparent text-[10px] outline-none"
+            placeholder="Search rules..."
+            className="h-7 pl-6 text-[10px]"
           />
         </div>
-      </div>
 
-      <div className="flex items-center justify-start gap-1">
-        <label className="flex w-[120px] items-center gap-1 border border-input bg-background px-1">
-          <Filter className="h-2.5 w-2.5 text-muted-foreground" />
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value as RuleFilter)}
-            className="h-5 w-full bg-transparent text-[10px] outline-none"
-          >
-            <option value="all">All Types</option>
-            <option value="field">Field Rules</option>
-            <option value="validation">Validation Rules</option>
-            <option value="navigation">Navigation Rules</option>
-            <option value="formula">Formulas</option>
-          </select>
-        </label>
-        <select
-          value={sort}
-          onChange={(e) => setSort(e.target.value as RuleSort)}
-          className="h-5 w-[128px] border border-input bg-background px-1 text-[10px]"
-        >
-          <option value="updated_desc">Last Updated (newest)</option>
-          <option value="updated_asc">Last Updated (oldest)</option>
-          <option value="name_asc">Name (A-Z)</option>
-          <option value="name_desc">Name (Z-A)</option>
-        </select>
+        <Select value={sort} onValueChange={(v) => setSort(v as RuleSort)}>
+          <SelectTrigger className="h-7 w-[140px] text-[10px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="updated_desc" className="text-[10px]">
+              Updated (Newest)
+            </SelectItem>
+            <SelectItem value="updated_asc" className="text-[10px]">
+              Updated (Oldest)
+            </SelectItem>
+            <SelectItem value="name_asc" className="text-[10px]">
+              Name (A-Z)
+            </SelectItem>
+            <SelectItem value="name_desc" className="text-[10px]">
+              Name (Z-A)
+            </SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {!hasContent && (
@@ -228,158 +227,272 @@ export function LogicPanel() {
           <Zap className="h-8 w-8 opacity-20" />
           <p className="text-xs font-medium">No logic rules yet</p>
           <p className="text-[10px] opacity-70">
-            Create typed rules, formulas, and shuffle stacks.
+            Create rules, formulas, and shuffle stacks.
           </p>
         </div>
       )}
 
+      {/* Rules List */}
       {filteredRules.length > 0 && (
         <div>
-          <h4 className="mb-1.5 text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
+          <h4 className="mb-2 text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
             Rules ({filteredRules.length})
           </h4>
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             {filteredRules.map((rule) => {
-              const isActive = activeRuleId === rule.ruleId;
-              return (
-                <div
-                  key={rule.ruleId}
-                  onClick={() => setActiveRule(rule.ruleId)}
-                  onContextMenu={(e) => {
-                    e.preventDefault();
-                    setContextMenu({
-                      kind: 'rule',
-                      id: rule.ruleId,
-                      x: e.clientX,
-                      y: e.clientY,
-                    });
-                  }}
-                  className={`group cursor-pointer rounded-md border px-2.5 py-1.5 transition-all ${
-                    isActive
-                      ? 'border-primary bg-primary/5 shadow-sm'
-                      : 'border-border hover:border-primary/30 hover:bg-muted/50'
-                  } ${!rule.enabled ? 'opacity-50' : ''}`}
-                >
-                  <div className="flex items-center gap-1.5">
-                    <Zap
-                      className={`h-3 w-3 shrink-0 ${
-                        isActive ? 'text-amber-500' : 'text-muted-foreground'
-                      }`}
-                    />
-                    <span className="min-w-0 flex-1 truncate text-xs font-medium">
-                      {rule.name}
-                    </span>
-                    <span className="shrink-0 rounded bg-muted px-1 py-0 text-[9px]">
-                      {RULE_LABELS[rule.ruleType]}
-                    </span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setContextMenu({
-                          kind: 'rule',
-                          id: rule.ruleId,
-                          x: e.clientX,
-                          y: e.clientY,
-                        });
-                      }}
-                      className="rounded p-0.5 text-muted-foreground hover:text-foreground"
-                      title="Rule actions"
-                    >
-                      <MoreHorizontal className="h-2.5 w-2.5" />
-                    </button>
-                  </div>
+              const ActionMenu = (
+                <>
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRename(rule.ruleId, rule.name, 'rule');
+                    }}
+                  >
+                    <Copy className="mr-2 h-3.5 w-3.5" /> Rename
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleRule(rule.ruleId);
+                    }}
+                  >
+                    <Power className="mr-2 h-3.5 w-3.5" /> Toggle
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      duplicateRule(rule.ruleId);
+                    }}
+                  >
+                    <Copy className="mr-2 h-3.5 w-3.5" /> Duplicate
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeRule(rule.ruleId);
+                    }}
+                  >
+                    <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete
+                  </DropdownMenuItem>
+                </>
+              );
 
-                  <div className="mt-1 flex flex-wrap gap-1">
-                    {rule.thenActions.slice(0, 3).map((action) => (
-                      <span
-                        key={action.id}
-                        className={`rounded px-1 py-0 text-[9px] font-semibold ${ACTION_TYPE_COLORS[action.type]} bg-current/10`}
-                        style={{ backgroundColor: 'transparent' }}
-                      >
-                        {ACTION_TYPE_LABELS[action.type]}
-                      </span>
-                    ))}
-                    {rule.thenActions.length > 3 && (
-                      <span className="text-[9px] text-muted-foreground">
-                        +{rule.thenActions.length - 3}
-                      </span>
-                    )}
-                  </div>
-                </div>
+              return (
+                <ContextMenu key={rule.ruleId}>
+                  <ContextMenuTrigger asChild>
+                    <div
+                      onClick={() => {
+                        window.open(
+                          '',
+                          `logic_portal_${rule.ruleId}`,
+                          'width=800,height=600,left=200,top=200'
+                        );
+                        openPopoutRule(rule.ruleId);
+                      }}
+                      className={`group cursor-pointer rounded-md border px-2.5 py-2 transition-all ${!rule.enabled ? 'opacity-50' : ''}`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Zap
+                          className={`h-3.5 w-3.5 shrink-0 text-amber-500`}
+                        />
+                        <span className="min-w-0 flex-1 truncate text-xs font-medium">
+                          {rule.name}
+                        </span>
+
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-5 w-5 shrink-0"
+                            >
+                              <MoreHorizontal className="h-3.5 w-3.5" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-36">
+                            {ActionMenu}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+
+                      <div className="mt-1.5 flex flex-wrap gap-1">
+                        {rule.thenActions.slice(0, 3).map((action) => (
+                          <Badge
+                            key={action.id}
+                            variant="outline"
+                            className={`bg-transparent px-1 py-0 text-[9px] font-semibold ${ACTION_TYPE_COLORS[action.type]}`}
+                          >
+                            {ACTION_TYPE_LABELS[action.type]}
+                          </Badge>
+                        ))}
+                        {rule.thenActions.length > 3 && (
+                          <span className="text-[9px] text-muted-foreground">
+                            +{rule.thenActions.length - 3}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </ContextMenuTrigger>
+                  <ContextMenuContent className="w-36">
+                    <ContextMenuItem
+                      onClick={() => {
+                        window.open(
+                          '',
+                          `logic_portal_${rule.ruleId}`,
+                          'width=800,height=600,left=200,top=200'
+                        );
+                        openPopoutRule(rule.ruleId);
+                      }}
+                    >
+                      <Search className="mr-2 h-3.5 w-3.5" /> Open
+                    </ContextMenuItem>
+                    <ContextMenuItem
+                      onClick={() =>
+                        handleRename(rule.ruleId, rule.name, 'rule')
+                      }
+                    >
+                      <Copy className="mr-2 h-3.5 w-3.5" /> Rename
+                    </ContextMenuItem>
+                    <ContextMenuItem onClick={() => toggleRule(rule.ruleId)}>
+                      <Power className="mr-2 h-3.5 w-3.5" /> Toggle
+                    </ContextMenuItem>
+                    <ContextMenuItem onClick={() => duplicateRule(rule.ruleId)}>
+                      <Copy className="mr-2 h-3.5 w-3.5" /> Duplicate
+                    </ContextMenuItem>
+                    <ContextMenuSeparator />
+                    <ContextMenuItem
+                      className="text-destructive focus:text-destructive"
+                      onClick={() => removeRule(rule.ruleId)}
+                    >
+                      <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete
+                    </ContextMenuItem>
+                  </ContextMenuContent>
+                </ContextMenu>
               );
             })}
           </div>
         </div>
       )}
 
+      {/* Formulas List */}
       {filteredFormulas.length > 0 && (
         <div>
-          <h4 className="mb-1.5 text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
+          <h4 className="mt-2 mb-2 text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
             Formulas ({filteredFormulas.length})
           </h4>
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             {filteredFormulas.map((formula) => {
-              const isActive = activeFormulaId === formula.ruleId;
+              const ActionMenu = (
+                <>
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      window.open(
+                        '',
+                        `logic_portal_${formula.ruleId}`,
+                        'width=800,height=600,left=200,top=200'
+                      );
+                      openPopoutRule(formula.ruleId);
+                    }}
+                  >
+                    <Search className="mr-2 h-3.5 w-3.5" /> Open
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRename(formula.ruleId, formula.name, 'formula');
+                    }}
+                  >
+                    <Copy className="mr-2 h-3.5 w-3.5" /> Rename
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeFormula(formula.ruleId);
+                    }}
+                  >
+                    <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete
+                  </DropdownMenuItem>
+                </>
+              );
+
               return (
-                <div
-                  key={formula.ruleId}
-                  onClick={() => setActiveFormula(formula.ruleId)}
-                  onContextMenu={(e) => {
-                    e.preventDefault();
-                    setContextMenu({
-                      kind: 'formula',
-                      id: formula.ruleId,
-                      x: e.clientX,
-                      y: e.clientY,
-                    });
-                  }}
-                  className={`group cursor-pointer rounded-md border px-2.5 py-1.5 transition-all ${
-                    isActive
-                      ? 'border-violet-500 bg-violet-500/5 shadow-sm'
-                      : 'border-border hover:border-violet-500/30 hover:bg-muted/50'
-                  } ${!formula.enabled ? 'opacity-50' : ''}`}
-                >
-                  <div className="flex items-center gap-1.5">
-                    <Calculator
-                      className={`h-3 w-3 shrink-0 ${
-                        isActive ? 'text-violet-500' : 'text-muted-foreground'
-                      }`}
-                    />
-                    <span className="min-w-0 flex-1 truncate text-xs font-medium">
-                      {formula.name}
-                    </span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setContextMenu({
-                          kind: 'formula',
-                          id: formula.ruleId,
-                          x: e.clientX,
-                          y: e.clientY,
-                        });
+                <ContextMenu key={formula.ruleId}>
+                  <ContextMenuTrigger asChild>
+                    <div
+                      onClick={() => {
+                        window.open(
+                          '',
+                          `logic_portal_${formula.ruleId}`,
+                          'width=800,height=600,left=200,top=200'
+                        );
+                        openPopoutRule(formula.ruleId);
                       }}
-                      className="rounded p-0.5 text-muted-foreground hover:text-foreground"
-                      title="Formula actions"
+                      className={`group cursor-pointer rounded-md border px-2.5 py-2 transition-all ${!formula.enabled ? 'opacity-50' : ''}`}
                     >
-                      <MoreHorizontal className="h-2.5 w-2.5" />
-                    </button>
-                  </div>
-                  {formula.expression && (
-                    <p className="mt-0.5 truncate font-mono text-[10px] text-muted-foreground">
-                      {formula.expression}
-                    </p>
-                  )}
-                </div>
+                      <div className="flex items-center gap-2">
+                        <Calculator
+                          className={`h-3.5 w-3.5 shrink-0 text-violet-500`}
+                        />
+                        <span className="min-w-0 flex-1 truncate text-xs font-medium">
+                          {formula.name}
+                        </span>
+
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-5 w-5 shrink-0"
+                            >
+                              <MoreHorizontal className="h-3.5 w-3.5" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-36">
+                            {ActionMenu}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                      {formula.expression && (
+                        <p className="mt-1 truncate font-mono text-[10px] text-muted-foreground">
+                          {formula.expression}
+                        </p>
+                      )}
+                    </div>
+                  </ContextMenuTrigger>
+                  <ContextMenuContent className="w-36">
+                    <ContextMenuItem
+                      onClick={() =>
+                        handleRename(formula.ruleId, formula.name, 'formula')
+                      }
+                    >
+                      <Copy className="mr-2 h-3.5 w-3.5" /> Rename
+                    </ContextMenuItem>
+                    <ContextMenuSeparator />
+                    <ContextMenuItem
+                      className="text-destructive focus:text-destructive"
+                      onClick={() => removeFormula(formula.ruleId)}
+                    >
+                      <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete
+                    </ContextMenuItem>
+                  </ContextMenuContent>
+                </ContextMenu>
               );
             })}
           </div>
         </div>
       )}
 
-      <div className="border-t border-border pt-2">
-        <div className="mb-1 flex items-center justify-between">
+      {/* Component Shuffle Stacks */}
+      <div className="pt-2">
+        <Separator className="mb-3" />
+        <div className="mb-2 flex items-center justify-between">
           <h4 className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
-            Component Shuffle Stacks ({stacks.length})
+            Shuffle Stacks ({stacks.length})
           </h4>
           <Button
             size="sm"
@@ -387,11 +500,10 @@ export function LogicPanel() {
             className="h-6 px-2 text-[10px]"
             onClick={() => addStack()}
           >
-            <Plus className="mr-0.5 h-2.5 w-2.5" />
-            Add
+            <Plus className="mr-1 h-3 w-3" /> Add
           </Button>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-3">
           {stacks.map((stack) => {
             const pageComponentIds = stack.pageId
               ? pages[stack.pageId]?.children || []
@@ -399,65 +511,75 @@ export function LogicPanel() {
             return (
               <div
                 key={stack.stackId}
-                className="rounded border border-border p-2"
+                className="rounded-md border bg-card p-2"
               >
-                <div className="mb-1 flex items-center gap-1">
-                  <input
+                <div className="mb-2 flex items-center gap-2">
+                  <Input
                     value={stack.name}
                     onChange={(e) =>
                       updateStack(stack.stackId, { name: e.target.value })
                     }
-                    className="h-6 flex-1 rounded border border-input bg-background px-1.5 text-[11px]"
+                    className="h-6 flex-1 text-[11px]"
                   />
-                  <label className="flex items-center gap-1 text-[10px]">
-                    <input
-                      type="checkbox"
+                  <div className="flex items-center space-x-1.5">
+                    <Checkbox
+                      id={`stack-${stack.stackId}`}
                       checked={stack.enabled}
-                      onChange={(e) =>
-                        updateStack(stack.stackId, {
-                          enabled: e.target.checked,
-                        })
+                      onCheckedChange={(checked) =>
+                        updateStack(stack.stackId, { enabled: !!checked })
                       }
                     />
-                    On
-                  </label>
-                  <button
+                    <label
+                      htmlFor={`stack-${stack.stackId}`}
+                      className="text-[10px] leading-none font-medium"
+                    >
+                      On
+                    </label>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 text-muted-foreground hover:text-destructive"
                     onClick={() => removeStack(stack.stackId)}
-                    className="rounded p-0.5 text-muted-foreground hover:text-destructive"
-                    title="Delete stack"
                   >
-                    <Trash2 className="h-3 w-3" />
-                  </button>
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
                 </div>
-                <select
+
+                <Select
                   value={stack.pageId}
-                  onChange={(e) =>
-                    updateStack(stack.stackId, {
-                      pageId: e.target.value,
-                      componentIds: [],
-                    })
+                  onValueChange={(v) =>
+                    updateStack(stack.stackId, { pageId: v, componentIds: [] })
                   }
-                  className="mb-1 h-6 w-full rounded border border-input bg-background px-1.5 text-[11px]"
                 >
-                  <option value="">Select page...</option>
-                  {pageOptions.map((page) => (
-                    <option key={page.pageId} value={page.pageId}>
-                      {page.label}
-                    </option>
-                  ))}
-                </select>
-                {stack.pageId && (
-                  <div className="max-h-24 space-y-1 overflow-auto rounded border border-border p-1">
-                    {pageComponentIds.map((componentId) => (
-                      <label
-                        key={componentId}
-                        className="flex items-center gap-1 text-[10px]"
+                  <SelectTrigger className="mb-2 h-6 text-[10px]">
+                    <SelectValue placeholder="Select page..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {pageOptions.map((page) => (
+                      <SelectItem
+                        key={page.pageId}
+                        value={page.pageId}
+                        className="text-[10px]"
                       >
-                        <input
-                          type="checkbox"
+                        {page.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {stack.pageId && (
+                  <div className="max-h-24 space-y-1.5 overflow-auto rounded-md border border-input bg-background p-2">
+                    {pageComponentIds.map((componentId) => (
+                      <div
+                        key={componentId}
+                        className="flex items-center space-x-2"
+                      >
+                        <Checkbox
+                          id={`comp-${stack.stackId}-${componentId}`}
                           checked={stack.componentIds.includes(componentId)}
-                          onChange={(e) => {
-                            const next = e.target.checked
+                          onCheckedChange={(checked) => {
+                            const next = checked
                               ? [...stack.componentIds, componentId]
                               : stack.componentIds.filter(
                                   (id) => id !== componentId
@@ -465,8 +587,14 @@ export function LogicPanel() {
                             updateStack(stack.stackId, { componentIds: next });
                           }}
                         />
-                        {components[componentId]?.metadata.label || componentId}
-                      </label>
+                        <label
+                          htmlFor={`comp-${stack.stackId}-${componentId}`}
+                          className="text-[10px] font-medium"
+                        >
+                          {components[componentId]?.metadata.label ||
+                            componentId}
+                        </label>
+                      </div>
                     ))}
                   </div>
                 )}
@@ -481,101 +609,35 @@ export function LogicPanel() {
         </div>
       </div>
 
+      {/* Dependency Graph */}
       {hasContent && (
-        <div className="border-t border-border pt-2">
-          <button
-            onClick={() => setShowGraph(!showGraph)}
-            className="flex w-full items-center gap-1.5 rounded px-1 py-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+        <div className="pt-2">
+          <Separator className="mb-2" />
+          <Collapsible
+            open={showGraph}
+            onOpenChange={setShowGraph}
+            className="w-full"
           >
-            <GitBranch className="h-3 w-3" />
-            <span className="flex-1 text-left">Dependency Graph</span>
-            {showGraph ? (
-              <ChevronDown className="h-3 w-3" />
-            ) : (
-              <ChevronRight className="h-3 w-3" />
-            )}
-          </button>
-          {showGraph && (
-            <div className="mt-1.5">
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className="flex h-7 w-full items-center justify-between px-2 text-xs font-medium text-muted-foreground hover:text-foreground"
+              >
+                <div className="flex items-center gap-1.5">
+                  <GitBranch className="h-3.5 w-3.5" />
+                  Dependency Graph
+                </div>
+                {showGraph ? (
+                  <ChevronDown className="h-3.5 w-3.5" />
+                ) : (
+                  <ChevronRight className="h-3.5 w-3.5" />
+                )}
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-2 rounded-md border bg-card p-2">
               <DependencyGraph />
-            </div>
-          )}
-        </div>
-      )}
-
-      {contextMenu && (
-        <div
-          className="fixed z-[9999] min-w-[140px] rounded border border-border bg-popover p-1 shadow-md"
-          style={{ top: contextMenu.y, left: contextMenu.x }}
-        >
-          <button
-            className="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-xs hover:bg-muted"
-            onClick={() => {
-              if (contextMenu.kind === 'rule') setActiveRule(contextMenu.id);
-              else setActiveFormula(contextMenu.id);
-              setContextMenu(null);
-            }}
-          >
-            <Search className="h-3 w-3" />
-            Open
-          </button>
-          <button
-            className="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-xs hover:bg-muted"
-            onClick={() => {
-              const current =
-                contextMenu.kind === 'rule'
-                  ? rules.find((r) => r.ruleId === contextMenu.id)?.name
-                  : formulas.find((f) => f.ruleId === contextMenu.id)?.name;
-              const next = window.prompt('Rename', current || '');
-              if (!next?.trim()) return;
-              if (contextMenu.kind === 'rule') {
-                updateRule(contextMenu.id, { name: next.trim() });
-              } else {
-                useLogicStore
-                  .getState()
-                  .updateFormula(contextMenu.id, { name: next.trim() });
-              }
-              setContextMenu(null);
-            }}
-          >
-            <Copy className="h-3 w-3" />
-            Rename
-          </button>
-          {contextMenu.kind === 'rule' && (
-            <>
-              <button
-                className="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-xs hover:bg-muted"
-                onClick={() => {
-                  toggleRule(contextMenu.id);
-                  setContextMenu(null);
-                }}
-              >
-                <Power className="h-3 w-3" />
-                Toggle
-              </button>
-              <button
-                className="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-xs hover:bg-muted"
-                onClick={() => {
-                  duplicateRule(contextMenu.id);
-                  setContextMenu(null);
-                }}
-              >
-                <Copy className="h-3 w-3" />
-                Duplicate
-              </button>
-            </>
-          )}
-          <button
-            className="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-xs text-destructive hover:bg-muted"
-            onClick={() => {
-              if (contextMenu.kind === 'rule') removeRule(contextMenu.id);
-              else removeFormula(contextMenu.id);
-              setContextMenu(null);
-            }}
-          >
-            <Trash2 className="h-3 w-3" />
-            Delete
-          </button>
+            </CollapsibleContent>
+          </Collapsible>
         </div>
       )}
     </div>

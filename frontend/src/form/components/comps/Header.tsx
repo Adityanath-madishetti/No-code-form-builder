@@ -6,6 +6,7 @@ import type { BaseComponentProps, NoValidation } from '../base';
 import { inp, lbl } from '../ComponentRender.Helper';
 import { nanoid } from 'nanoid';
 import type { JSX } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 
 export interface HeaderProps extends BaseComponentProps {
   text: string;
@@ -32,12 +33,11 @@ export function HeaderRenderer({
   instanceId,
   props,
 }: RendererProps<HeaderProps, NoValidation>) {
-  // Official shadcn/ui typography classes
   const typographyClasses: Record<string, string> = {
-    h1: 'scroll-m-20 text-5xl font-extrabold tracking-tight lg:text-5xl',
-    h2: 'scroll-m-20 text-4xl font-semibold  tracking-tight first:mt-0',
-    h3: 'scroll-m-20 text-3xl font-semibold  tracking-tight',
-    h4: 'scroll-m-20 text-2xl font-semibold  tracking-tight',
+    h1: 'scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl',
+    h2: 'scroll-m-20 text-3xl font-semibold tracking-tight first:mt-0',
+    h3: 'scroll-m-20 text-2xl font-semibold tracking-tight',
+    h4: 'scroll-m-20 text-xl font-semibold tracking-tight',
   };
 
   // Dynamically resolve the semantic tag, defaulting to h2
@@ -48,11 +48,13 @@ export function HeaderRenderer({
   const className = typographyClasses[Tag as string];
 
   return (
-    <div className="py-2">
-      <Tag id={instanceId} className={className}>
-        {props.text}
-      </Tag>
-    </div>
+    <Card className="shadow-none">
+      <CardContent>
+        <Tag id={instanceId} className={className}>
+          {props.text}
+        </Tag>
+      </CardContent>
+    </Card>
   );
 }
 

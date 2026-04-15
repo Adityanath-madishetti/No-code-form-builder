@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Settings, Form, Component, Palette } from 'lucide-react';
+import { Settings, Form, Component, Palette, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Resizable } from 're-resizable';
 import {
@@ -16,6 +16,7 @@ import { FormFileExplorer } from './FormExplorerPanel';
 import { ComponentCatalogPanel } from './ComponentCatalogPanel';
 
 import { ThemePanel } from './ThemePanel';
+import { LogicPanel } from './LogicPanel';
 
 // --- 1. Data Structure Interface ---
 export interface TabItem {
@@ -116,6 +117,12 @@ const TABS_DATA: TabItem[] = [
     title: 'Form Explorer',
     icon: Form,
     content: <FormFileExplorer/>,
+  },
+  {
+    id: 'formLogic',
+    title: 'Form Logic',
+    icon: Zap,
+    content: <LogicPanel/>,
   },
   // {
   //   id: 'formTheme',

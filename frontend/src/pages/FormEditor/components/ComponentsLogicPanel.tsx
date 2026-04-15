@@ -50,8 +50,6 @@ export function ComponentLogicPanel() {
   const addFormula = useLogicStore((s) => s.addFormula);
   const removeRule = useLogicStore((s) => s.removeRule);
   const removeFormula = useLogicStore((s) => s.removeFormula);
-  const setActiveRule = useLogicStore((s) => s.setActiveRule);
-  const setActiveFormula = useLogicStore((s) => s.setActiveFormula);
   const openPopoutRule = useLogicStore((s) => s.openPopoutRule);
 
   // ── Local State ──
@@ -209,7 +207,12 @@ export function ComponentLogicPanel() {
             <DropdownMenuItem
               onClick={(e) => {
                 e.stopPropagation();
-                setActiveRule(rule.ruleId);
+                window.open(
+                  '',
+                  `logic_portal_${rule.ruleId}`,
+                  'width=800,height=600,left=200,top=200'
+                );
+                openPopoutRule(rule.ruleId);
               }}
             >
               <Search className="mr-2 h-3 w-3" /> Open
@@ -263,7 +266,12 @@ export function ComponentLogicPanel() {
             <DropdownMenuItem
               onClick={(e) => {
                 e.stopPropagation();
-                setActiveFormula(formula.ruleId);
+                window.open(
+                  '',
+                  `logic_portal_${formula.ruleId}`,
+                  'width=800,height=600,left=200,top=200'
+                );
+                openPopoutRule(formula.ruleId);
               }}
             >
               <Search className="mr-2 h-3 w-3" /> Open

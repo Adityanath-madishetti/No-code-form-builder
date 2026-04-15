@@ -218,11 +218,11 @@ export function FloatingLogicPlayground({
 }: FloatingLogicPlaygroundProps) {
   const targetId = targetRuleId || targetFormulaId;
   const rule = useLogicStore((s) =>
-    s.rules.find((r) => r.ruleId === (targetId || s.activeRuleId))
+    s.rules.find((r) => r.ruleId === (targetId))
   );
 
   const formula = useLogicStore((s) =>
-    s.formulas.find((f) => f.ruleId === (targetId || s.activeFormulaId))
+    s.formulas.find((f) => f.ruleId === (targetId))
   );
   const activeRuleId = rule?.ruleId;
 
@@ -298,12 +298,12 @@ export function FloatingLogicPlayground({
       <div className="flex h-full flex-col">
         {/* Formula Header & Body */}
         <div className="flex items-center gap-2 border-b border-border bg-background/80 px-4 py-2.5 backdrop-blur-sm">
-          <button
+          {/* <button
             onClick={onClose}
             className="text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
-          </button>
+          </button> */}
           <Calculator className="h-4 w-4 text-violet-500" />
           <input
             type="text"

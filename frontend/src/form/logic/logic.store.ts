@@ -30,8 +30,6 @@ interface LogicState {
   rules: LogicRule[];
   formulas: FormulaRule[];
   componentShuffleStacks: ComponentShuffleStack[];
-  activeRuleId: string | null;
-  activeFormulaId: string | null;
   showDependencyGraph: boolean;
   popoutRuleIds: string[];
 }
@@ -75,8 +73,6 @@ interface LogicActions {
   removeComponentShuffleStack: (stackId: string) => void;
 
   // UI
-  setActiveRule: (ruleId: string | null) => void;
-  setActiveFormula: (formulaId: string | null) => void;
   toggleDependencyGraph: () => void;
 
   // New actions for window management
@@ -101,7 +97,6 @@ export const useLogicStore = create<LogicStore>()(
     rules: [],
     formulas: [],
     componentShuffleStacks: [],
-    activeRuleId: null,
     activeFormulaId: null,
     showDependencyGraph: false,
     popoutRuleIds: [],
@@ -112,8 +107,6 @@ export const useLogicStore = create<LogicStore>()(
       const rule = createLogicRule(name, ruleType, initialFieldId);
       set((state) => {
         state.rules.push(rule);
-        state.activeRuleId = rule.ruleId;
-        state.activeFormulaId = null;
       });
       return rule.ruleId;
     },
@@ -129,7 +122,6 @@ export const useLogicStore = create<LogicStore>()(
     removeRule: (ruleId) =>
       set((state) => {
         state.rules = state.rules.filter((r) => r.ruleId !== ruleId);
-        if (state.activeRuleId === ruleId) state.activeRuleId = null;
         state.popoutRuleIds = state.popoutRuleIds.filter((id) => id !== ruleId);
       }),
 
@@ -143,7 +135,6 @@ export const useLogicStore = create<LogicStore>()(
         clone.name = `${rule.name} (copy)`;
         newId = clone.ruleId;
         state.rules.push(clone);
-        state.activeRuleId = clone.ruleId;
       });
       return newId;
     },
@@ -193,8 +184,6 @@ export const useLogicStore = create<LogicStore>()(
       }
       set((state) => {
         state.formulas.push(formula);
-        state.activeFormulaId = formula.ruleId;
-        state.activeRuleId = null;
       });
       return formula.ruleId;
     },
@@ -212,7 +201,6 @@ export const useLogicStore = create<LogicStore>()(
     removeFormula: (ruleId) =>
       set((state) => {
         state.formulas = state.formulas.filter((f) => f.ruleId !== ruleId);
-        if (state.activeFormulaId === ruleId) state.activeFormulaId = null;
         state.popoutRuleIds = state.popoutRuleIds.filter((id) => id !== ruleId);
       }),
 
@@ -243,27 +231,6 @@ export const useLogicStore = create<LogicStore>()(
       }),
 
     // ── UI ──
-
-    setActiveRule: (ruleId) =>
-      set((state) => {
-        if (ruleId === state.activeRuleId) {
-          state.activeRuleId = null;
-        } else {
-          state.activeRuleId = ruleId;
-        }
-        if (ruleId) state.activeFormulaId = null;
-      }),
-
-    setActiveFormula: (formulaId) =>
-      set((state) => {
-        if (formulaId === state.activeFormulaId) {
-          state.activeFormulaId = null;
-        } else {
-          state.activeFormulaId = formulaId;
-        }
-        state.activeFormulaId = formulaId;
-        if (formulaId) state.activeRuleId = null;
-      }),
 
     toggleDependencyGraph: () =>
       set((state) => {
@@ -297,8 +264,6 @@ export const useLogicStore = create<LogicStore>()(
           updatedAt: formula.updatedAt || new Date().toISOString(),
         }));
         state.componentShuffleStacks = stacks || [];
-        state.activeRuleId = null;
-        state.activeFormulaId = null;
       }),
 
     clearAll: () =>
@@ -306,8 +271,6 @@ export const useLogicStore = create<LogicStore>()(
         state.rules = [];
         state.formulas = [];
         state.componentShuffleStacks = [];
-        state.activeRuleId = null;
-        state.activeFormulaId = null;
       }),
   }))
 );
