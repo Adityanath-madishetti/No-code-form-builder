@@ -157,7 +157,8 @@ function PageProperties({ pageId }: { pageId: string }) {
 
   const currentIndex = orderedPageIds.indexOf(pageId);
   // const isTerminal = page.isTerminal;
-  const isTerminal = orderedPageIds.length > 0 && currentIndex === orderedPageIds.length - 1;
+  const isTerminal =
+    orderedPageIds.length > 0 && currentIndex === orderedPageIds.length - 1;
   const sequentialNextId = orderedPageIds[currentIndex + 1];
   if (!sequentialNextId) {
     console.log('faaahh!!!');

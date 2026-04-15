@@ -232,9 +232,9 @@ export function createFormulaRule(
     ruleId: crypto.randomUUID(),
     name,
     enabled: true,
-    targetId: '',
+    targetId: initialFieldId || '',
     expression: '',
-    referencedFields: initialFieldId ? [initialFieldId] : [],
+    referencedFields: [],
     updatedAt: now,
   };
 }

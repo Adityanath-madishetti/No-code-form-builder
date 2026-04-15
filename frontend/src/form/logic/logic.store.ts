@@ -188,6 +188,9 @@ export const useLogicStore = create<LogicStore>()(
 
     addFormula: (name, initialFieldId) => {
       const formula = createFormulaRule(name, initialFieldId);
+      if (initialFieldId) {
+        formula.targetId = initialFieldId;
+      }
       set((state) => {
         state.formulas.push(formula);
         state.activeFormulaId = formula.ruleId;

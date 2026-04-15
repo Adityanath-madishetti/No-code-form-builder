@@ -332,7 +332,7 @@ function syncPageOrdering(state: {
     const isLast = i === pagesArray.length - 1;
     const sequentialNextId = pagesArray[i + 1];
 
-    page.isTerminal = isLast;
+    page.isTerminal = page.isTerminal || isLast;
 
     if (isLast) {
       page.defaultNextPageId = undefined;
