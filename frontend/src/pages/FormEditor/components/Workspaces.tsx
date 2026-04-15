@@ -35,7 +35,6 @@ import { toast } from 'sonner';
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import {
@@ -43,6 +42,23 @@ import {
   getRuleDiagnostics,
   type RuleWarning,
 } from '@/form/logic/logic.store';
+
+import {
+  Menubar,
+  MenubarCheckboxItem,
+  MenubarContent,
+  MenubarGroup,
+  MenubarItem,
+  MenubarMenu,
+  MenubarRadioGroup,
+  MenubarRadioItem,
+  MenubarSeparator,
+  MenubarShortcut,
+  MenubarSub,
+  MenubarSubContent,
+  MenubarSubTrigger,
+  MenubarTrigger,
+} from '@/components/ui/menubar';
 
 interface RulesWarningDialogProps {
   open: boolean;
@@ -318,7 +334,7 @@ export function PublishButton({
   const [isOverlapDialogOpen, setIsOverlapDialogOpen] = useState(false);
   const [ruleWarningData, setRuleWarningData] = useState<RuleWarning[]>([]);
 
-  const shareLink = formId ? `${window.location.origin}/forms/s/${formId}` : '';
+  const shareLink = formId ? `${window.location.origin}/forms/${formId}` : '';
   const components = useFormStore((s) => s.components);
 
   const handleCopy = async () => {
@@ -455,6 +471,173 @@ export function PublishButton({
   );
 }
 
+type MenuItemType = 'item' | 'separator' | 'sub' | 'checkbox' | 'radio';
+
+interface MenuItem {
+  type: MenuItemType;
+  text?: string;
+  shortcut?: string;
+  disabled?: boolean;
+  inset?: boolean;
+  checked?: boolean; // For Checkbox items
+  value?: string; // For Radio items
+  onClick?: () => void;
+  items?: MenuItem[]; // For Submenus
+  className?: string
+}
+
+interface MenuSection {
+  trigger: string;
+  content: MenuItem[];
+}
+
+const formBuilderMenuConfig: MenuSection[] = [
+  {
+    trigger: 'Form',
+    content: [
+      {
+        type: 'item',
+        text: 'New Blank Form',
+        shortcut: '⌘N',
+        // onClick: () => handleCreateNew(),
+      },
+      {
+        type: 'item',
+        text: 'Duplicate Form',
+        shortcut: '⌘D',
+        // onClick: () => handleDuplicate(),
+      },
+      { type: 'separator' },
+      {
+        type: 'sub',
+        text: 'Export As...',
+        items: [
+          { type: 'item', text: 'JSON Schema (.json)' },
+          { type: 'item', text: 'PDF Document (.pdf)' },
+          { type: 'item', text: 'React Component (.tsx)' },
+        ],
+      },
+      {
+        type: 'sub',
+        text: 'Share',
+        items: [
+          { type: 'item', text: 'Copy Public Link' },
+          { type: 'item', text: 'Embed in Website' },
+          { type: 'item', text: 'Email to Collaborators' },
+        ],
+      },
+      { type: 'separator' },
+      {
+        type: 'item',
+        text: 'Print Preview',
+        shortcut: '⌘P',
+      },
+      {
+        type: 'item',
+        text: 'Delete Form',
+        className: 'text-red-500', // Custom styling for destructive actions
+      },
+    ],
+  },
+  {
+    trigger: 'Edit',
+    content: [
+      { type: 'item', text: 'Undo', shortcut: '⌘Z' },
+      { type: 'item', text: 'Redo', shortcut: '⇧⌘Z' },
+      { type: 'separator' },
+      { type: 'item', text: 'Clear All Fields', inset: true },
+      { type: 'item', text: 'Auto-arrange Layout', inset: true },
+    ],
+  },
+  {
+    trigger: 'View',
+    content: [
+      { type: 'checkbox', text: 'Show Field IDs', checked: true },
+      { type: 'checkbox', text: 'Show Grid Lines', checked: false },
+      { type: 'checkbox', text: 'Responsive Preview', checked: true },
+      { type: 'separator' },
+      { type: 'item', text: 'Open Logic Map', inset: true },
+    ],
+  },
+  {
+    trigger: 'Profiles',
+    content: [
+      { type: 'radio', text: 'Admin Mode', value: 'admin' },
+      { type: 'radio', text: 'Editor Mode', value: 'editor' },
+      { type: 'radio', text: 'Viewer Only', value: 'viewer' },
+      { type: 'separator' },
+      { type: 'item', text: 'Account Settings...', inset: true },
+    ],
+  },
+];
+
+export function DynamicMenubar() {
+  const renderMenuItems = (items: MenuItem[]) => {
+    return items.map((item, index) => {
+      if (item.type === 'separator') return <MenubarSeparator key={index} />;
+
+      if (item.type === 'sub') {
+        return (
+          <MenubarSub key={item.text}>
+            <MenubarSubTrigger className={item.className}>{item.text}</MenubarSubTrigger>
+            <MenubarSubContent className="shadow-none">
+              {item.items && renderMenuItems(item.items)}
+            </MenubarSubContent>
+          </MenubarSub>
+        );
+      }
+
+      if (item.type === 'checkbox') {
+        return (
+          <MenubarCheckboxItem key={item.text} checked={item.checked}>
+            {item.text}
+          </MenubarCheckboxItem>
+        );
+      }
+
+      if (item.type === 'radio') {
+        return (
+          <MenubarRadioItem key={item.value} value={item.value!}>
+            {item.text}
+          </MenubarRadioItem>
+        );
+      }
+
+      return (
+        <MenubarItem
+          key={item.text}
+          disabled={item.disabled}
+          inset={item.inset}
+          onClick={item.onClick}
+        >
+          {item.text}
+          {item.shortcut && <MenubarShortcut>{item.shortcut}</MenubarShortcut>}
+        </MenubarItem>
+      );
+    });
+  };
+
+  return (
+    <Menubar className="w-72 border-none">
+      {formBuilderMenuConfig.map((menu) => (
+        <MenubarMenu key={menu.trigger}>
+          <MenubarTrigger>{menu.trigger}</MenubarTrigger>
+          <MenubarContent className="shadow-none">
+            {/* Wrap in RadioGroup if it contains radio items */}
+            {menu.content.some((i) => i.type === 'radio') ? (
+              <MenubarRadioGroup value="benoit">
+                {renderMenuItems(menu.content)}
+              </MenubarRadioGroup>
+            ) : (
+              <MenubarGroup>{renderMenuItems(menu.content)}</MenubarGroup>
+            )}
+          </MenubarContent>
+        </MenubarMenu>
+      ))}
+    </Menubar>
+  );
+}
+
 interface WorkspacesProps {
   editorView: 'canvas' | 'logic' | 'workflow' | 'formProperties' | 'theming';
   setEditorView: (
@@ -497,6 +680,7 @@ export function Workspaces({
   return (
     <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border bg-background px-3 py-[5.5px]">
       <div className="flex items-center gap-1">
+        <DynamicMenubar />
         {/* <button
           onClick={() => setEditorView('canvas')}
           className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors ${

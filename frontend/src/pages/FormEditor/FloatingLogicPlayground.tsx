@@ -1,4 +1,4 @@
-// src/pages/FormEditor/components/LogicPlayground.tsx
+// src/pages/FormEditor/components/FloatingLogicPlayground.tsx
 /**
  * Logic Playground — Rule/Formula editor that replaces the form canvas.
  * Renders the full IF → THEN → ELSE builder for the active rule,
@@ -216,18 +216,15 @@ export function FloatingLogicPlayground({
   targetRuleId,
   targetFormulaId,
 }: FloatingLogicPlaygroundProps) {
-  const storeActiveRuleId = useLogicStore((s) => s.activeRuleId);
-  const activeRuleId = targetRuleId || storeActiveRuleId;
-
-  const storeActiveFormulaId = useLogicStore((s) => s.activeFormulaId);
-  const activeFormulaId = targetFormulaId || storeActiveFormulaId;
-
+  const targetId = targetRuleId || targetFormulaId;
   const rule = useLogicStore((s) =>
-    s.rules.find((r) => r.ruleId === activeRuleId)
+    s.rules.find((r) => r.ruleId === (targetId || s.activeRuleId))
   );
+
   const formula = useLogicStore((s) =>
-    s.formulas.find((f) => f.ruleId === activeFormulaId)
+    s.formulas.find((f) => f.ruleId === (targetId || s.activeFormulaId))
   );
+  const activeRuleId = rule?.ruleId;
 
   const updateRule = useLogicStore((s) => s.updateRule);
   const updateRuleCondition = useLogicStore((s) => s.updateRuleCondition);

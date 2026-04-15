@@ -354,6 +354,8 @@ export function FormRunner() {
   const [submitting, setSubmitting] = useState(false);
   const logicEngineRef = useRef<FormLogicEngine | null>(null);
 
+  const [hasLocalSubmission, setHasLocalSubmission] = useState(false);
+
   const { initRuntimeForm } = useRuntimeFormStore();
 
   const [mySubmissions, setMySubmissions] = useState<SubmissionEntry[]>([]);
@@ -378,6 +380,12 @@ export function FormRunner() {
         if (!isMounted) return;
 
         initRuntimeForm(res);
+        const localSubmissionFlag = localStorage.getItem(
+          `form_${formId}_submitted`
+        );
+        if (localSubmissionFlag === 'true') {
+          setHasLocalSubmission(true);
+        }
 
         const currentEmail = user?.email || '';
         if (currentEmail) {
@@ -392,15 +400,7 @@ export function FormRunner() {
           );
         }
 
-        if (
-          settings.submissionPolicy === 'none' &&
-          !settings.canViewOwnSubmission
-        ) {
-          throw new Error('This form is no longer accepting submissions.');
-        }
-
-        // Only block loading once submissions are ALSO fetched (if allowed)
-        if (settings.canViewOwnSubmission && user) {
+        if (user) {
           try {
             const subRes = await api.get<{ submissions: SubmissionEntry[] }>(
               `/api/forms/${formId}/submissions/mine`
@@ -453,14 +453,33 @@ export function FormRunner() {
 
   const submitDisabledByPolicy = useMemo(() => {
     if (!settings) return false;
-    if (settings.submissionPolicy === 'none') return true;
-    if (!user) return false;
-    if (!hasExisting) return false;
-    if (settings.submissionPolicy === 'edit_only' && !editingSubmissionId) {
-      return true;
+
+    // If the user is actively editing, submission is always allowed
+    if (editingSubmissionId) return false;
+
+    // If the user already has a submission, check if they can make a NEW one
+    if (hasExisting) {
+      if (
+        settings.submissionPolicy === 'none' || // "none" means submit only once
+        settings.submissionPolicy === 'edit_only' // Can edit, but cannot create new
+      ) {
+        return true;
+      }
     }
+
+    // 2. Anonymous User Check (Client-side truth)
+    // If they aren't logged in, but their browser remembers submitting, and the policy is "once"
+    if (!user && hasLocalSubmission) {
+      if (
+        settings.submissionPolicy === 'none' ||
+        settings.submissionPolicy === 'edit_only'
+      ) {
+        return true;
+      }
+    }
+
     return false;
-  }, [settings, user, hasExisting, editingSubmissionId]);
+  }, [settings, editingSubmissionId, hasExisting, user, hasLocalSubmission]);
 
   const showHistoryList = !!(
     settings?.canViewOwnSubmission &&
@@ -474,6 +493,9 @@ export function FormRunner() {
     user &&
     hasExisting
   );
+
+  const isLockedOut =
+    submitDisabledByPolicy && !showHistoryList && !editingSubmissionId;
 
   const methods = useForm<Record<string, unknown>>({
     mode: 'onTouched',
@@ -713,6 +735,7 @@ export function FormRunner() {
         );
       } else {
         await api.post(`/api/forms/${formId}/submissions`, payload);
+        localStorage.setItem(`form_${formId}_submitted`, 'true');
       }
 
       // 4. Redirect on success
@@ -772,45 +795,43 @@ export function FormRunner() {
 
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-background px-4 text-center">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10">
-          <AlertCircle className="h-5 w-5 text-destructive" />
-        </div>
+        {!requiresLogin && (
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10">
+            <AlertCircle className="h-5 w-5 text-destructive" />
+          </div>
+        )}
         <div className="mb-2 flex flex-col gap-1">
           <p className="text-sm font-medium text-foreground">
-            {requiresLogin ? 'Authentication Required' : 'Error loading form'}
+            {requiresLogin ? 'Sign In Required' : 'Error loading form'}
           </p>
           <p className="max-w-sm text-sm text-muted-foreground">
-            {globalFormError ||
-              'We could not find the form you are looking for.'}
+            {requiresLogin
+              ? 'The creator of this form requires you to sign in before continuing.'
+              : globalFormError ||
+                'We could not find the form you are looking for.'}
           </p>
         </div>
 
-        {requiresLogin ? (
-          <LoginDialog />
-        ) : (
-          <Button variant="outline" size="sm" onClick={() => navigate('/')}>
-            Back to Home
-          </Button>
-        )}
+        {requiresLogin && <LoginDialog />}
       </div>
     );
   }
 
-  if (globalFormError || !formData) {
+  if (isLockedOut) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-background px-4 text-center">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10">
-          <AlertCircle className="h-5 w-5 text-destructive" />
-        </div>
-        <div className="flex flex-col gap-1">
-          <p className="text-sm font-medium text-foreground">
-            Error loading form
-          </p>
-          <p className="max-w-sm text-sm text-muted-foreground">
-            {globalFormError ||
-              'We could not find the form you are looking for.'}
-          </p>
-        </div>
+      <div className="mx-auto mt-15 mb-15 max-w-3xl">
+        <Card className="border-amber-200 bg-amber-50">
+          <CardContent className="flex flex-col items-center justify-center p-12 text-center">
+            <AlertCircle className="mb-4 h-10 w-10 text-amber-500" />
+            <h2 className="text-xl font-semibold text-amber-900">
+              Already Submitted
+            </h2>
+            <p className="mt-2 text-amber-700">
+              You have already completed this form. Multiple submissions are not
+              permitted.
+            </p>
+          </CardContent>
+        </Card>
       </div>
     );
   }

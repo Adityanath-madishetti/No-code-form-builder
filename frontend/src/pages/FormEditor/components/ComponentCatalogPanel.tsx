@@ -134,7 +134,7 @@ function DraggableCatalogItem({
     <div className="relative w-full">
       {/* Ghost */}
       <div
-        className={`flex aspect-square w-full flex-col items-center justify-center gap-1.5 border p-2 text-center transition-opacity ${
+        className={`flex aspect-square w-full flex-col items-center justify-center gap-1.5 rounded-md border p-2 text-center transition-opacity ${
           isDragging ? 'border-dashed opacity-40' : 'opacity-0'
         }`}
       >
@@ -149,7 +149,7 @@ function DraggableCatalogItem({
       {/* Draggable */}
       <div
         ref={ref}
-        className={`absolute top-0 left-0 flex aspect-square h-full w-full cursor-grab touch-none flex-col items-center justify-center gap-1.5 border bg-card p-2 text-center text-card-foreground transition-all hover:border-primary/50 hover:bg-muted/40 hover:shadow-sm active:cursor-grabbing ${
+        className={`absolute top-0 left-0 flex aspect-square h-full w-full cursor-grab touch-none flex-col items-center justify-center gap-1.5 rounded-md border bg-card p-2 text-center text-card-foreground transition-all hover:border-primary/50 hover:bg-muted/40 hover:shadow-sm active:cursor-grabbing ${
           isDragging ? 'z-50 opacity-95' : 'z-10'
         }`}
         title={description}
@@ -201,7 +201,7 @@ export function ComponentCatalogPanel() {
   }, [filteredComponents]);
 
   return (
-    <div key={catalogRefreshKey} className="flex flex-col gap-4">
+    <div key={catalogRefreshKey} className="flex flex-col gap-4 p-4">
       {/* Search */}
       <div className="relative">
         <Search className="absolute top-2.5 left-2.5 h-3.5 w-3.5 text-muted-foreground" />

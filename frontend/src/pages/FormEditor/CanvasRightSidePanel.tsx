@@ -12,8 +12,8 @@ import {
 
 import { FormPropertiesPanel } from './components/FormPropertiesPanel';
 
-import ComponentsSidePanel from './ComponentsSidePanel';
 import { FormFileExplorer } from './FormExplorerPanel';
+import { ComponentCatalogPanel } from './components/ComponentCatalogPanel';
 
 // --- 1. Data Structure Interface ---
 export interface TabItem {
@@ -115,12 +115,12 @@ const TABS_DATA: TabItem[] = [
     icon: Form,
     content: <FormFileExplorer/>,
   },
-  // {
-  //   id: 'componentProperties',
-  //   title: 'Component Properties',
-  //   icon: Component,
-  //   content: <ComponentsSidePanel />,
-  // },
+  {
+    id: 'componentsCatalog',
+    title: 'Components Catalog',
+    icon: Component,
+    content: <ComponentCatalogPanel />,
+  },
   {
     id: 'formSettings',
     title: 'Form Settings',

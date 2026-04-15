@@ -13,7 +13,6 @@ import {
 } from '@/form/utils/DndUtils';
 import { LayoutGrid } from 'lucide-react';
 import {
-  RichTextEditor,
   sharedProseClasses,
 } from '@/components/RichTextEditor';
 import { SelectablePage } from '@/form/renderer/SelectableWrapper';

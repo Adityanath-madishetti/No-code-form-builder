@@ -10,8 +10,17 @@ import { useShallow } from 'zustand/react/shallow';
 import { getComponentPropsRenderer } from '@/form/registry/componentRegistry';
 import { Settings2, EyeOff } from 'lucide-react';
 import { useMemo } from 'react';
-import { inp } from '@/form/components/ComponentRender.Helper';
-
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 // function supportsHidden(props: unknown): boolean {
 //   if (!props || typeof props !== 'object') return false;
 //   return 'hidden' in (props as object);
@@ -166,72 +175,82 @@ function PageProperties({ pageId }: { pageId: string }) {
 
   return (
     <>
-      <div className="flex items-center gap-2 border-b border-border pb-3">
+      {/* <div className="flex items-center gap-2 border-b border-border pb-3">
         <span className="text-[10px] font-bold tracking-widest text-muted-foreground/50 uppercase">
           Page Properties
         </span>
-      </div>
+      </div> */}
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-muted-foreground">
+        <Label className="text-xs font-medium text-muted-foreground">
           Title
-        </label>
-        <input
+        </Label>
+        <Input
           value={page.title || ''}
           onChange={(e) => updatePageTitle(pageId, e.target.value)}
           placeholder="Page title"
-          className="w-full border border-border bg-background px-2 py-1.5 text-sm outline-none focus:border-primary"
         />
       </div>
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-muted-foreground">
+        <Label className="text-xs font-medium text-muted-foreground">
           Description
-        </label>
-        <textarea
+        </Label>
+        <Textarea
           value={page.description || ''}
           onChange={(e) => updatePageDesc(pageId, e.target.value)}
           placeholder="Page description"
           rows={3}
-          className="w-full resize-y border border-border bg-background px-2 py-1.5 text-sm outline-none focus:border-primary"
+          className=""
         />
       </div>
-      <div className="mt-2 mb-4 flex flex-col gap-1">
-        <label className="text-xs font-medium text-muted-foreground">
+       {/* Logic Routing Section */}
+      <div className="space-y-2">
+        <Label className="text-xs font-medium text-muted-foreground">
           After this page
-        </label>
+        </Label>
 
         {isTerminal ? (
-          // The last page has no routing options.
-          <div className="w-full cursor-not-allowed border border-border/50 bg-muted/30 px-2 py-1.5 text-sm text-muted-foreground select-none">
+          <div className="flex h-10 w-full items-center rounded-md border border-input bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+            <Badge
+              variant="outline"
+              className="mr-2 h-5 bg-background font-mono text-[9px] tracking-tighter uppercase"
+            >
+              End
+            </Badge>
             Submit Form
           </div>
         ) : (
-          <select
-            // Fallback to the sequential ID if nextPageId is undefined
+          <Select
             value={page.defaultNextPageId || sequentialNextId || ''}
-            onChange={(e) => updatePageNextPage(pageId, e.target.value)}
-            className={inp}
+            onValueChange={(val) => updatePageNextPage(pageId, val)}
           >
-            {orderedPageIds.map((optId, idx) => {
-              // Prevent a page from logically routing to itself
-              if (optId === pageId) return null;
+            <SelectTrigger className="bg-background/50">
+              <SelectValue placeholder="Select next destination" />
+            </SelectTrigger>
+            <SelectContent>
+              {orderedPageIds.map((optId, idx) => {
+                if (optId === pageId) return null;
 
-              const optPage = pages[optId];
-              const fallbackName = `Page ${idx + 1}`;
-              const displayName = optPage?.title || fallbackName;
+                const optPage = pages[optId];
+                const displayName = optPage?.title || `Page ${idx + 1}`;
+                const isSequential = optId === sequentialNextId;
 
-              // Add a visual indicator in the dropdown for the default sequential path
-              const isSequential = optId === sequentialNextId;
-
-              return (
-                <option key={optId} value={optId}>
-                  {isSequential
-                    ? `Continue to next (${displayName})`
-                    : `Jump to ${displayName}`}
-                </option>
-              );
-            })}
-            {/* <option value="_submit">Submit Form</option> */}
-          </select>
+                return (
+                  <SelectItem key={optId} value={optId}>
+                    <div className="flex items-center gap-2">
+                      <span className="max-w-[160px] truncate">
+                        {displayName}
+                      </span>
+                      {isSequential && (
+                        <span className="text-[10px] text-muted-foreground italic">
+                          (Sequential)
+                        </span>
+                      )}
+                    </div>
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
         )}
       </div>
     </>

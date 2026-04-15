@@ -16,7 +16,6 @@ import {
   DRAG_CATALOG_GROUP_ID,
 } from '@/form/utils/DndUtils';
 
-import { Rnd } from 'react-rnd';
 import { EditorSidebar, type SidebarPanelId } from './components/EditorSidebar';
 import { ComponentCatalogPanel } from './components/ComponentCatalogPanel';
 import { TemplateCatalogPanel } from './components/TemplateCatalogPanel';
@@ -49,7 +48,10 @@ import {
 import { useWorkflowStore } from '@/form/workflow/workflowStore';
 
 import SidebarLayout from './CanvasRightSidePanel';
-import { FloatingLogicPlayground, LogicWindowPortal } from './FloatingLogicPlayground';
+import {
+  FloatingLogicPlayground,
+  LogicWindowPortal,
+} from './FloatingLogicPlayground';
 
 const PANEL_TITLES: Record<SidebarPanelId, string> = {
   components: 'Components',
@@ -347,7 +349,7 @@ export default function FormEditor() {
     >
       <div className="isolate flex h-screen w-full overflow-hidden bg-neutral-50 dark:bg-neutral-950">
         {/* ── Left icon rail ── */}
-        <EditorSidebar
+        {/* <EditorSidebar
           activePanel={activePanel}
           onPanelChange={(panel) => {
             if (panel === 'theme') {
@@ -357,45 +359,16 @@ export default function FormEditor() {
             }
             setActivePanel(panel);
           }}
-        />
+        /> */}
 
         {/* ── Main area with react-rnd custom resizable panels ── */}
         <div className="relative flex h-full flex-1 overflow-hidden">
           {/* ── Left fly-out panel ── */}
-          {activePanel && (
-            <Rnd
-              disableDragging
-              enableResizing={{ right: true }}
-              size={{ width: leftWidth, height: '100%' }}
-              minWidth="20%"
-              maxWidth="35%"
-              onResize={(_e, _dir, ref) => setLeftWidth(ref.style.width)}
-              style={{ position: 'relative', transform: 'none' }}
-              className="z-10 shrink-0 border-r border-border bg-background"
-            >
-              <div className="flex h-full flex-col">
-                <div className="flex h-10 shrink-0 items-center gap-2 border-b border-border px-3">
-                  <span className="flex-1 text-xs font-semibold tracking-widest text-muted-foreground uppercase">
-                    {PANEL_TITLES[activePanel]}
-                  </span>
-                  <button
-                    onClick={() => setActivePanel(null)}
-                    title="Collapse Sidebar"
-                    className="text-muted-foreground transition-colors hover:text-foreground"
-                  >
-                    <PanelLeftClose className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-                <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-3">
-                  <PanelContent panelId={activePanel} />
-                </div>
-              </div>
-            </Rnd>
-          )}
 
           {/* ── Centre area: Form canvas OR Logic playground ── */}
           <div className="relative flex h-full min-w-[400px] flex-1 flex-col overflow-hidden bg-neutral-100 dark:bg-neutral-900">
             {/* Workspaces navbar */}
+
             <Workspaces
               editorView={editorView}
               setEditorView={setEditorView}
@@ -420,7 +393,50 @@ export default function FormEditor() {
               <>
                 {/* 1. New outer wrapper: Horizontal flex layout */}
                 <div className="flex h-full w-full overflow-hidden bg-muted/20">
+                  {/* <EditorSidebar
+                    activePanel={activePanel}
+                    onPanelChange={(panel) => {
+                      if (panel === 'theme') {
+                        setActivePanel(null);
+                        setEditorView('theming');
+                        return;
+                      }
+                      setActivePanel(panel);
+                    }}
+                  /> */}
                   {/* 2. Left/Center Area: Your Form Canvas */}
+                  {/* {activePanel && (
+                    <Rnd
+                      disableDragging
+                      enableResizing={{ right: true }}
+                      size={{ width: leftWidth, height: '100%' }}
+                      minWidth="250px"
+                      maxWidth="35%"
+                      onResize={(_e, _dir, ref) =>
+                        setLeftWidth(ref.style.width)
+                      }
+                      style={{ transform: 'none' }}
+                      className="z-10 shrink-0 border-r border-border bg-background"
+                    >
+                      <div className="flex h-full flex-col">
+                        <div className="flex h-10 shrink-0 items-center gap-2 border-b border-border px-3">
+                          <span className="flex-1 text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+                            {PANEL_TITLES[activePanel]}
+                          </span>
+                          <button
+                            onClick={() => setActivePanel(null)}
+                            title="Collapse Sidebar"
+                            className="text-muted-foreground transition-colors hover:text-foreground"
+                          >
+                            <PanelLeftClose className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-3">
+                          <PanelContent panelId={activePanel} />
+                        </div>
+                      </div>
+                    </Rnd>
+                  )} */}
                   <div
                     className="relative flex flex-1 flex-col overflow-y-auto"
                     onClick={handleCanvasClick}
@@ -458,34 +474,34 @@ export default function FormEditor() {
             )}
 
             {/* Logic playground view */}
-            {editorView === 'logic' && (
+            {/* {editorView === 'logic' && (
               <div className="flex-1 overflow-hidden">
                 <LogicPlayground onClose={() => setEditorView('canvas')} />
               </div>
-            )}
+            )} */}
 
             {/* Workflow editor view */}
-            {editorView === 'workflow' && (
+            {/* {editorView === 'workflow' && (
               <div className="flex-1 overflow-y-auto">
                 <WorkflowPanel />
               </div>
-            )}
+            )} */}
 
             {/* Theming editor view */}
-            {editorView === 'theming' && (
+            {/* {editorView === 'theming' && (
               <div className="flex-1 overflow-hidden">
                 <ThemingPage />
               </div>
-            )}
+            )} */}
 
             {/* Form properties view */}
-            {editorView === 'formProperties' && (
+            {/* {editorView === 'formProperties' && (
               <div className="flex-1 overflow-y-auto">
                 <div className="p-3">
                   <FormPropertiesPanel />
                 </div>
               </div>
-            )}
+            )} */}
           </div>
 
           {/* ── Right properties panel (custom resizable, anchored right) ── */}

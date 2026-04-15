@@ -1,3 +1,4 @@
+// src/pages/FormEditor/components/LogicPanel
 import {
   Zap,
   Calculator,
