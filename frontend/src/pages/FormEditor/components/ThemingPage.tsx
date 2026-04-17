@@ -130,27 +130,27 @@ function ColorsSection() {
     return theme?.color ?? 'default';
   }, [activeTab, selectedPageId, pages, theme?.color]);
 
-  const currentPrimary = useMemo(() => {
-    if (activeTab === 'page' && selectedPageId) {
-      return (
-        pages[selectedPageId]?.themeOverrides?.primaryColor ??
-        theme?.primaryColor ??
-        ''
-      );
-    }
-    return theme?.primaryColor ?? '';
-  }, [activeTab, selectedPageId, pages, theme?.primaryColor]);
+  // const currentPrimary = useMemo(() => {
+  //   if (activeTab === 'page' && selectedPageId) {
+  //     return (
+  //       pages[selectedPageId]?.themeOverrides?.primaryColor ??
+  //       theme?.primaryColor ??
+  //       ''
+  //     );
+  //   }
+  //   return theme?.primaryColor ?? '';
+  // }, [activeTab, selectedPageId, pages, theme?.primaryColor]);
 
-  const currentText = useMemo(() => {
-    if (activeTab === 'page' && selectedPageId) {
-      return (
-        pages[selectedPageId]?.themeOverrides?.textColor ??
-        theme?.textColor ??
-        ''
-      );
-    }
-    return theme?.textColor ?? '';
-  }, [activeTab, selectedPageId, pages, theme?.textColor]);
+  // const currentText = useMemo(() => {
+  //   if (activeTab === 'page' && selectedPageId) {
+  //     return (
+  //       pages[selectedPageId]?.themeOverrides?.textColor ??
+  //       theme?.textColor ??
+  //       ''
+  //     );
+  //   }
+  //   return theme?.textColor ?? '';
+  // }, [activeTab, selectedPageId, pages, theme?.textColor]);
 
   const setColor = useCallback(
     (color: formThemeColor) => {
@@ -163,27 +163,27 @@ function ColorsSection() {
     [activeTab, selectedPageId, update, updatePageOverrides]
   );
 
-  const setPrimary = useCallback(
-    (primaryColor: string) => {
-      if (activeTab === 'page' && selectedPageId) {
-        updatePageOverrides(selectedPageId, { primaryColor });
-      } else {
-        update({ primaryColor });
-      }
-    },
-    [activeTab, selectedPageId, update, updatePageOverrides]
-  );
+  // const setPrimary = useCallback(
+  //   (primaryColor: string) => {
+  //     if (activeTab === 'page' && selectedPageId) {
+  //       updatePageOverrides(selectedPageId, { primaryColor });
+  //     } else {
+  //       update({ primaryColor });
+  //     }
+  //   },
+  //   [activeTab, selectedPageId, update, updatePageOverrides]
+  // );
 
-  const setTextColor = useCallback(
-    (textColor: string) => {
-      if (activeTab === 'page' && selectedPageId) {
-        updatePageOverrides(selectedPageId, { textColor });
-      } else {
-        update({ textColor });
-      }
-    },
-    [activeTab, selectedPageId, update, updatePageOverrides]
-  );
+  // const setTextColor = useCallback(
+  //   (textColor: string) => {
+  //     if (activeTab === 'page' && selectedPageId) {
+  //       updatePageOverrides(selectedPageId, { textColor });
+  //     } else {
+  //       update({ textColor });
+  //     }
+  //   },
+  //   [activeTab, selectedPageId, update, updatePageOverrides]
+  // );
 
   return (
     <Section id="colors" icon={Palette} title="Colors">
@@ -211,7 +211,7 @@ function ColorsSection() {
       </div>
 
       {/* Custom primary color */}
-      <label className="mb-1.5 block text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+      {/* <label className="mb-1.5 block text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
         Custom Primary Color
       </label>
       <div className="mb-3 flex items-center gap-2">
@@ -237,10 +237,10 @@ function ColorsSection() {
             <X className="h-3.5 w-3.5" />
           </button>
         )}
-      </div>
+      </div> */}
 
       {/* Text color */}
-      <label className="mb-1.5 block text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+      {/* <label className="mb-1.5 block text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
         Text Color
       </label>
       <div className="flex items-center gap-2">
@@ -266,7 +266,7 @@ function ColorsSection() {
             <X className="h-3.5 w-3.5" />
           </button>
         )}
-      </div>
+      </div> */}
     </Section>
   );
 }
@@ -630,10 +630,10 @@ function TypographySection() {
       return (
         pages[selectedPageId]?.themeOverrides?.headingFont?.family ??
         theme?.headingFont?.family ??
-        formFontNames.Inter
+        formFontNames.GoogleSans
       );
     }
-    return theme?.headingFont?.family ?? formFontNames.Inter;
+    return theme?.headingFont?.family ?? formFontNames.GoogleSans;
   }, [activeTab, selectedPageId, pages, theme?.headingFont?.family]);
 
   const bodyFont = useMemo(() => {
@@ -641,10 +641,10 @@ function TypographySection() {
       return (
         pages[selectedPageId]?.themeOverrides?.bodyFont?.family ??
         theme?.bodyFont?.family ??
-        formFontNames.Inter
+        formFontNames.GoogleSans
       );
     }
-    return theme?.bodyFont?.family ?? formFontNames.Inter;
+    return theme?.bodyFont?.family ?? formFontNames.GoogleSans;
   }, [activeTab, selectedPageId, pages, theme?.bodyFont?.family]);
 
   const setHeadingFont = useCallback(

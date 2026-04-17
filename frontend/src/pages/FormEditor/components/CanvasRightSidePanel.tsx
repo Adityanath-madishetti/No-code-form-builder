@@ -124,12 +124,12 @@ const TABS_DATA: TabItem[] = [
     icon: Zap,
     content: <LogicPanel/>,
   },
-  // {
-  //   id: 'formTheme',
-  //   title: 'Form Theme',
-  //   icon: Palette,
-  //   content: <ThemePanel/>,
-  // },
+  {
+    id: 'formTheme',
+    title: 'Form Theme',
+    icon: Palette,
+    content: <ThemePanel/>,
+  },
   {
     id: 'componentsCatalog',
     title: 'Components Catalog',

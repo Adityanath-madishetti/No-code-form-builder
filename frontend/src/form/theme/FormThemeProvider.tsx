@@ -1,7 +1,6 @@
 // src/form/theme/FormThemeProvider.tsx
 import type { ReactNode } from 'react';
 import { useMemo } from 'react';
-import { formSelectors, useFormStore } from '@/form/store/form.store';
 import { formThemeColors, formThemeModes } from './formTheme';
 import type {
   FormTheme,
@@ -111,15 +110,17 @@ function mergeThemes(
 
 interface FormThemeProviderProps {
   children: ReactNode;
+  globalTheme: FormTheme | null;
   /** Optional page-level overrides pre-merged externally */
   pageOverrides?: Partial<FormTheme>;
 }
 
 export function FormThemeProvider({
   children,
+  globalTheme,
   pageOverrides,
 }: FormThemeProviderProps) {
-  const globalTheme = useFormStore(formSelectors.formTheme);
+  // const globalTheme = useFormStore(formSelectors.formTheme);
 
   // Compute final theme atomically — no flash
   const theme = useMemo(
@@ -176,8 +177,8 @@ export function FormThemeProvider({
 
   const customColorVars = useMemo<React.CSSProperties>(() => {
     const vars: Record<string, string> = {};
-    if (theme?.primaryColor) vars['--form-primary'] = theme.primaryColor;
-    if (theme?.textColor) vars['--form-text'] = theme.textColor;
+    // if (theme?.primaryColor) vars['--form-primary'] = theme.primaryColor;
+    // if (theme?.textColor) vars['--form-text'] = theme.textColor;
     return vars as React.CSSProperties;
   }, [theme]);
 
@@ -190,7 +191,7 @@ export function FormThemeProvider({
         layoutCls,
         compCls,
         'form-theme-container',
-        'min-h-full',
+        'min-h-[99vh]',
       ]
         .filter(Boolean)
         .join(' ')}

@@ -450,22 +450,22 @@ const SettingsSchema = new Schema(
 
 const ThemeSchema = new Schema(
     {
-        themeId: {
-            type: String,
-            required: true,
+        color: String,
+        mode: String,
+        headingFont: { family: String },
+        bodyFont: { family: String },
+        background: {
+            type: Schema.Types.Mixed, // Quickest way to accept your nested background object
+            default: {}
         },
-
-        primaryColor: {
-            type: String,
+        layout: {
+            type: Schema.Types.Mixed,
+            default: {}
         },
-
-        backgroundColor: {
-            type: String,
-        },
-
-        fontFamily: {
-            type: String,
-        },
+        componentProps: {
+            type: Schema.Types.Mixed,
+            default: {}
+        }
     },
     { _id: false }
 );
@@ -489,9 +489,7 @@ const MetaSchema = new Schema(
             default: "",
         },
 
-        theme: {
-            type: ThemeSchema,
-        },
+        
 
         isDraft: {
             type: Boolean,
@@ -548,6 +546,10 @@ const FormVersionSchema = new Schema(
         meta: {
             type: MetaSchema,
             required: true,
+        },
+
+        theme: {
+            type: ThemeSchema,
         },
 
         settings: {

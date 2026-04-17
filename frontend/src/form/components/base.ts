@@ -230,12 +230,12 @@ export interface FormThemeComponentProps {
 }
 
 export interface FormTheme {
-  color: formThemeColor;
+  color: string;
   mode: formThemeMode;
   headingFont: Font;
   bodyFont: Font;
-  primaryColor?: string;
-  textColor?: string;
+  // primaryColor?: string;
+  // textColor?: string;
   background?: FormThemeBackground;
   layout?: FormThemeLayout;
   componentProps?: FormThemeComponentProps;

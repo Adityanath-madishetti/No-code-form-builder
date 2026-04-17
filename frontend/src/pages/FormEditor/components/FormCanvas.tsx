@@ -1,5 +1,5 @@
 // src/pages/FormEditor/components/FormCanvas.tsx
-import { useFormStore } from '@/form/store/form.store';
+import { formSelectors, useFormStore } from '@/form/store/form.store';
 import { FormModeProvider } from '@/form/context/FormModeContext';
 import { FormThemeProvider } from '@/form/theme/FormThemeProvider';
 import { RenderPage } from '@/form/renderer/editRenderer/RenderPage';
@@ -12,9 +12,7 @@ import {
   DRAG_CATALOG_GROUP_ID,
 } from '@/form/utils/DndUtils';
 import { LayoutGrid } from 'lucide-react';
-import {
-  sharedProseClasses,
-} from '@/components/RichTextEditor';
+import { sharedProseClasses } from '@/components/RichTextEditor';
 import { SelectablePage } from '@/form/renderer/SelectableWrapper';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -52,6 +50,7 @@ function EmptyPageDrop({ pageId, index }: { pageId: string; index: number }) {
 export function FormCanvas({ currentPageIndex }: FormCanvasProps) {
   const form = useFormStore((s) => s.form);
   const pages = useFormStore(useShallow((s) => s.pages));
+  const globalTheme = useFormStore(formSelectors.formTheme)
 
   if (!form || form.pages.length === 0) {
     return (
@@ -69,9 +68,9 @@ export function FormCanvas({ currentPageIndex }: FormCanvasProps) {
   const hasComponents = (page?.children ?? []).length > 0;
 
   return (
-    <FormThemeProvider>
+    <FormThemeProvider globalTheme={globalTheme}>
       <FormModeProvider value="edit">
-        <div className="mx-auto w-full max-w-3xl px-8 py-6">
+        <div className="mx-auto w-full max-w-3xl min-h-screen px-8 py-6">
           {/* Editable form title on first page */}
           <FormHeader />
           <Separator className="mt-5" />
@@ -106,7 +105,7 @@ function FormHeader() {
       <Card>
         <CardHeader>
           <div className="w-full bg-transparent text-5xl font-bold tracking-tight text-foreground outline-none">
-            {formName}
+            <h1>{formName}</h1>
           </div>
         </CardHeader>
         {formDescription && (

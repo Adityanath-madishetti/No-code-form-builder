@@ -33,7 +33,7 @@ async function assertCanEdit(formId, user) {
 async function applyVersionUpdates({ formId, versionNum, uid, user, payload }) {
     const { form } = await assertCanEdit(formId, user);
 
-    const allowedFields = ["meta", "settings", "pages", "logic", "workflow", "access"];
+    const allowedFields = ["meta", "theme", "settings", "pages", "logic", "workflow", "access"];
     const updates = {};
     for (const field of allowedFields) {
         if (payload[field] !== undefined) {

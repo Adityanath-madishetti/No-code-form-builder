@@ -26,6 +26,8 @@ export const runtimeFormSelector = {
   formData: (state: RuntimeFormStore) => state.formData,
   renderState: (state: RuntimeFormStore) => state.renderState,
 
+  theme: (state: RuntimeFormStore) => state.formData?.version.theme ?? null,
+
   currentPageId: (state: RuntimeFormStore) => state.renderState?.currentPageId,
 
   currentPage: (state: RuntimeFormStore) => {

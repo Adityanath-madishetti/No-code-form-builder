@@ -40,6 +40,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { LogIn, Mail } from 'lucide-react'; // Ensure LogIn and Mail are included here
+import { FormThemeProvider } from '@/form/theme/FormThemeProvider';
 
 function flattenResponses(
   pages: SubmissionEntry['pages']
@@ -186,7 +187,7 @@ export function TrueForm({
         <Card>
           <CardHeader>
             <div className="w-full bg-transparent text-5xl font-bold tracking-tight text-foreground outline-none">
-              {formData.form.title}
+              <h1>{formData.form.title}</h1>
             </div>
           </CardHeader>
           {formData.version.meta.description && (
@@ -278,7 +279,7 @@ export function TrueForm({
             <Button
               key="btn-back"
               type="button"
-              variant="secondary"
+              // variant="secondary"
               onClick={handleBack}
               disabled={!hasPrevious || submitting}
             >
@@ -498,7 +499,7 @@ export function FormRunner() {
     submitDisabledByPolicy && !showHistoryList && !editingSubmissionId;
 
   const methods = useForm<Record<string, unknown>>({
-    mode: 'onTouched',
+    // mode: 'onTouched',
     shouldUnregister: false,
     defaultValues: {},
   });
@@ -701,6 +702,7 @@ export function FormRunner() {
             currentPageState?.ComponentStates || {};
 
           const activeResponses = page.components
+            // TODO: check if only the heading has to be excluded
             .filter((comp) => comp.componentType !== 'heading') // Ignore visual components
             .filter((comp) => {
               const state = componentStatesForPage[comp.componentId];
@@ -753,6 +755,10 @@ export function FormRunner() {
       setSubmitting(false);
     }
   };
+
+  const globalTheme = useRuntimeFormStore(
+    useShallow(runtimeFormSelector.theme)
+  );
 
   const currentPageState =
     currentPageId && renderState ? renderState.PageStates[currentPageId] : null;
@@ -842,91 +848,99 @@ export function FormRunner() {
   }
 
   return (
-    <div className="mx-auto mt-15 mb-15 max-w-3xl">
+    <>
       {showHistoryList ? (
         <>
-          <Card className="mb-8">
-            <CardHeader className="flex flex-row items-center justify-between pb-3">
-              <h2 className="text-lg font-semibold">Your Submissions</h2>
-              {!submitDisabledByPolicy && (
-                <Button size="sm" onClick={handleStartNew}>
-                  New Submission
-                </Button>
-              )}
-            </CardHeader>
-            <CardContent>
-              {mySubmissions.length === 0 ? (
-                <div className="text-xs text-muted-foreground">Loading...</div>
-              ) : (
-                <div className="space-y-2">
-                  {mySubmissions.map((submission) => (
-                    <div
-                      key={submission.submissionId}
-                      className="flex items-center justify-between rounded border border-border px-3 py-2"
-                    >
-                      <div className="text-sm font-medium text-muted-foreground">
-                        {new Date(submission.createdAt).toLocaleString()}
+          <div className="mx-auto mt-15 mb-15 max-w-3xl">
+            <Card className="mb-8">
+              <CardHeader className="flex flex-row items-center justify-between pb-3">
+                <h2 className="text-lg font-semibold">Your Submissions</h2>
+                {!submitDisabledByPolicy && (
+                  <Button size="sm" onClick={handleStartNew}>
+                    New Submission
+                  </Button>
+                )}
+              </CardHeader>
+              <CardContent>
+                {mySubmissions.length === 0 ? (
+                  <div className="text-xs text-muted-foreground">
+                    Loading...
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {mySubmissions.map((submission) => (
+                      <div
+                        key={submission.submissionId}
+                        className="flex items-center justify-between rounded border border-border px-3 py-2"
+                      >
+                        <div className="text-sm font-medium text-muted-foreground">
+                          {new Date(submission.createdAt).toLocaleString()}
+                        </div>
+                        {canEditSubmission && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => startEditingSubmission(submission)}
+                          >
+                            <Pencil className="mr-1.5 h-3.5 w-3.5" />
+                            Edit
+                          </Button>
+                        )}
                       </div>
-                      {canEditSubmission && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => startEditingSubmission(submission)}
-                        >
-                          <Pencil className="mr-1.5 h-3.5 w-3.5" />
-                          Edit
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
-          {submitDisabledByPolicy && editingSubmissionId && (
-            <div className="mb-6 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
-              New submissions are disabled by form policy. Edit an existing
-              submission above.
-            </div>
-          )}
+            {submitDisabledByPolicy && editingSubmissionId && (
+              <div className="mb-6 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+                New submissions are disabled by form policy. Edit an existing
+                submission above.
+              </div>
+            )}
 
-          {submitDisabledByPolicy && !editingSubmissionId && (
-            <div className="mb-6 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
-              New submissions are disabled by form policy.
-            </div>
-          )}
+            {submitDisabledByPolicy && !editingSubmissionId && (
+              <div className="mb-6 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+                New submissions are disabled by form policy.
+              </div>
+            )}
+          </div>
         </>
       ) : (
         <>
-          {submitDisabledByPolicy && !editingSubmissionId && (
+          {/* {submitDisabledByPolicy && !editingSubmissionId && (
             <div className="mb-6 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
               New submissions are disabled by form policy.
             </div>
-          )}
+          )} */}
 
-          <TrueForm
-            methods={methods}
-            formData={formData}
-            currentPage={currentPage}
-            componentsData={componentsData}
-            componentsStates={componentsStates}
-            backendToFrontend={backendToFrontend}
-            getComponentRenderer={getComponentRenderer}
-            handleNext={handleNext}
-            handleBack={handleBack}
-            handleBackToList={handleBackToList}
-            onSubmit={onSubmit}
-            hasNext={hasNext}
-            hasPrevious={hasPrevious}
-            submitting={submitting}
-            editingSubmissionId={editingSubmissionId}
-            submitDisabledByPolicy={submitDisabledByPolicy}
-            showBackToList={showBackToList}
-            sharedProseClasses={sharedProseClasses}
-          />
+          <FormThemeProvider globalTheme={globalTheme}>
+            <div className="px-auto max-w-3xl pt-15 pb-15">
+              <TrueForm
+                methods={methods}
+                formData={formData}
+                currentPage={currentPage}
+                componentsData={componentsData}
+                componentsStates={componentsStates}
+                backendToFrontend={backendToFrontend}
+                getComponentRenderer={getComponentRenderer}
+                handleNext={handleNext}
+                handleBack={handleBack}
+                handleBackToList={handleBackToList}
+                onSubmit={onSubmit}
+                hasNext={hasNext}
+                hasPrevious={hasPrevious}
+                submitting={submitting}
+                editingSubmissionId={editingSubmissionId}
+                submitDisabledByPolicy={submitDisabledByPolicy}
+                showBackToList={showBackToList}
+                sharedProseClasses={sharedProseClasses}
+              />
+            </div>
+          </FormThemeProvider>
         </>
       )}
-    </div>
+    </>
   );
 }

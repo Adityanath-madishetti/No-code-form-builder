@@ -7,6 +7,7 @@ import type {
   FormAccess,
   FormPage,
   FormSettings,
+  FormTheme,
   SubmissionPolicy,
 } from '@/form/components/base';
 import type {
@@ -78,6 +79,7 @@ interface BackendFormVersion {
     description: string;
     isDraft: boolean;
   };
+  theme: FormTheme;
   settings?: BackendSettings;
   access?: BackendAccess;
   pages: BackendPage[];
@@ -174,7 +176,7 @@ export async function loadFormVersion(formId: string): Promise<{
       authorId: v.meta.createdBy,
       version: v.version,
     },
-    theme: null,
+    theme: v.theme,
     access: normalizeAccess(v.access),
     settings: normalizeSettings(v.settings),
     pages: v.pages.map((p) => p.pageId),
@@ -287,6 +289,7 @@ export async function saveFormVersion(
       description: storeForm.metadata.description || '',
       isDraft: true,
     },
+    theme: storeForm.theme,
     settings: {
       collectEmailMode: storeForm.settings.collectEmailMode,
       submissionPolicy: storeForm.settings.submissionPolicy,

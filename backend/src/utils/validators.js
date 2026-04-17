@@ -58,17 +58,29 @@ const formVersionPayloadSchema = {
                 isDraft: { type: "boolean" },
                 isMultiPage: { type: "boolean" },
                 isQuiz: { type: "boolean" },
-                theme: {
-                    type: "object",
-                    properties: {
-                        themeId: { type: "string" },
-                        primaryColor: { type: "string" },
-                        backgroundColor: { type: "string" },
-                        fontFamily: { type: "string" },
-                    },
-                },
+                
             },
             required: ["createdBy", "name"],
+        },
+        theme: {
+            type: "object",
+            properties: {
+                color: { type: "string" },
+                mode: { type: "string" },
+                headingFont: { 
+                    type: "object",properties: {
+                        family: { type: "string" } 
+                    }
+                },
+                bodyFont: { 
+                    type: "object", 
+                    properties: {
+                        family: { type: "string" }
+                    }
+                },
+                // primaryColor: { type: "string" },
+                // backgroundColor: { type: "string" },
+            },
         },
         settings: {
             type: "object",

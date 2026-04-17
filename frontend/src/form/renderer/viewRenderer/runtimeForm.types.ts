@@ -1,3 +1,4 @@
+import type { FormTheme } from '@/form/components/base';
 import type {
   LogicRule,
   FormulaRule,
@@ -54,6 +55,7 @@ export interface PublicFormData {
     formId: string;
     version: number;
     meta: { name: string; description: string };
+    theme: FormTheme
     settings: VersionSettings;
     pages: PublicPageData[];
     logic?: PublicLogicData;

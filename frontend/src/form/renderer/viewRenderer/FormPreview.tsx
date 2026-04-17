@@ -5,7 +5,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { runtimeFormSelector, useRuntimeFormStore } from './runtimeForm.store';
 import { backendToFrontend } from '@/lib/frontendBackendCompArray';
 import { getComponentRenderer } from '@/form/registry/componentRegistry';
-import type { ComponentID } from '@/form/components/base';
+import type { ComponentID, FormTheme } from '@/form/components/base';
 import { FormLogicEngine } from '@/form/logic/formLogicEngine';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight, Eye, Loader2, AlertCircle } from 'lucide-react';
@@ -20,10 +20,12 @@ import type {
   PublicPageData,
   VersionSettings,
 } from './runtimeForm.types';
+import { FormThemeProvider } from '@/form/theme/FormThemeProvider';
 
 interface VersionData {
   formId: string;
   version: number;
+  theme: FormTheme;
   meta: { name: string; description: string };
   settings: VersionSettings;
   pages: PublicPageData[];
@@ -103,7 +105,7 @@ export default function FormPreview() {
 
   // --- React Hook Form Setup ---
   const methods = useForm<Record<string, unknown>>({
-    mode: 'onTouched',
+    // mode: 'onTouched',
     shouldUnregister: false,
     defaultValues: {},
   });
@@ -230,6 +232,10 @@ export default function FormPreview() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [methods.watch, triggerLogicEvaluation]);
 
+  const globalTheme = useRuntimeFormStore(
+    useShallow(runtimeFormSelector.theme)
+  );
+
   // --- Navigation & Submission Handlers ---
   const currentPageState =
     currentPageId && renderState ? renderState.PageStates[currentPageId] : null;
@@ -306,127 +312,129 @@ export default function FormPreview() {
 
   // --- Main Form Render ---
   return (
-    <div className="mx-auto mt-15 mb-15 max-w-3xl min-w-3xl">
-      <div className="mb-4 flex items-center justify-center gap-2 rounded-md bg-blue-50 py-2 text-sm font-medium text-blue-700">
-        <Eye className="h-4 w-4" />
-        Preview Mode
-      </div>
+    <FormThemeProvider globalTheme={globalTheme}>
+      <div className="mx-auto mt-15 mb-15 max-w-3xl min-w-3xl">
+        <div className="mb-4 flex items-center justify-center gap-2 rounded-md bg-blue-50 py-2 text-sm font-medium text-blue-700">
+          <Eye className="h-4 w-4" />
+          Preview Mode
+        </div>
 
-      <FormProvider {...methods}>
-        <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6">
-          {/* Header Section */}
-          <Card>
-            <CardHeader>
-              <div className="w-full bg-transparent text-5xl font-bold tracking-tight text-foreground outline-none">
-                {formData.form.title}
-              </div>
-            </CardHeader>
-            {formData.version.meta.description && (
-              <CardContent>
-                <div
-                  className={sharedProseClasses}
-                  dangerouslySetInnerHTML={{
-                    __html: formData.version.meta.description,
-                  }}
-                />
-              </CardContent>
-            )}
-          </Card>
-
-          <Separator className="mt-5" />
-
-          {/* Page Meta Section */}
-          {(currentPage?.title || currentPage?.description) && (
+        <FormProvider {...methods}>
+          <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Header Section */}
             <Card>
               <CardHeader>
-                <div className="text-4xl font-semibold tracking-tight">
-                  {currentPage?.title}
+                <div className="w-full bg-transparent text-5xl font-bold tracking-tight text-foreground outline-none">
+                  <h1>{formData.form.title}</h1>
                 </div>
               </CardHeader>
-              {currentPage?.description && (
+              {formData.version.meta.description && (
                 <CardContent>
-                  <div className={`tracking-tight ${sharedProseClasses}`}>
-                    {currentPage?.description}
-                  </div>
+                  <div
+                    className={sharedProseClasses}
+                    dangerouslySetInnerHTML={{
+                      __html: formData.version.meta.description,
+                    }}
+                  />
                 </CardContent>
               )}
             </Card>
-          )}
 
-          {/* Components Mapping */}
-          <div className="space-y-4">
-            {componentsData.length === 0 ? (
-              <p className="text-gray-500">
-                No components to display on this page.
-              </p>
-            ) : (
-              componentsData.map((comp) => {
-                const frontendId = backendToFrontend[comp.componentType];
-                const Renderer = getComponentRenderer(
-                  frontendId as ComponentID
-                );
+            <Separator className="mt-5" />
 
-                const isHidden =
-                  componentsStates[comp.componentId]?.isHidden ?? false;
-
-                if (isHidden) return null;
-
-                if (!Renderer) {
-                  return (
-                    <div
-                      key={comp.componentId}
-                      className="border bg-red-50 p-4 text-red-500"
-                    >
-                      Unknown component type: {comp.componentType}
+            {/* Page Meta Section */}
+            {(currentPage?.title || currentPage?.description) && (
+              <Card>
+                <CardHeader>
+                  <div className="text-4xl font-semibold tracking-tight">
+                    {currentPage?.title}
+                  </div>
+                </CardHeader>
+                {currentPage?.description && (
+                  <CardContent>
+                    <div className={`tracking-tight ${sharedProseClasses}`}>
+                      {currentPage?.description}
                     </div>
-                  );
-                }
-
-                return (
-                  <Renderer
-                    key={comp.componentId}
-                    metadata={null}
-                    props={comp.props}
-                    validation={comp.validation}
-                    instanceId={comp.componentId}
-                  />
-                );
-              })
+                  </CardContent>
+                )}
+              </Card>
             )}
-          </div>
 
-          {/* Footer Navigation */}
-          <div className="mt-8 flex items-center justify-between border-t pt-6">
-            <div className="flex items-center gap-2">
-              <Button
-                key="btn-back"
-                type="button"
-                variant="secondary"
-                onClick={handleBack}
-                disabled={!hasPrevious}
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back
-              </Button>
+            {/* Components Mapping */}
+            <div className="space-y-4">
+              {componentsData.length === 0 ? (
+                <p className="text-gray-500">
+                  No components to display on this page.
+                </p>
+              ) : (
+                componentsData.map((comp) => {
+                  const frontendId = backendToFrontend[comp.componentType];
+                  const Renderer = getComponentRenderer(
+                    frontendId as ComponentID
+                  );
+
+                  const isHidden =
+                    componentsStates[comp.componentId]?.isHidden ?? false;
+
+                  if (isHidden) return null;
+
+                  if (!Renderer) {
+                    return (
+                      <div
+                        key={comp.componentId}
+                        className="border bg-red-50 p-4 text-red-500"
+                      >
+                        Unknown component type: {comp.componentType}
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <Renderer
+                      key={comp.componentId}
+                      metadata={null}
+                      props={comp.props}
+                      validation={comp.validation}
+                      instanceId={comp.componentId}
+                    />
+                  );
+                })
+              )}
             </div>
 
-            {hasNext ? (
-              <Button key="btn-next" type="button" onClick={handleNext}>
-                Next
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            ) : (
-              <Button
-                key="btn-submit"
-                type="submit"
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                Submit (Preview)
-              </Button>
-            )}
-          </div>
-        </form>
-      </FormProvider>
-    </div>
+            {/* Footer Navigation */}
+            <div className="mt-8 flex items-center justify-between border-t pt-6">
+              <div className="flex items-center gap-2">
+                <Button
+                  key="btn-back"
+                  type="button"
+                  // variant="secondary"
+                  onClick={handleBack}
+                  disabled={!hasPrevious}
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back
+                </Button>
+              </div>
+
+              {hasNext ? (
+                <Button key="btn-next" type="button" onClick={handleNext}>
+                  Next
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              ) : (
+                <Button
+                  key="btn-submit"
+                  type="submit"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                >
+                  Submit (Preview)
+                </Button>
+              )}
+            </div>
+          </form>
+        </FormProvider>
+      </div>
+    </FormThemeProvider>
   );
 }
