@@ -17,8 +17,8 @@
   --font-merriweather: 'Merriweather', serif;
 
   /* Theme defaults */
-  --form-font-heading: var(--font-inter);
-  --form-font-body: var(--font-inter);
+  --form-font-heading: var(--font-google-sans);
+  --form-font-body: var(--font-google-sans);
 }
 
 /* Font name mapping classes (optional, if needed for direct use) */

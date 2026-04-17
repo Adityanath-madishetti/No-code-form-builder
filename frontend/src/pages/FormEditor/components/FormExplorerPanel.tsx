@@ -44,7 +44,8 @@ function ExplorerPanel() {
       setActivePage(pageId);
       setActiveComponent(null);
       setCurrentPageIndex(pageIndex);
-if (!isCurrentlyExpanded) setPageExpanded(pageId, true);    },
+      if (!isCurrentlyExpanded) setPageExpanded(pageId, true);
+    },
     [setActivePage, setActiveComponent, setCurrentPageIndex, setPageExpanded]
   );
 
@@ -165,8 +166,6 @@ export function FormFileExplorer() {
     },
     [handleAddPage]
   );
-
-  
 
   // Generic Resize Handler
   const createResizeHandler = useCallback(
@@ -321,7 +320,7 @@ function ResizeHandle({
   if (!isVisible) return null;
   return (
     <div
-      className="z-10 h-[1px] w-full shrink-0 cursor-row-resize bg-border/40 transition-colors hover:bg-primary/50 active:bg-primary/80"
+      className="z-10 h-[1px] w-full shrink-0 cursor-row-resize bg-border/40 transition-colors hover:h-[5px] hover:bg-primary/50 active:bg-primary/80"
       onMouseDown={onMouseDown}
     />
   );

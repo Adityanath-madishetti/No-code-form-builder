@@ -64,8 +64,8 @@ export const DEFAULT_FORM_THEME: {
 } = {
   color: formThemeColors.Default,
   mode: formThemeModes.Light,
-  headingFont: { family: formFontNames.Inter },
-  bodyFont: { family: formFontNames.Inter },
+  headingFont: { family: formFontNames.GoogleSans },
+  bodyFont: { family: formFontNames.GoogleSans },
   background: {
     type: 'solid',
     solidColor: '',

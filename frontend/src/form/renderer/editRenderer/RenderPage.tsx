@@ -34,7 +34,11 @@ export const RenderPage = ({
 
   const { ref: contentDropRef } = useDroppable({
     id: `content-drop-${pageId}`,
-    accept: [DRAG_COMPONENT_ID, DRAG_CATALOG_COMPONENT_ID, DRAG_CATALOG_GROUP_ID],
+    accept: [
+      DRAG_COMPONENT_ID,
+      DRAG_CATALOG_COMPONENT_ID,
+      DRAG_CATALOG_GROUP_ID,
+    ],
     data: { type: DRAG_PAGE_ID, pageId: pageId },
   });
 
@@ -57,11 +61,7 @@ export const RenderPage = ({
 
   const rendered = (
     <div ref={mode === 'edit' ? contentDropRef : undefined}>
-      <div
-        className={`relative flex flex-col gap-2 bg-transparent ${
-          mode === 'edit' ? 'border border-border/30 p-6' : ''
-        }`}
-      >
+      <div className="relative flex flex-col gap-2 bg-transparent">
         {componentIds.length === 0 && (
           <div className="flex min-h-[120px] items-center justify-center text-sm text-muted-foreground/40">
             Drop components here

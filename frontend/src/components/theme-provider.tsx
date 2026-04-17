@@ -141,6 +141,7 @@ export function ThemeProvider({
 
   React.useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      return;
       if (event.repeat) {
         return
       }

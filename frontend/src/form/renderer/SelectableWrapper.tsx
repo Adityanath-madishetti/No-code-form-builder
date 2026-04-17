@@ -218,10 +218,10 @@ export const SelectableComponent = ({
               : 'hover:ring-1 hover:ring-border'
           } ${
             isHiddenByDefault ? 'opacity-40' : ''
-          } border border-border/50 bg-background ${isSelected ? 'border-foreground opacity-50' : ''} `}
+          } border border-border/50 ${isSelected ? 'border-foreground opacity-50' : ''} `}
         >
           {/* Slide/Drag Handle - Left Middle (Half In, Half Out) */}
-          <div
+          {/* <div
             className={`absolute top-1/2 -left-2 z-30 flex -translate-y-1/2 transition-opacity ${
               isActive ? 'opacity-100' : 'opacity-100'
             }`}
@@ -231,7 +231,6 @@ export const SelectableComponent = ({
               data-dnd-kit-drag-handle
               title="Drag to reorder"
             >
-              {/* Six dots pattern inside the rectangle */}
               <div className="grid grid-cols-2 gap-0.5">
                 <div className="h-0.5 w-0.5 rounded-full bg-current"></div>
                 <div className="h-0.5 w-0.5 rounded-full bg-current"></div>
@@ -241,18 +240,18 @@ export const SelectableComponent = ({
                 <div className="h-0.5 w-0.5 rounded-full bg-current"></div>
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Header + content */}
           <div className="w-full">
-            <div className="flex items-center gap-1 border-b border-border/50 bg-background px-1 py-1 pl-6">
+            <div className="flex items-center gap-1 border-b border-border/50  px-1 py-1">
               {/* Top-left expand/collapse */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   toggleComponentCollapsed(component.instanceId);
                 }}
-                className="flex h-5 w-5 cursor-pointer items-center justify-center rounded-none border border-border/50 bg-background text-muted-foreground/60 transition-colors hover:bg-muted/50 hover:text-foreground"
+                className="flex h-5 w-5 cursor-pointer items-center justify-center rounded-none border border-border/50 bg-card text-muted-foreground/60 transition-colors hover:bg-muted/50 hover:text-foreground"
                 aria-label={
                   isCollapsed ? 'Expand component' : 'Collapse component'
                 }
@@ -279,7 +278,7 @@ export const SelectableComponent = ({
                   onChange={(e) =>
                     updateLabel(component.instanceId, { label: e.target.value })
                   }
-                  className="h-5 flex-1 truncate rounded-none border border-border/50 bg-background px-1 font-mono text-[11px] font-semibold text-foreground/80"
+                  className="h-5 flex-1 truncate rounded-none border border-border/50 bg-card px-1 font-mono text-[11px] font-semibold text-foreground/80"
                 />
 
                 {/* Copy instanceId */}
@@ -296,7 +295,7 @@ export const SelectableComponent = ({
                       // ignore clipboard errors; user can still select/copy manually
                     }
                   }}
-                  className="flex h-5 w-5 cursor-pointer items-center justify-center rounded-none border border-border/50 bg-background text-muted-foreground/60 transition-colors hover:bg-muted/50 hover:text-foreground"
+                  className="flex h-5 w-5 cursor-pointer items-center justify-center rounded-none border border-border/50 bg-card text-muted-foreground/60 transition-colors hover:bg-muted/50 hover:text-foreground"
                   aria-label="Copy component id"
                   title="Copy component id"
                 >
@@ -322,7 +321,7 @@ export const SelectableComponent = ({
                       setDeleteDoNotAskAgain(false);
                       setDeleteConfirmOpen(true);
                     }}
-                    className="flex h-5 w-5 cursor-pointer items-center justify-center rounded-none border border-border/50 bg-background text-muted-foreground/60 transition-colors hover:bg-destructive/10 hover:text-destructive"
+                    className="flex h-5 w-5 cursor-pointer items-center justify-center rounded-none border border-border/50 bg-card text-muted-foreground/60 transition-colors hover:bg-destructive/10 hover:text-destructive"
                     aria-label="Delete component"
                     title="Delete component"
                   >
@@ -339,7 +338,7 @@ export const SelectableComponent = ({
                         setActivePage(null);
                       }
                     }}
-                    className="flex h-5 w-5 cursor-pointer items-center justify-center rounded-none border border-border/50 bg-background text-muted-foreground/60 transition-colors hover:bg-muted/50 hover:text-foreground"
+                    className="flex h-5 w-5 cursor-pointer items-center justify-center rounded-none border border-border/50 bg-card text-muted-foreground/60 transition-colors hover:bg-muted/50 hover:text-foreground"
                     aria-label="Duplicate component"
                     title="Duplicate component"
                   >
@@ -356,7 +355,7 @@ export const SelectableComponent = ({
                       setMoveTargetPosition(Math.min(index + 1, maxPos));
                       setMoveModalOpen(true);
                     }}
-                    className="flex h-5 w-5 cursor-pointer items-center justify-center rounded-none border border-border/50 bg-background text-muted-foreground/60 transition-colors hover:bg-muted/50 hover:text-foreground"
+                    className="flex h-5 w-5 cursor-pointer items-center justify-center rounded-none border border-border/50 bg-card text-muted-foreground/60 transition-colors hover:bg-muted/50 hover:text-foreground"
                     aria-label="Move component"
                     title="Move component"
                   >
@@ -370,7 +369,7 @@ export const SelectableComponent = ({
                       setActiveComponent(component.instanceId);
                       setActivePage(null);
                     }}
-                    className="flex h-5 w-5 cursor-pointer items-center justify-center rounded-none border border-border/50 bg-background text-muted-foreground/60 transition-colors hover:bg-muted/50 hover:text-foreground"
+                    className="flex h-5 w-5 cursor-pointer items-center justify-center rounded-none border border-border/50 bg-card text-muted-foreground/60 transition-colors hover:bg-muted/50 hover:text-foreground"
                     aria-label="Component properties"
                     title="Component properties"
                   >
@@ -381,7 +380,7 @@ export const SelectableComponent = ({
             </div>
 
             {/* Collapsible content */}
-            {!isCollapsed && <div className="p-1 pr-1 pl-6">{children}</div>}
+            {!isCollapsed && <div className="p-1 pr-1">{children}</div>}
           </div>
 
           {/* Delete confirmation modal (with "do this for every time") */}
