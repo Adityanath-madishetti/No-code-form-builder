@@ -15,6 +15,9 @@ import {
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+
+export const DONT_ASK_DELETE_FORM_KEY = 'dontAskAgainDeleteForm';
 
 interface DeleteFormDialogProps {
   formId: string;
@@ -33,11 +36,13 @@ export function DeleteFormDialog({
 }: DeleteFormDialogProps) {
   const [confirmText, setConfirmText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+  const [dontAskAgain, setDontAskAgain] = useState(false);
 
   // Clear the input field whenever the dialog closes
   useEffect(() => {
     if (!open) {
       setConfirmText('');
+      setDontAskAgain(false);
     }
   }, [open]);
 
@@ -45,6 +50,10 @@ export function DeleteFormDialog({
 
   const handleDelete = async () => {
     if (!isMatch) return;
+
+    if (dontAskAgain) {
+      localStorage.setItem(DONT_ASK_DELETE_FORM_KEY, 'true');
+    }
 
     setIsDeleting(true);
     try {
@@ -102,9 +111,24 @@ export function DeleteFormDialog({
             <Input
               value={confirmText}
               onChange={(e) => setConfirmText(e.target.value)}
-              placeholder="Enter form ID"
+              placeholder="Enter form Name"
               disabled={isDeleting}
             />
+          </div>
+          
+          <div className="flex items-center space-x-2 pt-2">
+            <Checkbox 
+              id="dont-ask-delete-form" 
+              checked={dontAskAgain} 
+              onCheckedChange={(checked) => setDontAskAgain(checked === true)} 
+              disabled={isDeleting}
+            />
+            <label
+              htmlFor="dont-ask-delete-form"
+              className="text-sm font-medium leading-none cursor-pointer select-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              Don't ask again
+            </label>
           </div>
         </div>
 

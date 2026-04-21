@@ -244,7 +244,7 @@ export const SelectableComponent = ({
 
           {/* Header + content */}
           <div className="w-full">
-            <div className="flex items-center gap-1 border-b border-border/50  px-1 py-1">
+            <div className="flex items-center gap-1 border-b border-border/50 px-1 py-1">
               {/* Top-left expand/collapse */}
               <button
                 onClick={(e) => {
@@ -648,7 +648,6 @@ export const SelectablePage = ({
 }: SelectablePageProps) => {
   const setActivePage = useFormStore((s) => s.setActivePage);
   const setActiveComponent = useFormStore((s) => s.setActiveComponent);
-  const removePage = useFormStore((s) => s.removePage);
 
   const { ref, isDragging } = useSortable({
     id: pageId,
@@ -674,20 +673,6 @@ export const SelectablePage = ({
         isDragging ? 'opacity-40' : 'opacity-100'
       }`}
     >
-      <div className="absolute top-1 -right-9 z-20">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            removePage(pageId);
-          }}
-          className="flex h-5 w-5 cursor-pointer items-center justify-center border border-border/50 bg-background/95 text-muted-foreground/60 shadow-lg backdrop-blur-sm transition-colors hover:bg-destructive/10 hover:text-destructive"
-          aria-label="Remove page"
-          title="Remove page"
-        >
-          <Trash2 className="h-3 w-3" />
-        </button>
-      </div>
-
       {children}
     </div>
   );

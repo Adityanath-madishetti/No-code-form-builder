@@ -54,7 +54,12 @@ import {
   getCreatorLabel,
   matchesDateFilter,
 } from '../dashboard.utils';
-import { DeleteFormDialog } from '@/components/DeleteFormDialog';
+import {
+  DeleteFormDialog,
+  DONT_ASK_DELETE_FORM_KEY,
+} from '@/components/DeleteFormDialog';
+import { deleteForm } from '@/lib/formApi';
+import { toast } from 'sonner';
 
 const LIST_COLUMNS =
   'grid-cols-[minmax(0,2fr)_minmax(0,1.5fr)_minmax(0,1.5fr)_minmax(0,1fr)_120px]';
@@ -82,6 +87,39 @@ export default function MyFormsTab({ forms, onReload }: Props) {
     formId: string;
     formTitle: string;
   }>({ isOpen: false, formId: '', formTitle: '' });
+
+  const requestDelete = async (formId: string, formTitle: string) => {
+    const dontAsk = localStorage.getItem(DONT_ASK_DELETE_FORM_KEY) === 'true';
+    if (dontAsk) {
+      try {
+        await deleteForm(formId);
+        toast.success('Form deleted successfully', {
+          position: 'top-center',
+          style: {
+            '--normal-bg':
+              'color-mix(in oklab, light-dark(var(--color-green-600), var(--color-green-400)) 10%, var(--background))',
+            '--normal-text':
+              'light-dark(var(--color-green-600), var(--color-green-400))',
+            '--normal-border':
+              'light-dark(var(--color-green-600), var(--color-green-400))',
+          } as React.CSSProperties,
+        });
+        await onReload();
+      } catch {
+        toast.error('Failed to delete form. Please try again.', {
+          position: 'top-center',
+          style: {
+            '--normal-bg':
+              'color-mix(in oklab, var(--destructive) 10%, var(--background))',
+            '--normal-text': 'var(--destructive)',
+            '--normal-border': 'var(--destructive)',
+          } as React.CSSProperties,
+        });
+      }
+    } else {
+      setDeleteDialog({ isOpen: true, formId, formTitle });
+    }
+  };
 
   const [newTitle, setNewTitle] = useState('');
   const [isRenaming, setIsRenaming] = useState(false);
@@ -339,11 +377,7 @@ export default function MyFormsTab({ forms, onReload }: Props) {
                             variant="ghost"
                             className="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                             onClick={() =>
-                              setDeleteDialog({
-                                isOpen: true,
-                                formId: form.formId,
-                                formTitle: form.title,
-                              })
+                              requestDelete(form.formId, form.title)
                             }
                           >
                             <Trash2 className="h-4 w-4" />
@@ -427,6 +461,14 @@ export default function MyFormsTab({ forms, onReload }: Props) {
                         }
                       >
                         <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                        onClick={() => requestDelete(form.formId, form.title)}
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>

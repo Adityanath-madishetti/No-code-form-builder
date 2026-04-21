@@ -1,5 +1,5 @@
 // frontend/src/pages/FormEditor/components/FormExplorerPanel.tsx
-import React, { useCallback } from 'react';
+import React, { useCallback, useState, useContext } from 'react';
 import {
   ChevronRight,
   ChevronDown,
@@ -14,6 +14,10 @@ import {
 } from 'lucide-react';
 import { useFormStore } from '@/form/store/form.store';
 import { cn } from '@/lib/utils';
+import {
+  DeletePageDialog,
+  DONT_ASK_DELETE_PAGE_KEY,
+} from '@/components/DeletePageDialog';
 
 import {
   Collapsible,
@@ -24,6 +28,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 
 import { ComponentPropertiesPanel } from './ComponentPropertiesPanel';
 import { ComponentLogicPanel } from './ComponentsLogicPanel';
+import { DeletePageContext } from './DeletePageContext';
 import { useShallow } from 'zustand/react/shallow';
 
 import { useMemo } from 'react';
@@ -100,8 +105,8 @@ function Node({ node, style, dragHandle }: NodeRendererProps<TreeNodeData>) {
   const activeComponentId = useFormStore((s) => s.activeComponentId);
   const setActivePage = useFormStore((s) => s.setActivePage);
   const setActiveComponent = useFormStore((s) => s.setActiveComponent);
-  const removePage = useFormStore((s) => s.removePage);
   const setCurrentPageIndex = useFormStore((s) => s.setCurrentPageIndex);
+  const requestDelete = useContext(DeletePageContext);
   const form = useFormStore((s) => s.form);
 
   const isActive = isPage
@@ -170,7 +175,7 @@ function Node({ node, style, dragHandle }: NodeRendererProps<TreeNodeData>) {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              removePage(data.id); // Note: using data.id as it represents the pageId here
+              requestDelete(data.id, data.name);
             }}
             className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-sm text-muted-foreground/50 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive"
             aria-label="Remove page"
@@ -287,10 +292,29 @@ export function ExplorerPanel() {
 
 export function FormFileExplorer() {
   const addPage = useFormStore((s) => s.addPage);
+  const removePage = useFormStore((s) => s.removePage);
 
   const setCurrentPageIndex = useFormStore((s) => s.setCurrentPageIndex);
   const pageIds = useFormStore(useShallow((s) => s.form?.pages ?? []));
   const totalPages = pageIds.length;
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [pageToDelete, setPageToDelete] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const requestDelete = useCallback(
+    (id: string, name: string) => {
+      const dontAsk = localStorage.getItem(DONT_ASK_DELETE_PAGE_KEY) === 'true';
+      if (dontAsk) {
+        removePage(id);
+      } else {
+        setPageToDelete({ id, name });
+        setDeleteDialogOpen(true);
+      }
+    },
+    [removePage]
+  );
 
   // --- UI STATE: EXPLORER ---
   const isExplorerOpen = useFormStore((s) => s.isFormExplorerRightPanelOpen);
@@ -353,100 +377,115 @@ export function FormFileExplorer() {
   );
 
   return (
-    <div className="flex h-full w-full flex-col border-r bg-background text-sm select-none">
-      {/* 1. EXPLORER PANEL */}
-      <Collapsible
-        open={isExplorerOpen}
-        onOpenChange={setIsExplorerOpen}
-        className={cn(
-          'flex flex-col',
-          isExplorerOpen ? 'min-h-0 flex-1' : 'shrink-0'
-        )}
-      >
-        <PanelHeader isOpen={isExplorerOpen}>
-          <div className="flex flex-1 items-center justify-between">
-            <div className="flex items-center">
-              <ListTree size={12} className="mr-1" />
-              Explorer
+    <DeletePageContext.Provider value={requestDelete}>
+      <div className="flex h-full w-full flex-col border-r bg-background text-sm select-none">
+        {/* 1. EXPLORER PANEL */}
+        <Collapsible
+          open={isExplorerOpen}
+          onOpenChange={setIsExplorerOpen}
+          className={cn(
+            'flex flex-col',
+            isExplorerOpen ? 'min-h-0 flex-1' : 'shrink-0'
+          )}
+        >
+          <PanelHeader isOpen={isExplorerOpen}>
+            <div className="flex flex-1 items-center justify-between">
+              <div className="flex items-center">
+                <ListTree size={12} className="mr-1" />
+                Explorer
+              </div>
+
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={onAddPageClick}
+                className="flex items-center justify-center rounded p-0.5 text-muted-foreground transition-colors hover:bg-border/50 hover:text-foreground"
+              >
+                <FilePlus size={14} />
+              </div>
             </div>
+          </PanelHeader>
+          <CollapsibleContent className="flex-1 overflow-hidden">
+            <ScrollArea className="h-full">
+              <ExplorerPanel />
+            </ScrollArea>
+          </CollapsibleContent>
+        </Collapsible>
 
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={onAddPageClick}
-              className="flex items-center justify-center rounded p-0.5 text-muted-foreground transition-colors hover:bg-border/50 hover:text-foreground"
-            >
-              <FilePlus size={14} />
-            </div>
-          </div>
-        </PanelHeader>
-        <CollapsibleContent className="flex-1 overflow-hidden">
-          <ScrollArea className="h-full">
-            <ExplorerPanel />
-          </ScrollArea>
-        </CollapsibleContent>
-      </Collapsible>
+        {/* 2. PROPERTIES PANEL */}
+        <ResizeHandle
+          isVisible={isExplorerOpen && isPropertiesOpen}
+          onMouseDown={createResizeHandler(
+            propertiesHeight,
+            setPropertiesHeight
+          )}
+        />
+        <Collapsible
+          open={isPropertiesOpen}
+          onOpenChange={setIsPropertiesOpen}
+          className={cn(
+            'flex flex-col border-t bg-background/50',
+            isPropertiesOpen && !isExplorerOpen ? 'min-h-0 flex-1' : 'shrink-0'
+          )}
+          style={
+            isPropertiesOpen && isExplorerOpen
+              ? { height: `${propertiesHeight}px` }
+              : undefined
+          }
+        >
+          <PanelHeader isOpen={isPropertiesOpen}>
+            <Settings2 size={12} className="mr-1" />
+            Properties
+          </PanelHeader>
+          <CollapsibleContent className="flex-1 overflow-hidden">
+            <ScrollArea className="h-full">
+              <ComponentPropertiesPanel />
+            </ScrollArea>
+          </CollapsibleContent>
+        </Collapsible>
 
-      {/* 2. PROPERTIES PANEL */}
-      <ResizeHandle
-        isVisible={isExplorerOpen && isPropertiesOpen}
-        onMouseDown={createResizeHandler(propertiesHeight, setPropertiesHeight)}
-      />
-      <Collapsible
-        open={isPropertiesOpen}
-        onOpenChange={setIsPropertiesOpen}
-        className={cn(
-          'flex flex-col border-t bg-background/50',
-          isPropertiesOpen && !isExplorerOpen ? 'min-h-0 flex-1' : 'shrink-0'
+        {/* 3. LOGIC PANEL */}
+        <ResizeHandle
+          isVisible={(isExplorerOpen || isPropertiesOpen) && isLogicOpen}
+          onMouseDown={createResizeHandler(logicHeight, setLogicHeight)}
+        />
+        <Collapsible
+          open={isLogicOpen}
+          onOpenChange={setIsLogicOpen}
+          className={cn(
+            'flex flex-col border-t bg-background/50',
+            isLogicOpen && !isExplorerOpen && !isPropertiesOpen
+              ? 'min-h-0 flex-1'
+              : 'shrink-0'
+          )}
+          style={
+            isLogicOpen && (isExplorerOpen || isPropertiesOpen)
+              ? { height: `${logicHeight}px` }
+              : undefined
+          }
+        >
+          <PanelHeader isOpen={isLogicOpen}>
+            <Zap size={12} className="mr-1" />
+            Logic
+          </PanelHeader>
+          <CollapsibleContent className="flex-1 overflow-hidden">
+            <ScrollArea className="h-full">
+              <ComponentLogicPanel />
+            </ScrollArea>
+          </CollapsibleContent>
+        </Collapsible>
+        {pageToDelete && (
+          <DeletePageDialog
+            open={deleteDialogOpen}
+            onOpenChange={setDeleteDialogOpen}
+            pageName={pageToDelete.name}
+            onConfirm={() => {
+              if (pageToDelete) removePage(pageToDelete.id);
+            }}
+          />
         )}
-        style={
-          isPropertiesOpen && isExplorerOpen
-            ? { height: `${propertiesHeight}px` }
-            : undefined
-        }
-      >
-        <PanelHeader isOpen={isPropertiesOpen}>
-          <Settings2 size={12} className="mr-1" />
-          Properties
-        </PanelHeader>
-        <CollapsibleContent className="flex-1 overflow-hidden">
-          <ScrollArea className="h-full">
-            <ComponentPropertiesPanel />
-          </ScrollArea>
-        </CollapsibleContent>
-      </Collapsible>
-
-      {/* 3. LOGIC PANEL */}
-      <ResizeHandle
-        isVisible={(isExplorerOpen || isPropertiesOpen) && isLogicOpen}
-        onMouseDown={createResizeHandler(logicHeight, setLogicHeight)}
-      />
-      <Collapsible
-        open={isLogicOpen}
-        onOpenChange={setIsLogicOpen}
-        className={cn(
-          'flex flex-col border-t bg-background/50',
-          isLogicOpen && !isExplorerOpen && !isPropertiesOpen
-            ? 'min-h-0 flex-1'
-            : 'shrink-0'
-        )}
-        style={
-          isLogicOpen && (isExplorerOpen || isPropertiesOpen)
-            ? { height: `${logicHeight}px` }
-            : undefined
-        }
-      >
-        <PanelHeader isOpen={isLogicOpen}>
-          <Zap size={12} className="mr-1" />
-          Logic
-        </PanelHeader>
-        <CollapsibleContent className="flex-1 overflow-hidden">
-          <ScrollArea className="h-full">
-            <ComponentLogicPanel />
-          </ScrollArea>
-        </CollapsibleContent>
-      </Collapsible>
-    </div>
+      </div>
+    </DeletePageContext.Provider>
   );
 }
 
