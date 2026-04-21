@@ -1,158 +1,221 @@
 import { Groq } from "groq-sdk";
 import { ActionStreamSchema } from "../utils/aiForm.schema.js";
 import { z } from "zod";
+import {
+  generateBuilderPrompt,
+  generateRouterCatalogue,
+} from "../utils/schemaPromptBuilder.js";
+import { getRegisteredComponentTypes } from "../registry/components.js";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
+// ─── Model identifiers ───────────────────────────────────────────────────────
+const ROUTER_MODEL  = "llama-3.1-8b-instant";    // Pass 1 — fast & cheap
+const BUILDER_MODEL = "llama-3.3-70b-versatile"; // Pass 2 — heavy & accurate
+
 /**
-Phase 1: Architecture & Dynamic Prompting
-    [ ] 1. Create the Component Registry (src/registry/components.ts)
-        Create a central object mapping component types (e.g., SingleLineInput, Radio) 
-        to a brief description and their specific Zod schema definition.
-    [ ] 2. Build the Schema-to-Prompt Helper (src/utils/schemaPromptBuilder.ts)
-        Write a utility function: generateBuilderPrompt(activeComponents: string[]).
-        Have it dynamically stringify the base ADD_PAGE and ADD_SKIP_LOGIC rules, plus 
-        only the ADD_COMPONENT rules for the activeComponents passed into it. 
-        (You can use zod-to-json-schema to automate translating Zod types to prompt strings 
-        if you want zero hardcoding).
-Phase 2: The Backend Orchestration (src/services/aiService.js)
-    [ ] 3. Implement Pass 1: The Router (Fast Model)
-        Prompt: Give the AI the user's request and the list of keys/descriptions from your 
-        Component Registry. Ask it to return only a JSON array of strings (the required 
-        component types).
-        Model: Use a fast/cheap model (e.g., Llama 3 8b or Gemini Flash).
-    [ ] 4. Implement Pass 2: The Builder (Heavy Model)
-        Prompt: Pass the array from Pass 1 into generateBuilderPrompt(). Feed this 
-        laser-focused system instruction + the user's original request to the AI.
-        Model: Use the heavy reasoning model (e.g., Llama 3 70b or Gemini Pro).
-        Validation: Run the output through your existing ActionStreamSchema.parse() and keep 
-        your self-healing retry loop.
-Phase 3: The Frontend UX (AIGenerateButton.tsx)
-    [ ] 5. Upgrade the Loading State
-        Change the isGenerating boolean to a state machine: 
-        type GenerationState = 'idle' | 'analyzing' | 'building' | 'done'.
-        (Optional) Use Server-Sent Events (SSE) or simple sequential HTTP requests to update 
-        the UI text from "Analyzing request..." to "Drafting structure and logic..." so the 
-        user isn't staring at a frozen spinner.
+ * ✅ Phase 1: Architecture & Dynamic Prompting  — COMPLETE
+ * ✅ Phase 2: Backend Two-Pass Orchestration    — COMPLETE
+ *
+ * [x] 1. Component Registry       →  src/registry/components.js
+ * [x] 2. Schema-to-Prompt Helper  →  src/utils/schemaPromptBuilder.js
+ * [x] 3. Pass 1 — Router  (this file, runRouterPass)
+ *        Model  : llama-3.1-8b-instant  (fast/cheap)
+ *        Input  : user prompt + generateRouterCatalogue()
+ *        Output : { componentTypes: string[], requiresLogic: boolean }
+ * [x] 4. Pass 2 — Builder (this file, runBuilderPass)
+ *        Model  : llama-3.3-70b-versatile
+ *        System : generateBuilderPrompt(componentTypes)  ← laser-focused
+ *        Output : validated ActionStream (Zod + self-healing retry loop)
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * TODO Phase 3: Frontend UX (AIGenerateButton.tsx)
+ *   [ ] 5. State machine: 'idle' | 'analyzing' | 'building' | 'done'
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Phase 3: The Frontend UX (AIGenerateButton.tsx)
+ *  [ ] 5. Upgrade the Loading State
+ *      Change the isGenerating boolean to a state machine: 
+ *      type GenerationState = 'idle' | 'analyzing' | 'building' | 'done'.
+ *      (Optional) Use Server-Sent Events (SSE) or simple sequential HTTP requests to update 
+ *      the UI text from "Analyzing request..." to "Drafting structure and logic..." so the 
+ *      user isn't staring at a frozen spinner.
  */
 
-export async function generateFormDraft(prompt, maxRetries = 2) {
-  const systemInstruction = `
-    You are an expert Form Architect. Respond ONLY with valid JSON representing a chronological action stream.
-    
-    CRITICAL RULES:
-    1. Output operations in EXACT chronological order: ADD_PAGE -> ADD_COMPONENT -> ADD_SKIP_LOGIC.
-    2. Invent logical IDs (e.g., 'page_1', 'field_email', 'opt_1') for all 'tempId' and 'id' fields.
-    3. DO NOT invent properties. Strictly follow the operation shapes below.
-    
-    REQUIRED OPERATION SHAPES:
-    
-    1. ADD_PAGE:
-       { "action": "ADD_PAGE", "tempId": "page_1", "title": "Page Title" }
-       
-    2. ADD_COMPONENT (SingleLineInput):
-       { 
-         "action": "ADD_COMPONENT", 
-         "componentType": "SingleLineInput", 
-         "tempId": "field_1", 
-         "targetPageId": "page_1", 
-         "label": "Full Name",
-         "props": { "type": "text|email|number", "questionText": "What is your name?" },
-         "validation": { "required": true }
-       }
-       
-    3. ADD_COMPONENT (Radio):
-       { 
-         "action": "ADD_COMPONENT", 
-         "componentType": "Radio", 
-         "tempId": "field_2", 
-         "targetPageId": "page_1", 
-         "label": "Role",
-         "props": { "questionText": "Select role", "layout": "vertical", "options": [{"id": "opt_1", "value": "Frontend"}] },
-         "validation": { "required": true }
-       }
-       
-    4. ADD_SKIP_LOGIC (MUST BE FLAT, DO NOT NEST CONDITIONS):
-       {
-         "action": "ADD_SKIP_LOGIC",
-         "sourceFieldId": "field_2",
-         "operator": "equals" | "not_equals" | "greater_than" | "less_than",
-         "value": "Frontend",
-         "targetPageId": "page_2"
-       }
+// ─────────────────────────────────────────────────────────────────────────────
+// Pass 1 — Router  (fast model)
+// Job   : understand *what* is needed, NOT generate JSON
+// Output: { componentTypes: string[], requiresLogic: boolean }
+// ─────────────────────────────────────────────────────────────────────────────
 
-    Output the final JSON object containing: { "formName": "...", "operations": [...] }
-  `;
+const RouterOutputSchema = z.object({
+  componentTypes: z
+    .array(z.string())
+    .describe("Component types needed from the registry"),
+  requiresLogic: z
+    .boolean()
+    .describe("True if the form needs conditional skip-logic between pages"),
+});
+
+/**
+ * Pass 1 — Router.
+ * Uses a fast, cheap model to read the user's request and decide which
+ * component types are required.  No form JSON is generated here.
+ *
+ * @param {string} userPrompt
+ * @returns {Promise<{ componentTypes: string[], requiresLogic: boolean }>}
+ */
+async function runRouterPass(userPrompt) {
+  const registeredTypes = getRegisteredComponentTypes();
+  const catalogue = generateRouterCatalogue();
+
+  const systemInstruction = `
+You are a Form Component Analyst. Your ONLY job is to read the user's form request
+and identify which component types from the registry are needed.
+
+Available component types:
+${catalogue}
+
+Rules:
+- Return ONLY the types from the list above. Do not invent new types.
+- Include a type if it is clearly needed to fulfil the user's request.
+- Set requiresLogic to true if the form needs conditional page navigation
+  (e.g. "if answer is X, skip to page Y", branching questions, etc.).
+
+Respond ONLY with a JSON object:
+{ "componentTypes": ["TypeA", "TypeB"], "requiresLogic": false }
+`.trim();
+
+  const completion = await groq.chat.completions.create({
+    model: ROUTER_MODEL,
+    temperature: 0,
+    response_format: { type: "json_object" },
+    messages: [
+      { role: "system", content: systemInstruction },
+      { role: "user", content: userPrompt },
+    ],
+    max_tokens: 4096,
+  });
+
+  const raw = completion.choices[0].message.content;
+  const parsed = JSON.parse(raw);
+  const result = RouterOutputSchema.parse(parsed);
+
+  // Guardrail: filter out any types not actually in the registry
+  const validTypes = result.componentTypes.filter((t) =>
+    registeredTypes.includes(t)
+  );
+
+  if (validTypes.length === 0) {
+    // Fallback: use SingleLineInput so the Builder always has at least one schema
+    console.warn("[Router] No valid component types returned. Falling back to SingleLineInput.");
+    validTypes.push("SingleLineInput");
+  }
+
+  console.log(`[Router] Identified types: ${validTypes.join(", ")} | logic: ${result.requiresLogic}`);
+  return { componentTypes: validTypes, requiresLogic: result.requiresLogic };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Pass 2 — Builder  (heavy model + self-healing retry loop)
+// Job   : generate the full validated ActionStream JSON
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Pass 2 — Builder.
+ * Uses the heavy model with a laser-focused system prompt (only the schemas
+ * the Router requested) and validates the output with Zod.  Retries up to
+ * `maxRetries` times on schema violations, feeding errors back to the model.
+ *
+ * @param {string} userPrompt
+ * @param {string[]} componentTypes   - from runRouterPass
+ * @param {number}  maxRetries
+ * @returns {Promise<import('../utils/aiForm.schema.js').ActionStream>}
+ */
+async function runBuilderPass(userPrompt, componentTypes, maxRetries = 2) {
+  const systemInstruction = generateBuilderPrompt(componentTypes);
 
   const messages = [
     { role: "system", content: systemInstruction },
-    { role: "user", content: prompt },
+    { role: "user", content: userPrompt },
   ];
 
   let lastRawJsonString = "";
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      const chatCompletion = await groq.chat.completions.create({
-        messages: messages,
-        model: "llama-3.3-70b-versatile",
+      const completion = await groq.chat.completions.create({
+        model: BUILDER_MODEL,
         temperature: 0.2,
         response_format: { type: "json_object" },
+        messages,
       });
-      lastRawJsonString = chatCompletion.choices[0].message.content;
+
+      lastRawJsonString = completion.choices[0].message.content;
       const parsedJson = JSON.parse(lastRawJsonString);
-      // console.log(parsedJson);
       const validatedData = ActionStreamSchema.parse(parsedJson);
-      // console.log(validatedData);
+      console.log(`[Builder] Valid form generated on attempt ${attempt + 1}.`);
       return validatedData;
     } catch (error) {
-      if (
-        error.name === "ZodError" ||
-        (error.issues && Array.isArray(error.issues))
-      ) {
-        console.warn(`[Attempt ${attempt + 1}] AI Schema Breach. Retrying...`);
+      const isZodError =
+        error.name === "ZodError" || (error.issues && Array.isArray(error.issues));
+
+      if (isZodError) {
+        console.warn(`[Builder] Attempt ${attempt + 1} — schema violation. Retrying...`);
 
         if (attempt === maxRetries) {
           throw new Error(
-            "AI failed to generate a valid schema after multiple attempts.",
+            `[Builder] Failed to produce a valid form after ${maxRetries + 1} attempt(s).`
           );
         }
 
         const errorDetails = error.issues?.length
           ? error.issues
-              .map((e) => `Path '${e.path.join(".")}': ${e.message}`)
-              .join(", ")
+              .map((e) => `Path '${e.path.join(".") || "(root)"}': ${e.message}`)
+              .join("\n")
           : JSON.stringify(error.format ? error.format() : error.message);
 
+        // Feed the error back into the conversation so the model can self-correct
         messages.push({ role: "assistant", content: lastRawJsonString });
         messages.push({
           role: "user",
-          content: `Your previous response failed validation. Please fix these errors and return ONLY valid JSON: ${errorDetails}`,
+          content:
+            `Your previous response failed validation. Fix ONLY the errors listed below ` +
+            `and return the complete, corrected JSON:\n\n${errorDetails}`,
         });
       } else {
-        throw error;
+        throw error; // Network/auth errors — surface immediately
       }
     }
   }
 }
 
-// exports.generateFormDraft = async (prompt) => {
-//   const systemInstruction = `
-//     You are an expert Form Architect for a No-Code Form Builder.
-//     Output ONLY valid JSON matching this schema... [Paste the same JSON structure from the Groq example above]
-//   `;
+// ─────────────────────────────────────────────────────────────────────────────
+// Public API
+// ─────────────────────────────────────────────────────────────────────────────
 
-//   const response = await fetch('http://localhost:11434/api/generate', {
-//     method: 'POST',
-//     headers: { 'Content-Type': 'application/json' },
-//     body: JSON.stringify({
-//       model: "llama3.1",
-//       prompt: `${systemInstruction}\n\nUser Request: ${prompt}`,
-//       stream: false,
-//       format: "json" // Ollama's native JSON mode
-//     })
-//   });
+/**
+ * Two-pass form generation pipeline.
+ *
+ * Pass 1 (Router):  fast model decides which component types are needed.
+ * Pass 2 (Builder): heavy model generates the full ActionStream, validated
+ *                   by Zod with a self-healing retry loop.
+ *
+ * @param {string} userPrompt
+ * @param {{ maxRetries?: number }} [options]
+ * @returns {Promise<import('../utils/aiForm.schema.js').ActionStream>}
+ */
+export async function generateFormDraftV2(userPrompt, { maxRetries = 2 } = {}) {
+  // ── Pass 1: Router ──────────────────────────────────────────────────────
+  const { componentTypes } = await runRouterPass(userPrompt);
 
-//   const data = await response.json();
-//   return JSON.parse(data.response);
-// };
+  // ── Pass 2: Builder ─────────────────────────────────────────────────────
+  return runBuilderPass(userPrompt, componentTypes, maxRetries);
+}
+
+/**
+ * @deprecated Use generateFormDraftV2 instead.
+ * Kept for backwards compatibility with existing route handlers.
+ */
+export async function generateFormDraft(prompt, maxRetries = 2) {
+  return generateFormDraftV2(prompt, { maxRetries });
+}

@@ -47,6 +47,25 @@ export const AddPageOp = z.object({
   action: z.literal("ADD_PAGE"),
   tempId: z.string().describe("A unique logical ID like 'page_1'"),
   title: z.string(),
+  terminalPage: z
+    .boolean()
+    .default(false)
+    .describe(
+      "Set to true if this is the page of the form where the user is allowed to Submit. " +
+      "More than one page can be terminal in multi-page forms. " +
+      "Single-page forms should always have terminalPage: true."
+    ),
+  nextPageId: z
+    .string()
+    .nullable()
+    .optional()
+    .describe(
+      "The tempId of the page to navigate to after this one. " +
+      "Omit or set to null to use the default sequential next page. " +
+      "Only set this when you need to jump to a non-sequential page unconditionally " +
+      "(e.g. always skip page_2 and go to page_3 regardless of answers). " +
+      "Do NOT set this on terminal pages."
+    ),
 });
 
 // --- Component Tool Signatures ---

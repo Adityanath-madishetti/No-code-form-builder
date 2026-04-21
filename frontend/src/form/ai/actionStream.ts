@@ -16,8 +16,14 @@ export function executeAIActionStream(payload: any) {
     `[executeAIActionStream] Starting execution for form: "${payload.formName}"`
   );
 
-  const { addPage, addComponent, updateFormName, updatePageTitle } =
-    useFormStore.getState();
+  const {
+    addPage,
+    addComponent,
+    updateFormName,
+    updatePageTitle,
+    updatePageTerminal,
+    updatePageNextPage,
+  } = useFormStore.getState();
   const { addRule, updateRuleCondition, updateRuleThenActions } =
     useLogicStore.getState();
 
@@ -29,6 +35,12 @@ export function executeAIActionStream(payload: any) {
   // PASS 1: Generate All Pages First
   // ==========================================
   console.log('--- PASS 1: PAGES ---');
+  // Collect (realPageId → nextPageTempId) pairs to resolve after all pages are created
+  const pendingNextPageLinks: Array<{
+    realPageId: string;
+    nextPageTempId: string;
+  }> = [];
+
   payload.operations
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .filter((op: any) => op.action === 'ADD_PAGE')
@@ -43,7 +55,33 @@ export function executeAIActionStream(payload: any) {
       if (updatePageTitle && op.title) {
         updatePageTitle(realPageId, op.title);
       }
+      // Mark the page as terminal (Submit page) if the AI flagged it
+      if (op.terminalPage === true) {
+        updatePageTerminal(realPageId, true);
+      }
+      // Collect nextPageId for resolution after all pages are registered in idMap
+      if (op.nextPageId) {
+        pendingNextPageLinks.push({
+          realPageId,
+          nextPageTempId: op.nextPageId,
+        });
+      }
     });
+
+  // Resolve nextPageId references now that all pages are in the idMap
+  pendingNextPageLinks.forEach(({ realPageId, nextPageTempId }) => {
+    const realNextPageId = idMap.get(nextPageTempId);
+    if (realNextPageId) {
+      updatePageNextPage(realPageId, realNextPageId);
+      console.log(
+        `[Page] Wired defaultNextPage: ${realPageId} -> ${realNextPageId}`
+      );
+    } else {
+      console.warn(
+        `[Page] nextPageId "${nextPageTempId}" not found in idMap — skipping.`
+      );
+    }
+  });
 
   // ==========================================
   // PASS 2: Generate All Components
