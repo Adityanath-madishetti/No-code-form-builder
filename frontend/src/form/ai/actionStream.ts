@@ -194,6 +194,61 @@ export function executeAIActionStream(payload: any) {
       updateRuleThenActions(ruleId, [skipAction]);
     });
 
+  // ==========================================
+  // PASS 4: Generate Visibility (Show/Hide) Logic
+  // ==========================================
+  console.log('--- PASS 4: VISIBILITY LOGIC ---');
+  payload.operations
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .filter((op: any) => op.action === 'ADD_VISIBILITY_LOGIC')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .forEach((op: any, index: number) => {
+      const realSourceId = idMap.get(op.sourceFieldId);
+      const realTargetId = idMap.get(op.targetFieldId);
+
+      if (!realSourceId || !realTargetId) {
+        console.warn(
+          `[Visibility ${index + 1}] Failed: Missing mapping. Source: ${realSourceId}, Target: ${realTargetId}`
+        );
+        return;
+      }
+
+      console.log(
+        `[Visibility ${index + 1}] Wired: If ${realSourceId} ${op.operator} '${op.value ?? ''}' → ${op.thenAction} ${realTargetId}`
+      );
+
+      const ruleId = addRule(
+        `AI Visibility: ${op.thenAction} on condition`,
+        'field',
+        realSourceId
+      );
+
+      const leafCondition: ConditionLeaf = {
+        type: 'leaf',
+        id: nanoid(),
+        instanceId: realSourceId,
+        operator: op.operator,
+        value: op.value ?? '',
+      };
+
+      const groupCondition: ConditionGroup = {
+        type: 'group',
+        id: nanoid(),
+        operator: 'AND',
+        conditions: [leafCondition],
+      };
+
+      // thenAction is 'SHOW' or 'HIDE' — both are valid ActionType values
+      const visibilityAction: RuleAction = {
+        id: nanoid(),
+        type: op.thenAction as 'SHOW' | 'HIDE',
+        targetId: realTargetId,
+      };
+
+      updateRuleCondition(ruleId, groupCondition);
+      updateRuleThenActions(ruleId, [visibilityAction]);
+    });
+
   console.log(`[executeAIActionStream] Finished executing AI action stream.`);
   console.groupEnd();
 }

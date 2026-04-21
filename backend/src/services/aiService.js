@@ -10,7 +10,7 @@ import { getRegisteredComponentTypes } from "../registry/components.js";
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 // ─── Model identifiers ───────────────────────────────────────────────────────
-const ROUTER_MODEL  = "llama-3.1-8b-instant";    // Pass 1 — fast & cheap
+const ROUTER_MODEL = "llama-3.1-8b-instant"; // Pass 1 — fast & cheap
 const BUILDER_MODEL = "llama-3.3-70b-versatile"; // Pass 2 — heavy & accurate
 
 /**
@@ -34,10 +34,10 @@ const BUILDER_MODEL = "llama-3.3-70b-versatile"; // Pass 2 — heavy & accurate
  * ─────────────────────────────────────────────────────────────────────────────
  * Phase 3: The Frontend UX (AIGenerateButton.tsx)
  *  [ ] 5. Upgrade the Loading State
- *      Change the isGenerating boolean to a state machine: 
+ *      Change the isGenerating boolean to a state machine:
  *      type GenerationState = 'idle' | 'analyzing' | 'building' | 'done'.
- *      (Optional) Use Server-Sent Events (SSE) or simple sequential HTTP requests to update 
- *      the UI text from "Analyzing request..." to "Drafting structure and logic..." so the 
+ *      (Optional) Use Server-Sent Events (SSE) or simple sequential HTTP requests to update
+ *      the UI text from "Analyzing request..." to "Drafting structure and logic..." so the
  *      user isn't staring at a frozen spinner.
  */
 
@@ -69,49 +69,92 @@ async function runRouterPass(userPrompt) {
   const catalogue = generateRouterCatalogue();
 
   const systemInstruction = `
-You are a Form Component Analyst. Your ONLY job is to read the user's form request
-and identify which component types from the registry are needed.
+You are a Form Component Analyst. Your ONLY job is to identify which UNIQUE component types are needed.
 
-Available component types:
+Available component types (${registeredTypes.length} total):
 ${catalogue}
 
 Rules:
-- Return ONLY the types from the list above. Do not invent new types.
-- Include a type if it is clearly needed to fulfil the user's request.
-- Set requiresLogic to true if the form needs conditional page navigation
-  (e.g. "if answer is X, skip to page Y", branching questions, etc.).
+- Return a DEDUPLICATED SET — each type appears at most once, regardless of how many fields use it.
+- Only include types that are clearly needed by the user's request.
+- Set requiresLogic to true if the form needs conditional navigation or show/hide logic.
+- The componentTypes array must have AT MOST ${registeredTypes.length} items.
 
-Respond ONLY with a JSON object:
+Respond with ONLY this JSON (no markdown, no explanation):
 { "componentTypes": ["TypeA", "TypeB"], "requiresLogic": false }
 `.trim();
 
   const completion = await groq.chat.completions.create({
     model: ROUTER_MODEL,
     temperature: 0,
-    response_format: { type: "json_object" },
+    // ⚠️  Do NOT use response_format: json_object here.
+    // Groq's JSON-mode validator requires the model to finish its JSON within
+    // max_tokens. The 8b model sometimes outputs reasoning text before the JSON,
+    // causing json_validate_failed even at generous token budgets.
+    // Plain-text mode is reliable for this ~50-token response.
+    max_tokens: 512,
     messages: [
       { role: "system", content: systemInstruction },
       { role: "user", content: userPrompt },
     ],
-    max_tokens: 4096,
   });
 
+  // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
   const raw = completion.choices[0].message.content;
-  const parsed = JSON.parse(raw);
+  // Strip markdown code fences if the model wrapped its response (e.g. ```json ... ```)
+  const stripped = raw
+    .replace(/^```[\w]*\n?/m, "")
+    .replace(/```\s*$/m, "")
+    .trim();
+  // Extract the first JSON object from the (possibly preamble-prefixed) response
+  const jsonMatch = stripped.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    throw new Error(`[Router] No JSON object found in model response: ${raw}`);
+  }
+  const parsed = JSON.parse(jsonMatch[0]);
   const result = RouterOutputSchema.parse(parsed);
+  // ==========================================
+  // const raw = completion.choices[0].message.content;
+  // // 1. Locate the first and last curly braces
+  // const firstBrace = raw.indexOf('{');
+  // const lastBrace = raw.lastIndexOf('}');
+  // if (firstBrace === -1 || lastBrace === -1 || lastBrace < firstBrace) {
+  //   console.warn(`[Router] No valid JSON brackets found in model response: ${raw}`);
+  //   // Return safe fallback instead of throwing, allowing Pass 2 to at least try
+  //   return { componentTypes: ["SingleLineInput"], requiresLogic: false };
+  // }
+  // // 2. Extract the substring
+  // const jsonString = raw.substring(firstBrace, lastBrace + 1);
+  // let parsed;
+  // try {
+  //   // 3. Parse safely
+  //   parsed = JSON.parse(jsonString);
+  // } catch (parseError) {
+  //   console.error(`[Router] JSON parse failed on string: ${jsonString}`, parseError);
+  //   // Fallback on parse failure
+  //   return { componentTypes: ["SingleLineInput"], requiresLogic: false };
+  // }
+  // // 4. Validate with Zod
+  // const result = RouterOutputSchema.parse(parsed);
+  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+  // Deduplicate server-side (safety net — model should already return unique types)
+  const uniqueTypes = [...new Set(result.componentTypes)];
 
   // Guardrail: filter out any types not actually in the registry
-  const validTypes = result.componentTypes.filter((t) =>
-    registeredTypes.includes(t)
-  );
+  const validTypes = uniqueTypes.filter((t) => registeredTypes.includes(t));
 
   if (validTypes.length === 0) {
     // Fallback: use SingleLineInput so the Builder always has at least one schema
-    console.warn("[Router] No valid component types returned. Falling back to SingleLineInput.");
+    console.warn(
+      "[Router] No valid component types returned. Falling back to SingleLineInput.",
+    );
     validTypes.push("SingleLineInput");
   }
 
-  console.log(`[Router] Identified types: ${validTypes.join(", ")} | logic: ${result.requiresLogic}`);
+  console.log(
+    `[Router] Identified types: ${validTypes.join(", ")} | logic: ${result.requiresLogic}`,
+  );
   return { componentTypes: validTypes, requiresLogic: result.requiresLogic };
 }
 
@@ -147,6 +190,8 @@ async function runBuilderPass(userPrompt, componentTypes, maxRetries = 2) {
         model: BUILDER_MODEL,
         temperature: 0.2,
         response_format: { type: "json_object" },
+        // Complex forms can be large; give the Builder enough room.
+        max_tokens: 8192,
         messages,
       });
 
@@ -157,20 +202,25 @@ async function runBuilderPass(userPrompt, componentTypes, maxRetries = 2) {
       return validatedData;
     } catch (error) {
       const isZodError =
-        error.name === "ZodError" || (error.issues && Array.isArray(error.issues));
+        error.name === "ZodError" ||
+        (error.issues && Array.isArray(error.issues));
 
       if (isZodError) {
-        console.warn(`[Builder] Attempt ${attempt + 1} — schema violation. Retrying...`);
+        console.warn(
+          `[Builder] Attempt ${attempt + 1} — schema violation. Retrying...`,
+        );
 
         if (attempt === maxRetries) {
           throw new Error(
-            `[Builder] Failed to produce a valid form after ${maxRetries + 1} attempt(s).`
+            `[Builder] Failed to produce a valid form after ${maxRetries + 1} attempt(s).`,
           );
         }
 
         const errorDetails = error.issues?.length
           ? error.issues
-              .map((e) => `Path '${e.path.join(".") || "(root)"}': ${e.message}`)
+              .map(
+                (e) => `Path '${e.path.join(".") || "(root)"}': ${e.message}`,
+              )
               .join("\n")
           : JSON.stringify(error.format ? error.format() : error.message);
 

@@ -22,7 +22,8 @@ You are an expert Form Architect. Respond ONLY with valid JSON representing a
 chronological action stream.
 
 CRITICAL RULES:
-1. Output operations in EXACT chronological order: ADD_PAGE → ADD_COMPONENT → ADD_SKIP_LOGIC.
+1. Output operations in EXACT chronological order:
+   ADD_PAGE → ADD_COMPONENT → ADD_SKIP_LOGIC → ADD_VISIBILITY_LOGIC.
 2. Invent logical IDs (e.g. 'page_1', 'field_email', 'opt_1') for ALL tempId and id fields.
 3. DO NOT invent properties. Strictly follow the operation shapes listed below.
 4. For ADD_SKIP_LOGIC: conditions MUST be FLAT — do NOT nest conditions.
@@ -30,6 +31,8 @@ CRITICAL RULES:
    user would click Submit from that page). In a linear form this is the last page only. In a
    branching form, multiple pages can be terminal — any page that is a dead-end in the graph
    (no outgoing skip-logic, or it is the final page of a branch). Single-page forms: always true.
+6. hiddenByDefault (on ADD_COMPONENT props): set to true when a component should start hidden
+   and only become visible via an ADD_VISIBILITY_LOGIC rule. Leave false (default) otherwise.
 
 ─────────────────────────────────────────
 REQUIRED OPERATION SHAPES
@@ -63,6 +66,22 @@ REQUIRED OPERATION SHAPES
     "value": "<comparison value — omit for is_empty / is_not_empty>",
     "targetPageId": "<tempId of the destination page>"
   }
+
+▸ ADD_VISIBILITY_LOGIC  (conditional show / hide a component)
+  {
+    "action": "ADD_VISIBILITY_LOGIC",
+    "sourceFieldId": "<tempId of the field whose value is evaluated>",
+    "operator": "equals" | "not_equals" | "contains" | "greater_than" | "less_than" | "is_empty" | "is_not_empty",
+    "value": "<comparison value — omit for is_empty / is_not_empty>",
+    "targetFieldId": "<tempId of the component to show or hide>",
+    "thenAction": "SHOW" | "HIDE"
+  }
+  ↳ thenAction:
+      • "SHOW" — targetField is hidden by default; reveal it when condition is true.
+                 Remember to set hiddenByDefault: true on the target component's props.
+      • "HIDE" — targetField is visible by default; hide it when condition is true.
+  ↳ Use ADD_VISIBILITY_LOGIC (not ADD_SKIP_LOGIC) when you want to show/hide a field
+    on the SAME page based on another field's answer.
 `.trim();
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -102,9 +121,9 @@ function buildComponentBlock(componentType, entry) {
 
   JSON Schema:
 ${schemaString
-    .split("\n")
-    .map((l) => `  ${l}`)
-    .join("\n")}
+  .split("\n")
+  .map((l) => `  ${l}`)
+  .join("\n")}
 
   Concrete example:
   ${entry.example}
@@ -129,17 +148,15 @@ ${schemaString
 export function generateBuilderPrompt(activeComponents) {
   if (!Array.isArray(activeComponents) || activeComponents.length === 0) {
     throw new Error(
-      "generateBuilderPrompt: activeComponents must be a non-empty array of component type strings."
+      "generateBuilderPrompt: activeComponents must be a non-empty array of component type strings.",
     );
   }
 
-  const unknownTypes = activeComponents.filter(
-    (t) => !ComponentRegistry[t]
-  );
+  const unknownTypes = activeComponents.filter((t) => !ComponentRegistry[t]);
   if (unknownTypes.length > 0) {
     throw new Error(
       `generateBuilderPrompt: Unknown component type(s): ${unknownTypes.join(", ")}. ` +
-        `Registered types: ${Object.keys(ComponentRegistry).join(", ")}`
+        `Registered types: ${Object.keys(ComponentRegistry).join(", ")}`,
     );
   }
 
@@ -178,7 +195,7 @@ Respond with a single JSON object:
  */
 export function generateRouterCatalogue() {
   const lines = Object.entries(ComponentRegistry).map(
-    ([type, entry]) => `- ${type}: ${entry.description}`
+    ([type, entry]) => `- ${type}: ${entry.description}`,
   );
   return lines.join("\n");
 }

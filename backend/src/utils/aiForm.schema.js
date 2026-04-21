@@ -52,8 +52,8 @@ export const AddPageOp = z.object({
     .default(false)
     .describe(
       "Set to true if this is the page of the form where the user is allowed to Submit. " +
-      "More than one page can be terminal in multi-page forms. " +
-      "Single-page forms should always have terminalPage: true."
+        "More than one page can be terminal in multi-page forms. " +
+        "Single-page forms should always have terminalPage: true.",
     ),
   nextPageId: z
     .string()
@@ -61,10 +61,10 @@ export const AddPageOp = z.object({
     .optional()
     .describe(
       "The tempId of the page to navigate to after this one. " +
-      "Omit or set to null to use the default sequential next page. " +
-      "Only set this when you need to jump to a non-sequential page unconditionally " +
-      "(e.g. always skip page_2 and go to page_3 regardless of answers). " +
-      "Do NOT set this on terminal pages."
+        "Omit or set to null to use the default sequential next page. " +
+        "Only set this when you need to jump to a non-sequential page unconditionally " +
+        "(e.g. always skip page_2 and go to page_3 regardless of answers). " +
+        "Do NOT set this on terminal pages.",
     ),
 });
 
@@ -135,21 +135,52 @@ export const AddSkipLogicOp = z.object({
   targetPageId: z.string(),
 });
 
+// Conditional show / hide a component based on another field's value
+export const AddVisibilityLogicOp = z.object({
+  action: z.literal("ADD_VISIBILITY_LOGIC"),
+  // The field whose value is evaluated (the trigger)
+  sourceFieldId: z
+    .string()
+    .describe("tempId of the field whose value is evaluated"),
+  operator: z.enum([
+    "equals",
+    "not_equals",
+    "contains",
+    "greater_than",
+    "less_than",
+    "is_empty",
+    "is_not_empty",
+  ]),
+  value: z
+    .any()
+    .optional()
+    .describe("The comparison value. Omit for is_empty / is_not_empty."),
+  // The field to show or hide
+  targetFieldId: z.string().describe("tempId of the component to show or hide"),
+  // What to do when the condition is true
+  thenAction: z
+    .enum(["SHOW", "HIDE"])
+    .describe(
+      "SHOW: make targetField visible when condition is true. " +
+        "HIDE: conceal targetField when condition is true.",
+    ),
+});
+
 // --- The Master Payload ---
 // We combine all possible actions into one massive stream.
 // As you add Dropdowns, Checkboxes, etc., you just add them to this array!
 export const ActionStreamSchema = z.object({
   formName: z.string(),
   operations: z.array(
-    z.discriminatedUnion("action", [
-      AddPageOp,
-      AddSkipLogicOp,
-      // We group the components under the same ADD_COMPONENT action, 
-      // but discriminate them further by componentType!
-    ]).or(z.discriminatedUnion("componentType", [
-      AddSingleLineOp,
-      AddRadioOp
-    ]))
+    z
+      .discriminatedUnion("action", [
+        AddPageOp,
+        AddSkipLogicOp,
+        AddVisibilityLogicOp,
+        // We group the components under the same ADD_COMPONENT action,
+        // but discriminate them further by componentType!
+      ])
+      .or(z.discriminatedUnion("componentType", [AddSingleLineOp, AddRadioOp])),
   ),
 });
 /**
@@ -193,6 +224,14 @@ export function printActionStream(actionStream) {
           `      Trigger:  If '${op.sourceFieldId}' ${op.operator} ${op.value !== undefined ? `'${op.value}'` : "(no value)"}`,
         );
         console.log(`      Action:   Skip to page '${op.targetPageId}'\n`);
+        break;
+
+      case "ADD_VISIBILITY_LOGIC":
+        console.log(`[${step}] 👁 ADD VISIBILITY LOGIC`);
+        console.log(
+          `      Trigger:  If '${op.sourceFieldId}' ${op.operator} ${op.value !== undefined ? `'${op.value}'` : "(no value)"}`,
+        );
+        console.log(`      Action:   ${op.thenAction} '${op.targetFieldId}'\n`);
         break;
 
       default:

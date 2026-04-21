@@ -770,6 +770,21 @@ Make Page 2 a submit page.
 Page 3 is 'Backend Skills'. Ask for 'Preferred Database' (text).
 make Page 3 a submit page (terminal page).
 
+===
+
+Create a 3-page Software Engineer Assessment form.
+
+Page 1 is 'Candidate Profile'. Ask for Full Name (text) and Email Address (email). Also add a Radio question asking 'Primary Role' with a vertical layout and two options: 'Frontend', 'Backend'.
+If Primary Role equals 'Frontend', skip to Page 2.
+If Primary Role equals 'Backend', skip to Page 3.
+
+Page 2 is 'Frontend Skills'. Ask for 'Years of React Experience' (as a number) and Ask for 'Architecture Portfolio URL' (text)(hidden by default).
+If Years of React Experience is greater than 5, show Architecture Portfolio URL.
+Make Page 2 a submit page.
+
+Page 3 is 'Backend Skills'. Ask for 'Preferred Database' (text).
+make Page 3 a submit page (terminal page).
+
  */
 export function AIGenerateButton() {
   const [isOpen, setIsOpen] = useState(false);
