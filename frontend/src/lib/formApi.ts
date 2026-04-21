@@ -162,19 +162,31 @@ export async function loadFormVersion(formId: string): Promise<{
   logicFormulas: FormulaRule[];
   logicShuffleStacks: ComponentShuffleStack[];
 }> {
-  const res = await api.get<{ version: BackendFormVersion }>(
-    `/api/forms/${formId}/versions/latest`
-  );
-  const v = res.version;
+  const [formRes, versionRes] = await Promise.all([
+    api.get<{
+      form: {
+        createdBy: string;
+        title: string;
+        createdAt: string;
+        updatedAt: string;
+      };
+    }>(`/api/forms/${formId}`),
+    api.get<{ version: BackendFormVersion }>(
+      `/api/forms/${formId}/versions/latest`
+    ),
+  ]);
+
+  const f = formRes.form;
+  const v = versionRes.version;
 
   const form: Form = {
     id: v.formId,
     name: v.meta.name,
     metadata: {
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: f.createdAt || new Date().toISOString(),
+      updatedAt: f.updatedAt || new Date().toISOString(),
       description: v.meta.description || '',
-      authorId: v.meta.createdBy,
+      authorId: f.createdBy,
       version: v.version,
     },
     theme: v.theme,

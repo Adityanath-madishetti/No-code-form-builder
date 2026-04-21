@@ -1,8 +1,14 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useTheme } from '@/components/theme-provider';
+// import { useTheme } from '@/components/theme-provider';
 import { Button } from '@/components/ui/button';
-import { Sun, Moon, User, Keyboard, Settings, LogOut } from 'lucide-react';
+import {
+  // Sun, Moon,
+  User,
+  Keyboard,
+  Settings,
+  LogOut,
+} from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,12 +19,12 @@ import {
 
 export default function DashboardHeader() {
   const { user, logout } = useAuth();
-  const { theme, setTheme } = useTheme();
+  // const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
 
-  const isDarkMode =
-    theme === 'dark' ||
-    (theme === 'system' && document.documentElement.classList.contains('dark'));
+  // const isDarkMode =
+  //   theme === 'dark' ||
+  //   (theme === 'system' && document.documentElement.classList.contains('dark'));
 
   const handleLogout = () => {
     logout();
@@ -32,7 +38,7 @@ export default function DashboardHeader() {
         Form Builder
       </h1>
       <div className="flex items-center gap-2">
-        <Button
+        {/* <Button
           variant="ghost"
           size="sm"
           onClick={() => setTheme(isDarkMode ? 'light' : 'dark')}
@@ -43,7 +49,7 @@ export default function DashboardHeader() {
           ) : (
             <Moon className="h-3.5 w-3.5 transition-colors group-hover:fill-current" />
           )}
-        </Button>
+        </Button> */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm">
