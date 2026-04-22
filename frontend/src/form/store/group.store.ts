@@ -26,7 +26,12 @@ interface GroupStore {
   addGroup: (name: string, components: AnyFormComponent[]) => Promise<void>;
   updateGroup: (
     id: string,
-    updates: { name?: string; sharedWith?: string[]; isPublic?: boolean }
+    updates: {
+      name?: string;
+      sharedWith?: string[];
+      isPublic?: boolean;
+      components?: AnyFormComponent[];
+    }
   ) => Promise<void>;
   removeGroup: (id: string) => Promise<void>;
 }

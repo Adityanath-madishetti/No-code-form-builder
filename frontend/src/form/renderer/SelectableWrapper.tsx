@@ -3,17 +3,8 @@ import { useState } from 'react';
 import { formSelectors, useFormStore } from '@/form/store/form.store';
 import { useGroupStore } from '@/form/store/group.store';
 import type { PageID } from '@/form/components/base';
-// import { TEMP_PAGE_PLACEHOLDER_ID } from '@/form/utils/DndUtils';
 
-import {
-  ArrowDown,
-  ArrowUp,
-  Copy,
-  SquareCheck,
-  Move,
-  Settings,
-  Trash2,
-} from 'lucide-react';
+import { ArrowDown, ArrowUp, Copy, Move, Trash2 } from 'lucide-react';
 import { useSortable } from '@dnd-kit/react/sortable';
 import type { AnyFormComponent } from '../registry/componentRegistry';
 
@@ -31,7 +22,7 @@ import {
   ContextMenuShortcut,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
-import { Layers } from 'lucide-react';
+import { Layers, RefreshCw } from 'lucide-react';
 // import { Layers, CopyX, Files } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 import {
@@ -53,6 +44,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { UpdateGroupDialog } from './UpdateGroupDialog';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Props {
   component: AnyFormComponent;
@@ -83,8 +76,6 @@ export const SelectableComponent = ({
 
   const isActive = activeId === component.instanceId;
 
-  const [copiedId, setCopiedId] = useState(false);
-
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteDoNotAskAgain, setDeleteDoNotAskAgain] = useState(false);
   const [skipDeleteConfirm, setSkipDeleteConfirm] = useState(() => {
@@ -100,6 +91,10 @@ export const SelectableComponent = ({
 
   const [groupDialogOpen, setGroupDialogOpen] = useState(false);
   const [groupName, setGroupName] = useState('New Group');
+  const [updateGroupDialogOpen, setUpdateGroupDialogOpen] = useState(false);
+  const { user } = useAuth();
+  const groups = useGroupStore((s) => s.groups);
+  const personalGroups = groups.filter((g) => g.createdBy === user?.uid);
 
   const isHiddenByDefault = component.props.hiddenByDefault === true;
 
@@ -272,19 +267,6 @@ export const SelectableComponent = ({
                     >
                       <Move className="h-3 w-3" />
                     </button>
-
-                    {/* <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setActiveComponent(component.instanceId);
-                        setActivePage(null);
-                      }}
-                      className="flex h-5 w-5 cursor-pointer items-center justify-center rounded-none border border-border/50 bg-white text-black hover:bg-muted/50"
-                      aria-label="Component properties"
-                      title="Component properties"
-                    >
-                      <Settings className="h-3 w-3" />
-                    </button> */}
                   </div>
                 )}
               </div>
@@ -295,9 +277,10 @@ export const SelectableComponent = ({
         </ContextMenuTrigger>
         <ContextMenuContent className="w-56">
           <ContextMenuItem
+            disabled={selectedComponents.length === 0}
             onClick={(e) => {
               e.stopPropagation();
-              if (isSelected && selectedComponents.length > 0) {
+              if (selectedComponents.length > 0) {
                 setGroupName('New Group'); // Reset the input
                 setGroupDialogOpen(true);
               }
@@ -310,6 +293,25 @@ export const SelectableComponent = ({
                 {selectedComponents.length} items
               </ContextMenuShortcut>
             )}
+          </ContextMenuItem>
+          <ContextMenuItem
+            disabled={
+              personalGroups.length === 0 ||
+              !(isSelected && selectedComponents.length > 0)
+            }
+            onClick={(e) => {
+              e.stopPropagation();
+              if (
+                isSelected &&
+                selectedComponents.length > 0 &&
+                personalGroups.length > 0
+              ) {
+                setUpdateGroupDialogOpen(true);
+              }
+            }}
+          >
+            <RefreshCw className="mr-2 h-4 w-4" />
+            <span>Update Existing Group</span>
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
@@ -530,6 +532,17 @@ export const SelectableComponent = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <UpdateGroupDialog
+        open={updateGroupDialogOpen}
+        onOpenChange={setUpdateGroupDialogOpen}
+        onSave={(groupId) => {
+          const { updateGroup } = useGroupStore.getState();
+          updateGroup(groupId, { components: selectedComponents });
+          clearSelectedComponents();
+          setUpdateGroupDialogOpen(false);
+        }}
+      />
     </>
   );
 };
