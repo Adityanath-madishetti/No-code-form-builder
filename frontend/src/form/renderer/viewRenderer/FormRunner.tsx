@@ -279,9 +279,10 @@ export function TrueForm({
             <Button
               key="btn-back"
               type="button"
-              // variant="secondary"
+              variant="outline"
               onClick={handleBack}
               disabled={!hasPrevious || submitting}
+              className="bg-secondary text-primary"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back
@@ -294,6 +295,7 @@ export function TrueForm({
                 type="button"
                 variant="outline"
                 onClick={handleBackToList}
+                className="bg-secondary text-primary"
               >
                 Switch to Submissions
               </Button>
@@ -304,10 +306,12 @@ export function TrueForm({
             <Button
               key="btn-next"
               type="button"
+              variant="outline"
               onClick={handleNext}
               disabled={
                 submitting || (submitDisabledByPolicy && !editingSubmissionId)
               }
+              className="bg-secondary text-primary"
             >
               Next
               <ArrowRight className="ml-2 h-4 w-4" />
@@ -316,10 +320,11 @@ export function TrueForm({
             <Button
               key="btn-submit"
               type="submit"
+              variant="outline"
               disabled={
                 submitting || (submitDisabledByPolicy && !editingSubmissionId)
               }
-              className="bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+              className="bg-success text-black hover:bg-success disabled:opacity-50"
             >
               {submitting ? (
                 <>
@@ -769,7 +774,8 @@ export function FormRunner() {
     ? formData.version.pages.findIndex((p) => p.pageId === currentPageId) ===
       formData.version.pages.length - 1
     : false;
-  const hasNext = !!currentPageState?.nextPageId && !isTerminal && !isLastPageIndex;
+  const hasNext =
+    !!currentPageState?.nextPageId && !isTerminal && !isLastPageIndex;
 
   const handleNext = async (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
@@ -858,61 +864,64 @@ export function FormRunner() {
     <>
       {showHistoryList ? (
         <>
-          <div className="mx-auto mt-15 mb-15 max-w-3xl">
-            <Card className="mb-8">
-              <CardHeader className="flex flex-row items-center justify-between pb-3">
-                <h2 className="text-lg font-semibold">Your Submissions</h2>
-                {!submitDisabledByPolicy && (
-                  <Button size="sm" onClick={handleStartNew}>
-                    New Submission
-                  </Button>
-                )}
-              </CardHeader>
-              <CardContent>
-                {mySubmissions.length === 0 ? (
-                  <div className="text-xs text-muted-foreground">
-                    Loading...
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {mySubmissions.map((submission) => (
-                      <div
-                        key={submission.submissionId}
-                        className="flex items-center justify-between rounded border border-border px-3 py-2"
-                      >
-                        <div className="text-sm font-medium text-muted-foreground">
-                          {new Date(submission.createdAt).toLocaleString()}
+          <FormThemeProvider globalTheme={globalTheme}>
+            <div className="mx-auto mb-15 max-w-3xl pt-15">
+              <Card className="mb-8">
+                <CardHeader className="flex flex-row items-center justify-between pb-3">
+                  <h2 className="text-lg font-semibold">Your Submissions</h2>
+                  {!submitDisabledByPolicy && (
+                    <Button size="sm" onClick={handleStartNew}>
+                      New Submission
+                    </Button>
+                  )}
+                </CardHeader>
+                <CardContent>
+                  {mySubmissions.length === 0 ? (
+                    <div className="text-xs text-muted-foreground">
+                      Loading...
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {mySubmissions.map((submission) => (
+                        <div
+                          key={submission.submissionId}
+                          className="flex items-center justify-between rounded border border-border px-3 py-2"
+                        >
+                          <div className="text-sm font-medium text-muted-foreground">
+                            {new Date(submission.createdAt).toLocaleString()}
+                          </div>
+                          {canEditSubmission && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="bg-secondary text-primary"
+                              onClick={() => startEditingSubmission(submission)}
+                            >
+                              <Pencil className="mr-1.5 h-3.5 w-3.5" />
+                              Edit
+                            </Button>
+                          )}
                         </div>
-                        {canEditSubmission && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => startEditingSubmission(submission)}
-                          >
-                            <Pencil className="mr-1.5 h-3.5 w-3.5" />
-                            Edit
-                          </Button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
 
-            {submitDisabledByPolicy && editingSubmissionId && (
-              <div className="mb-6 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
-                New submissions are disabled by form policy. Edit an existing
-                submission above.
-              </div>
-            )}
+              {submitDisabledByPolicy && editingSubmissionId && (
+                <div className="mb-6 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+                  New submissions are disabled by form policy. Edit an existing
+                  submission above.
+                </div>
+              )}
 
-            {submitDisabledByPolicy && !editingSubmissionId && (
-              <div className="mb-6 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
-                New submissions are disabled by form policy.
-              </div>
-            )}
-          </div>
+              {submitDisabledByPolicy && !editingSubmissionId && (
+                <div className="mb-6 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+                  New submissions are disabled by form policy.
+                </div>
+              )}
+            </div>
+          </FormThemeProvider>
         </>
       ) : (
         <>

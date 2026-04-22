@@ -5,8 +5,9 @@ import helmet from "helmet";
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import formRoutes from "./routes/formRoutes.js";
-import aiRoutes from "./routes/aiRoutes.js"
-import groupRoutes from "./routes/groupRoutes.js"
+import aiRoutes from "./routes/aiRoutes.js";
+import groupRoutes from "./routes/groupRoutes.js";
+import themeRoutes from "./routes/themeTemplateRoutes.js";
 import { getMySubmissions } from "./controllers/submissionController.js";
 import { verifyToken } from "./middleware/auth.js";
 import { errorHandler } from "./middleware/errorHandler.js";
@@ -35,7 +36,7 @@ app.use(helmet());
  *         description: OK
  */
 app.get("/api/health", (_req, res) => {
-    res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+  res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
 // ── Routes ──
@@ -43,6 +44,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/forms", formRoutes);
 app.use("/api/groups", groupRoutes);
+app.use("/api/themes", themeRoutes);
 // Note: formVersionRoutes and submissionRoutes are nested under formRoutes
 //       at /api/forms/:formId/versions and /api/forms/:formId/submissions
 
@@ -66,7 +68,7 @@ app.use("/api/groups", groupRoutes);
  *                 type: object
  */
 app.get("/api/submissions/mine", verifyToken, getMySubmissions);
-app.use('/api/ai', aiRoutes);
+app.use("/api/ai", aiRoutes);
 
 // ── Error Handling (must be last) ──
 app.use(errorHandler);

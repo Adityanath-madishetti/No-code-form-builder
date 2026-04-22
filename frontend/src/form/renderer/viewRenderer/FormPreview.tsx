@@ -246,7 +246,8 @@ export default function FormPreview() {
     ? formData.version.pages.findIndex((p) => p.pageId === currentPageId) ===
       formData.version.pages.length - 1
     : false;
-  const hasNext = !!currentPageState?.nextPageId && !isTerminal && !isLastPageIndex;
+  const hasNext =
+    !!currentPageState?.nextPageId && !isTerminal && !isLastPageIndex;
 
   const handleNext = async (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
@@ -414,9 +415,10 @@ export default function FormPreview() {
                 <Button
                   key="btn-back"
                   type="button"
-                  // variant="secondary"
+                  variant="outline"
                   onClick={handleBack}
                   disabled={!hasPrevious}
+                  className="bg-secondary text-primary"
                 >
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Back
@@ -424,7 +426,13 @@ export default function FormPreview() {
               </div>
 
               {hasNext ? (
-                <Button key="btn-next" type="button" onClick={handleNext}>
+                <Button
+                  key="btn-next"
+                  type="button"
+                  variant="outline"
+                  onClick={handleNext}
+                  className="bg-secondary text-primary"
+                >
                   Next
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -432,7 +440,8 @@ export default function FormPreview() {
                 <Button
                   key="btn-submit"
                   type="submit"
-                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                  variant="outline"
+                  className="bg-success text-black"
                 >
                   Submit (Preview)
                 </Button>

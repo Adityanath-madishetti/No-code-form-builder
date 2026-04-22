@@ -11,11 +11,17 @@ import type { PageID, FormTheme, FormPage } from '../components/base';
 export type ThemeTab = 'global' | 'page';
 export type ThemeSection =
   | 'colors'
+  | 'library'
   | 'background'
   | 'typography'
   | 'layout'
   | 'componentProps';
-export type BackgroundSubTab = 'solid' | 'gradient' | 'mesh' | 'image' | 'pattern';
+export type BackgroundSubTab =
+  | 'solid'
+  | 'gradient'
+  | 'mesh'
+  | 'image'
+  | 'pattern';
 
 interface ThemeUIState {
   activeTab: ThemeTab;
@@ -24,6 +30,7 @@ interface ThemeUIState {
   selectedPageId: PageID | null;
   primaryColor: string;
   secondaryColor: string;
+  isSaveThemeOpen: boolean;
 }
 
 interface ThemeUIActions {
@@ -32,7 +39,11 @@ interface ThemeUIActions {
   setBackgroundSubTab: (tab: BackgroundSubTab) => void;
   setSelectedPageId: (pageId: PageID | null) => void;
   setColors: (primary: string, secondary: string) => void;
-  syncWithTheme: (theme?: FormTheme | null, pages?: Record<PageID, FormPage>) => void;
+  setIsSaveThemeOpen: (open: boolean) => void;
+  syncWithTheme: (
+    theme?: FormTheme | null,
+    pages?: Record<PageID, FormPage>
+  ) => void;
 }
 
 export type ThemeUIStore = ThemeUIState & ThemeUIActions;
@@ -50,6 +61,7 @@ export const useThemeUIStore = create<ThemeUIStore>()((set) => ({
   selectedPageId: null,
   primaryColor: '',
   secondaryColor: '',
+  isSaveThemeOpen: false,
 
   setActiveTab: (tab) => set({ activeTab: tab }),
 
@@ -66,10 +78,12 @@ export const useThemeUIStore = create<ThemeUIStore>()((set) => ({
 
   setBackgroundSubTab: (tab) => set({ backgroundSubTab: tab }),
   setSelectedPageId: (pageId) => set({ selectedPageId: pageId }),
-  setColors: (primary, secondary) => set({ primaryColor: primary, secondaryColor: secondary }),
+  setColors: (primary, secondary) =>
+    set({ primaryColor: primary, secondaryColor: secondary }),
+  setIsSaveThemeOpen: (open) => set({ isSaveThemeOpen: open }),
   syncWithTheme: (theme, pages) => {
     const backgroundType = theme?.background?.type || 'solid';
-    
+
     // Logic to resolve colors based on tab/page
     set((state) => {
       let pc = theme?.primaryColor || '';
@@ -80,11 +94,11 @@ export const useThemeUIStore = create<ThemeUIStore>()((set) => ({
         if (overrides?.primaryColor) pc = overrides.primaryColor;
         if (overrides?.secondaryColor) sc = overrides.secondaryColor;
       }
-      
-      return { 
+
+      return {
         backgroundSubTab: backgroundType as BackgroundSubTab,
         primaryColor: pc,
-        secondaryColor: sc
+        secondaryColor: sc,
       };
     });
   },

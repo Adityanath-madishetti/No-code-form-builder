@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 // src/pages/FormEditor/components/ThemePanel.tsx
-import { useCallback, useMemo, useRef, useEffect } from 'react';
+import { useCallback, useMemo, useRef, useEffect, useState } from 'react';
 import { useFormStore, formSelectors } from '@/form/store/form.store';
 import { useThemeUIStore } from '@/form/theme/theme.store';
-import { type formThemeColor } from '@/form/theme/formTheme';
 import type {
   FormThemeBackground,
   FormThemeLayout,
@@ -23,18 +22,25 @@ import {
 import { formFontNames, type formFontName } from '@/form/theme/formTheme';
 import type { ThemeSection, BackgroundSubTab } from '@/form/theme/theme.store';
 import { ColorPicker } from '@/components/ColorPicker';
-
-// ── Theme color swatch map ──
-const THEME_COLORS: { key: string; color: formThemeColor; bg: string }[] = [
-  { key: 'Default', color: 'default', bg: '#525252' },
-  { key: 'Red', color: 'red', bg: '#ef4444' },
-  { key: 'Orange', color: 'orange', bg: '#f97316' },
-  { key: 'Yellow', color: 'yellow', bg: '#eab308' },
-  { key: 'Green', color: 'green', bg: '#22c55e' },
-  { key: 'Blue', color: 'blue', bg: '#3b82f6' },
-  { key: 'Purple', color: 'purple', bg: '#a855f7' },
-  { key: 'Pink', color: 'pink', bg: '#ec4899' },
-];
+import { Button } from '@/components/ui/button';
+import {
+  Share2,
+  Trash2,
+  Sparkles,
+  User as UserIcon,
+  Users,
+  Plus,
+} from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  useThemeTemplateStore,
+  type ThemeTemplate,
+} from '@/form/store/themeTemplate.store';
+import { SaveThemeDialog } from './SaveThemeDialog';
+import { EditThemeDialog } from './EditThemeDialog';
+import { DeleteThemeDialog } from './DeleteThemeDialog';
+import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
 
 const PATTERN_OPTIONS: { id: FormThemeBackground['pattern']; label: string }[] =
   [
@@ -230,6 +236,204 @@ function Section({
       </button>
       {expanded && <div className="theme-section-body">{children}</div>}
     </div>
+  );
+}
+
+function ThemeLibrarySection() {
+  const { user } = useAuth();
+  const { themes, loadThemes, addTheme, removeTheme, updateTheme, isLoading } =
+    useThemeTemplateStore();
+  const updateFormTheme = useFormStore((s) => s.updateFormTheme);
+  const currentTheme = useFormStore(formSelectors.formTheme);
+
+  const isSaveOpen = useThemeUIStore((s) => s.isSaveThemeOpen);
+  const setIsSaveOpen = useThemeUIStore((s) => s.setIsSaveThemeOpen);
+
+  const [editingTheme, setEditingTheme] = useState<ThemeTemplate | null>(null);
+  const [deletingTheme, setDeletingTheme] = useState<ThemeTemplate | null>(
+    null
+  );
+
+  useEffect(() => {
+    loadThemes();
+  }, [loadThemes]);
+
+  const personalThemes = themes.filter((t) => t.createdBy === user?.uid);
+  const sharedThemes = themes.filter((t) => t.createdBy !== user?.uid);
+
+  const handleApply = (theme: FormTheme) => {
+    updateFormTheme(theme);
+    toast.success('Theme applied successfully');
+  };
+
+  const handleSaveNew = async (name: string) => {
+    if (!currentTheme) return;
+    try {
+      await addTheme(name, currentTheme);
+      toast.success('Theme saved to your library');
+    } catch (err) {
+      toast.error('Failed to save theme');
+    }
+  };
+
+  const handleUpdate = async (id: string, updates: Partial<ThemeTemplate>) => {
+    try {
+      await updateTheme(id, updates);
+      toast.success('Theme updated');
+    } catch (err) {
+      toast.error('Failed to update theme');
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deletingTheme) return;
+    try {
+      await removeTheme(deletingTheme.id);
+      toast.success('Theme deleted');
+      setDeletingTheme(null);
+    } catch (err) {
+      toast.error('Failed to delete theme');
+    }
+  };
+
+  const ThemeItem = ({
+    item,
+    isOwner,
+  }: {
+    item: ThemeTemplate;
+    isOwner: boolean;
+  }) => (
+    <div className="group relative flex flex-col overflow-hidden rounded-md border border-border bg-card/40 transition-all hover:bg-card">
+      <div
+        className="h-10 w-full cursor-pointer transition-opacity group-hover:opacity-90"
+        style={{
+          background:
+            item.theme.background?.type === 'mesh'
+              ? `radial-gradient(at top left, ${item.theme.primaryColor || '#22d3ee'}, transparent), 
+               radial-gradient(at bottom right, ${item.theme.secondaryColor || '#818cf8'}, transparent), #1e293b`
+              : item.theme.background?.solidColor || '#525252',
+        }}
+        onClick={() => handleApply(item.theme)}
+      />
+      <div className="p-2">
+        <div className="flex items-center justify-between">
+          <span className="truncate text-[11px] font-medium text-foreground">
+            {item.name}
+          </span>
+          <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+            {isOwner && (
+              <>
+                <button
+                  onClick={() => setEditingTheme(item)}
+                  className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                >
+                  <Share2 className="h-3 w-3" />
+                </button>
+                <button
+                  onClick={() => setDeletingTheme(item)}
+                  className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+        <div className="mt-1 flex items-center justify-between text-[9px] text-muted-foreground">
+          <span>{item.creatorEmail || 'Unknown'}</span>
+          {item.isPublic && (
+            <Badge
+              variant="outline"
+              className="h-3 px-1 text-[8px] leading-none font-normal"
+            >
+              Public
+            </Badge>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <Section id="library" icon={Sparkles} title="Theme Library">
+      <Button
+        variant="outline"
+        size="sm"
+        className="mb-4 h-8 w-full gap-2 border-dashed text-xs"
+        onClick={() => setIsSaveOpen(true)}
+      >
+        <Plus className="h-3.5 w-3.5" />
+        Save Current Theme
+      </Button>
+
+      {personalThemes.length > 0 && (
+        <div className="mb-4">
+          <div className="mb-2 flex items-center gap-2 text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+            <UserIcon className="h-2.5 w-2.5" />
+            My Themes
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {personalThemes.map((t) => (
+              <ThemeItem key={t.id} item={t} isOwner={true} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {sharedThemes.length > 0 && (
+        <div>
+          <div className="mb-2 flex items-center gap-2 text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+            <Users className="h-2.5 w-2.5" />
+            Shared with me
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {sharedThemes.map((t) => (
+              <ThemeItem key={t.id} item={t} isOwner={false} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {isLoading &&
+        personalThemes.length === 0 &&
+        sharedThemes.length === 0 && (
+          <div className="py-4 text-center text-xs text-muted-foreground">
+            Loading library...
+          </div>
+        )}
+
+      {!isLoading &&
+        personalThemes.length === 0 &&
+        sharedThemes.length === 0 && (
+          <div className="py-4 text-center text-[11px] text-muted-foreground italic">
+            Your theme library is empty.
+          </div>
+        )}
+
+      <SaveThemeDialog
+        open={isSaveOpen}
+        onOpenChange={setIsSaveOpen}
+        onSave={handleSaveNew}
+      />
+
+      {editingTheme && (
+        <EditThemeDialog
+          theme={editingTheme}
+          open={!!editingTheme}
+          onOpenChange={(open) => !open && setEditingTheme(null)}
+          onSave={handleUpdate}
+        />
+      )}
+
+      {deletingTheme && (
+        <DeleteThemeDialog
+          themeName={deletingTheme.name}
+          open={!!deletingTheme}
+          onOpenChange={(open) => !open && setDeletingTheme(null)}
+          onConfirm={handleDelete}
+        />
+      )}
+    </Section>
   );
 }
 
@@ -1074,7 +1278,8 @@ export function ThemePanel() {
 
       {/* Sections Scrollable Area */}
       <div className="flex-1 overflow-y-auto pb-8">
-        <PresetsSection />
+        {/* <PresetsSection /> */}
+        <ThemeLibrarySection />
         <ColorsSection />
         <BackgroundSection />
         <TypographySection />
