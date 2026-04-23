@@ -40,7 +40,7 @@ export function LineDividerRenderer({
   const isSolid = !props.style || props.style === 'solid';
 
   return (
-    <div className="py-4">
+    <div className="py-0">
       <Separator
         className={!isSolid ? 'border-t border-border bg-transparent' : ''}
         style={

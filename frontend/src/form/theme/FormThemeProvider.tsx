@@ -221,14 +221,18 @@ export function FormThemeProvider({
     <div
       className={[
         `form-theme-${color}`,
-        mode === 'dark' ? 'dark' : 'light',
+        mode === 'light' ? 'light' : 'dark',
         patCls,
         layoutCls,
         compCls,
         isMesh ? 'form-bg-mesh' : '',
         isAnimated ? 'form-bg-animated' : '',
         'form-theme-container',
-        'min-h-[100vh]',
+        'min-h-[100dvh]',
+        'h-fit',
+        'flex',
+        'flex-col',
+        'shrink-0',
       ]
         .filter(Boolean)
         .join(' ')}
@@ -245,7 +249,7 @@ export function FormThemeProvider({
         <div style={{ ...overlayStyle, ...blurStyle }} />
       )}
       {/* Width constraint container */}
-      <div style={wStyle} className="form-width-container">
+      <div style={wStyle} className="form-width-container flex-1">
         {children}
       </div>
     </div>

@@ -72,7 +72,7 @@ export function MultiLineInputRenderer({
             id={instanceId}
             placeholder={props.placeholder || 'Type your answer...'}
             defaultValue={props.defaultValue}
-            className="resize-y"
+            className="resize-y border border-border"
             {...register(instanceId, {
               required: validation?.required ? 'This field is required' : false,
               minLength: validation?.minLength
@@ -116,7 +116,7 @@ export function MultiLineInputRenderer({
           readOnly
           defaultValue={props.defaultValue}
           placeholder={props.placeholder || 'Type your answer...'}
-          className="resize-y opacity-70"
+          className="resize-y border border-border"
           disabled
         />
       </CardContent>

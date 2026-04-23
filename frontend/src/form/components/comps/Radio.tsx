@@ -114,6 +114,7 @@ export function RadioComponentRenderer({
                     <RadioGroupItem
                       value={option.value}
                       id={`${instanceId}-${option.id}`}
+                      className="border border-border"
                     />
                     <Label
                       htmlFor={`${instanceId}-${option.id}`}
@@ -156,6 +157,7 @@ export function RadioComponentRenderer({
               <RadioGroupItem
                 value={option.value}
                 id={`builder-${instanceId}-${option.id}`}
+                className="border border-border"
               />
               <Label
                 htmlFor={`builder-${instanceId}-${option.id}`}

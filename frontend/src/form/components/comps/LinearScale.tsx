@@ -97,7 +97,7 @@ export function LinearScaleRenderer({
                     className={`flex h-9 flex-1 cursor-pointer items-center justify-center rounded-md border text-sm font-medium transition-colors ${
                       isSelected
                         ? 'border-primary bg-primary text-primary-foreground shadow'
-                        : 'border-input bg-transparent text-foreground hover:bg-accent hover:text-accent-foreground'
+                        : 'border-input bg-transparent text-foreground hover:bg-muted'
                     }`}
                   >
                     <input
@@ -163,7 +163,7 @@ export function LinearScaleRenderer({
             {Array.from({ length: count }, (_, i) => (
               <div
                 key={i}
-                className="flex h-9 flex-1 items-center justify-center rounded-md border border-input bg-transparent text-sm font-medium text-foreground transition-colors"
+                className="flex h-9 flex-1 items-center justify-center rounded-md bg-transparent text-sm font-medium text-foreground transition-colors"
               >
                 {props.min + i}
               </div>

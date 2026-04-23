@@ -108,7 +108,7 @@ export function DropdownComponentRenderer({
                 value={field.value || undefined}
                 defaultValue={props.defaultValue || undefined}
               >
-                <SelectTrigger className="mb-0 w-full">
+                <SelectTrigger className="mb-0 w-full border border-border">
                   <SelectValue
                     placeholder={props.placeholder || 'Select an option...'}
                   />
@@ -145,7 +145,7 @@ export function DropdownComponentRenderer({
           {props.questionText}
         </Label>
         <Select disabled defaultValue={props.defaultValue || undefined}>
-          <SelectTrigger className="w-full opacity-70">
+          <SelectTrigger className="w-full border border-border">
             <SelectValue
               placeholder={props.placeholder || 'Select an option...'}
             />

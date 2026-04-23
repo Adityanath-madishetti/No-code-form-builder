@@ -155,6 +155,7 @@ export function CheckboxComponentRenderer({
                                 )
                               );
                         }}
+                        className="border border-border"
                       />
                       <Label
                         htmlFor={`${instanceId}-${option.id}`}
@@ -195,6 +196,7 @@ export function CheckboxComponentRenderer({
               <Checkbox
                 id={`builder-${instanceId}-${option.id}`}
                 checked={(props.defaultValues || []).includes(option.value)}
+                className="border border-border"
                 disabled
               />
               <Label
