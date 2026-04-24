@@ -177,13 +177,18 @@ export default function FormReview() {
   }, [loadSubmissions]);
 
   useEffect(() => {
-    if (!formId) return;
+    if (!formId || !selectedSubmission?.version) {
+      setReviewFormSchema(null);
+      return;
+    }
 
     setReviewFormSchema(null);
     setReviewFormSchemaError('');
 
     api
-      .get<{ version: VersionData }>(`/api/forms/${formId}/versions/latest`)
+      .get<{ version: VersionData }>(
+        `/api/forms/${formId}/versions/${selectedSubmission.version}`
+      )
       .then((res) => {
         const versionData = res.version;
         const normalizedSchema: PublicFormData = {
@@ -209,7 +214,7 @@ export default function FormReview() {
           )
         );
       });
-  }, [formId]);
+  }, [formId, selectedSubmission?.version]);
 
   useEffect(() => {
     document.title = formTitle
@@ -507,6 +512,9 @@ export default function FormReview() {
                   <th className="px-4 py-2.5 font-medium text-muted-foreground">
                     Status
                   </th>
+                  <th className="px-4 py-2.5 text-center font-medium text-muted-foreground">
+                    Version
+                  </th>
                   <th className="px-4 py-2.5 font-medium text-muted-foreground">
                     Email / UID
                   </th>
@@ -533,6 +541,11 @@ export default function FormReview() {
                     </td>
                     <td className="px-4 py-3 capitalize">
                       {submission.status.replace('_', ' ')}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <span className="inline-flex items-center rounded-md bg-neutral-100 px-2 py-1 text-xs font-medium text-neutral-600 ring-1 ring-neutral-500/10 ring-inset dark:bg-neutral-800 dark:text-neutral-400">
+                        v{submission.version}
+                      </span>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
                       {submission.email ||

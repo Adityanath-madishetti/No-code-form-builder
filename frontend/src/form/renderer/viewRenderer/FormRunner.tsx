@@ -737,6 +737,7 @@ export function FormRunner() {
       const payload = {
         email: settings.collectEmailMode === 'none' ? undefined : userEmail,
         pages: pagesPayload,
+        formVersion: formData.version.version,
       };
 
       // Branch to PATCH if updating, POST if new

@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { useSearchParams } from 'react-router-dom';
 import { useShallow } from 'zustand/react/shallow';
-import { AlertCircle, Eye } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import {
   runtimeFormSelector,
   useRuntimeFormStore,
@@ -435,11 +435,6 @@ export default function EmbedSubmissionView({
         ref={containerRef}
         className="mx-auto mt-15 mb-15 max-w-3xl min-w-3xl"
       >
-        <div className="mb-4 flex items-center justify-center gap-2 rounded-md bg-blue-50 py-2 text-sm font-medium text-blue-700">
-          <Eye className="h-4 w-4" />
-          Submission View
-        </div>
-
         <FormProvider {...methods}>
           <form className="space-y-6">
             <Card>

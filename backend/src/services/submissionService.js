@@ -139,7 +139,7 @@ export async function submitFormService(formId, reqBody, user) {
     const submission = await Submission.create({
         submissionId: crypto.randomUUID(),
         formId,
-        version: version.version,
+        version: reqBody.formVersion || version.version,
         submittedBy: user?.uid || null,
         email,
         status: reqBody?.status || "submitted",
@@ -352,6 +352,9 @@ export async function updateMySubmissionService(formId, submissionId, reqBody, u
 
     if (reqBody?.pages !== undefined) {
         submission.pages = logicResult.pages;
+    }
+    if (reqBody?.formVersion !== undefined) {
+        submission.version = reqBody.formVersion;
     }
     submission.email = email;
 
