@@ -4,3 +4,4 @@ planning/
 serviceAccountKey.json
 
 run.sh
+test-host/

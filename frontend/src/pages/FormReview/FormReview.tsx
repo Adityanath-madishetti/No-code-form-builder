@@ -4,6 +4,13 @@ import { format } from 'date-fns';
 import { type DateRange } from 'react-day-picker';
 import { API_BASE, api } from '@/lib/api';
 import { cn } from '@/lib/utils';
+import EmbedSubmissionView from '@/components/EmbedSubmissionView';
+import type {
+  PublicFormData,
+  PublicLogicData,
+  PublicPageData,
+  VersionSettings,
+} from '@/form/renderer/viewRenderer/runtimeForm.types';
 
 // Shadcn UI & Icons
 import { Button } from '@/components/ui/button';
@@ -72,6 +79,16 @@ interface SubmissionDetailResponse {
   submission: SubmissionRecord;
 }
 
+interface VersionData {
+  formId: string;
+  version: number;
+  meta: { name: string; description: string };
+  settings: VersionSettings;
+  pages: PublicPageData[];
+  logic?: PublicLogicData;
+  theme: PublicFormData['version']['theme'];
+}
+
 function formatDate(iso: string) {
   return new Date(iso).toLocaleString('en-US', {
     month: 'short',
@@ -80,24 +97,6 @@ function formatDate(iso: string) {
     hour: '2-digit',
     minute: '2-digit',
   });
-}
-
-function formatResponse(value: unknown): string {
-  if (value === null || value === undefined) return 'No response';
-  if (typeof value === 'string') return value || 'No response';
-  if (typeof value === 'number' || typeof value === 'boolean')
-    return String(value);
-  if (Array.isArray(value)) {
-    return value.length
-      ? value.map((entry) => String(entry)).join(', ')
-      : 'No response';
-  }
-
-  try {
-    return JSON.stringify(value, null, 2);
-  } catch {
-    return String(value);
-  }
 }
 
 function mapErrorMessage(errorMessage: string): string {
@@ -142,6 +141,9 @@ export default function FormReview() {
     useState<SubmissionRecord | null>(null);
   const [detailError, setDetailError] = useState('');
   const [exporting, setExporting] = useState(false);
+  const [reviewFormSchema, setReviewFormSchema] =
+    useState<PublicFormData | null>(null);
+  const [reviewFormSchemaError, setReviewFormSchemaError] = useState('');
 
   // Load submissions (Using a larger limit to enable full frontend filtering)
   const loadSubmissions = useCallback(
@@ -173,6 +175,41 @@ export default function FormReview() {
   useEffect(() => {
     loadSubmissions();
   }, [loadSubmissions]);
+
+  useEffect(() => {
+    if (!formId) return;
+
+    setReviewFormSchema(null);
+    setReviewFormSchemaError('');
+
+    api
+      .get<{ version: VersionData }>(`/api/forms/${formId}/versions/latest`)
+      .then((res) => {
+        const versionData = res.version;
+        const normalizedSchema: PublicFormData = {
+          form: {
+            formId: versionData.formId || formId,
+            title: versionData.meta?.name || 'Submission Review',
+          },
+          version: {
+            ...versionData,
+            settings: versionData.settings || {
+              submissionPolicy: 'none',
+              collectEmailMode: 'none',
+              canViewOwnSubmission: false,
+            },
+          },
+        };
+        setReviewFormSchema(normalizedSchema);
+      })
+      .catch((err) => {
+        setReviewFormSchemaError(
+          mapErrorMessage(
+            (err as Error).message || 'Failed to load form schema.'
+          )
+        );
+      });
+  }, [formId]);
 
   useEffect(() => {
     document.title = formTitle
@@ -576,37 +613,23 @@ export default function FormReview() {
                       'Anonymous'}
                   </p>
                 </div>
-
-                <div className="space-y-4">
-                  {selectedSubmission.pages.map((page) => (
-                    <div
-                      key={page.pageNo}
-                      className="rounded border border-border p-3"
-                    >
-                      <h3 className="mb-3 text-sm font-medium">
-                        Page {page.pageNo}
-                      </h3>
-                      {page.responses.length === 0 ? (
-                        <p className="text-xs text-muted-foreground">
-                          No responses.
-                        </p>
-                      ) : (
-                        <div className="space-y-3">
-                          {page.responses.map((response) => (
-                            <div key={`${page.pageNo}-${response.componentId}`}>
-                              <p className="text-xs font-medium text-muted-foreground">
-                                {response.componentId}
-                              </p>
-                              <pre className="mt-1 overflow-auto rounded bg-muted/40 p-2 text-xs break-words whitespace-pre-wrap">
-                                {formatResponse(response.response)}
-                              </pre>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                {reviewFormSchemaError ? (
+                  <p className="text-sm text-destructive">
+                    {reviewFormSchemaError}
+                  </p>
+                ) : reviewFormSchema ? (
+                  <div className="overflow-hidden rounded-md border border-border">
+                    <EmbedSubmissionView
+                      formSchema={reviewFormSchema}
+                      responseData={selectedSubmission.pages}
+                    />
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading form schema...
+                  </div>
+                )}
               </div>
             ) : null}
           </section>
