@@ -15,6 +15,7 @@ import {
 import { useFormStore } from '@/form/store/form.store';
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
   DialogContent,
@@ -60,9 +61,11 @@ import { Label } from '@/components/ui/label';
 
 import { executeAIActionStream } from '@/form/ai/actionStream';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sparkles, X } from 'lucide-react';
 import { generateAiFormDraft } from '@/lib/formApi';
+import { api } from '@/lib/api';
+import type { FormHeader } from '@/pages/Dashboard/dashboard.types';
+import { DeleteFormDialog } from '@/components/DeleteFormDialog';
 
 interface RulesWarningDialogProps {
   open: boolean;
@@ -576,87 +579,139 @@ interface MenuSection {
   content: MenuItem[];
 }
 
-const formBuilderMenuConfig: MenuSection[] = [
-  {
-    trigger: 'Form',
-    content: [
-      {
-        type: 'item',
-        text: 'New Blank Form',
-        shortcut: '⌘N',
-        // onClick: () => handleCreateNew(),
-      },
-      {
-        type: 'item',
-        text: 'Duplicate Form',
-        shortcut: '⌘D',
-        // onClick: () => handleDuplicate(),
-      },
-      { type: 'separator' },
-      {
-        type: 'sub',
-        text: 'Export As...',
-        items: [
-          { type: 'item', text: 'JSON Schema (.json)' },
-          { type: 'item', text: 'PDF Document (.pdf)' },
-          { type: 'item', text: 'React Component (.tsx)' },
-        ],
-      },
-      {
-        type: 'sub',
-        text: 'Share',
-        items: [
-          { type: 'item', text: 'Copy Public Link' },
-          { type: 'item', text: 'Embed in Website' },
-          { type: 'item', text: 'Email to Collaborators' },
-        ],
-      },
-      { type: 'separator' },
-      {
-        type: 'item',
-        text: 'Print Preview',
-        shortcut: '⌘P',
-      },
-      {
-        type: 'item',
-        text: 'Delete Form',
-        className: 'text-red-500', // Custom styling for destructive actions
-      },
-    ],
-  },
-  {
-    trigger: 'Edit',
-    content: [
-      { type: 'item', text: 'Undo', shortcut: '⌘Z' },
-      { type: 'item', text: 'Redo', shortcut: '⇧⌘Z' },
-      { type: 'separator' },
-      { type: 'item', text: 'Clear All Fields', inset: true },
-      { type: 'item', text: 'Auto-arrange Layout', inset: true },
-    ],
-  },
-  {
-    trigger: 'View',
-    content: [
-      { type: 'checkbox', text: 'Show Field IDs', checked: true },
-      { type: 'checkbox', text: 'Show Grid Lines', checked: false },
-      { type: 'checkbox', text: 'Responsive Preview', checked: true },
-      { type: 'separator' },
-      { type: 'item', text: 'Open Logic Map', inset: true },
-    ],
-  },
-  {
-    trigger: 'Profiles',
-    content: [
-      { type: 'radio', text: 'Admin Mode', value: 'admin' },
-      { type: 'radio', text: 'Editor Mode', value: 'editor' },
-      { type: 'radio', text: 'Viewer Only', value: 'viewer' },
-      { type: 'separator' },
-      { type: 'item', text: 'Account Settings...', inset: true },
-    ],
-  },
-];
+export function DynamicMenubar({
+  handleSave,
+  saving,
+  formId,
+}: {
+  handleSave: () => Promise<boolean>;
+  saving: boolean;
+  formId?: string;
+}) {
+  const navigate = useNavigate();
+  const undo = useFormStore((s) => s.undo);
+  const redo = useFormStore((s) => s.redo);
+  const form = useFormStore((s) => s.form);
+  const formName = form?.name || 'Untitled Form';
 
-export function DynamicMenubar() {
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  const handleOpenDeleteDialog = () => {
+    setIsDeleteDialogOpen(true);
+  };
+
+  const [creating, setCreating] = useState(false);
+  const handleCreate = async () => {
+    if (creating) return;
+    setCreating(true);
+    try {
+      const res = await api.post<{ form: FormHeader }>('/api/forms', {
+        title: 'Untitled Form',
+      });
+      navigate(`/form-builder/${res.form.formId}`);
+    } catch {
+      setCreating(false);
+    }
+  };
+
+  const formBuilderMenuConfig: MenuSection[] = [
+    {
+      trigger: 'Form',
+      content: [
+        {
+          type: 'item',
+          text: 'New Blank Form',
+          shortcut: '⌘N',
+          onClick: () => {
+            if (confirm('Create a new form? Unsaved changes will be lost.')) {
+              handleCreate();
+            }
+          },
+        },
+        {
+          type: 'item',
+          text: 'New from Template...',
+          inset: true,
+        },
+        { type: 'separator' },
+        {
+          type: 'item',
+          text: 'Open Form...',
+          shortcut: '⌘O',
+        },
+        // {
+        //   type: 'item',
+        //   text: 'Save',
+        //   shortcut: '⌘S',
+        //   disabled: saving,
+        //   onClick: () => handleSave(),
+        // },
+        {
+          type: 'item',
+          text: 'Duplicate Form',
+          shortcut: '⌘D',
+        },
+        { type: 'separator' },
+        {
+          type: 'sub',
+          text: 'Export As...',
+          items: [
+            { type: 'item', text: 'JSON Schema (.json)' },
+            { type: 'item', text: 'PDF Document (.pdf)', disabled: true },
+            // { type: 'item', text: 'React Component (.tsx)' },
+            // { type: 'item', text: 'HTML/CSS Bundle (.zip)' },
+          ],
+        },
+        // {
+        //   type: 'sub',
+        //   text: 'Share',
+        //   items: [
+        //     { type: 'item', text: 'Copy Public Link', disabled: true },
+        //     { type: 'item', text: 'Embed in Website', disabled: true },
+        //     { type: 'item', text: 'Email to Collaborators', disabled: true },
+        //     { type: 'item', text: 'Publish as Template', disabled: true },
+        //   ],
+        // },
+        { type: 'separator' },
+        // {
+        //   type: 'item',
+        //   text: 'Form Settings',
+        //   shortcut: '⌘,',
+        // },
+        {
+          type: 'item',
+          text: 'Print Preview',
+          shortcut: '⌘P',
+        },
+        { type: 'separator' },
+        {
+          type: 'item',
+          text: 'Delete Form',
+          className: 'text-red-500',
+          onClick: handleOpenDeleteDialog,
+        },
+      ],
+    },
+    // {
+    //   trigger: 'Edit',
+    //   content: [
+    //     { type: 'item', text: 'Undo', shortcut: '⌘Z', onClick: () => undo() },
+    //     { type: 'item', text: 'Redo', shortcut: '⇧⌘Z', onClick: () => redo() },
+    //     { type: 'separator' },
+    //     { type: 'item', text: 'Cut', shortcut: '⌘X' },
+    //     { type: 'item', text: 'Copy', shortcut: '⌘C' },
+    //     { type: 'item', text: 'Paste', shortcut: '⌘V' },
+    //   ],
+    // },
+    {
+      trigger: 'Help',
+      content: [
+        { type: 'item', text: 'Documentation' },
+        { type: 'item', text: 'Keyboard Shortcuts', shortcut: '?' },
+      ],
+    },
+  ];
+
   const renderMenuItems = (items: MenuItem[]) => {
     return items.map((item, index) => {
       if (item.type === 'separator') return <MenubarSeparator key={index} />;
@@ -676,7 +731,11 @@ export function DynamicMenubar() {
 
       if (item.type === 'checkbox') {
         return (
-          <MenubarCheckboxItem key={item.text} checked={item.checked}>
+          <MenubarCheckboxItem
+            key={item.text}
+            checked={item.checked}
+            onClick={item.onClick}
+          >
             {item.text}
           </MenubarCheckboxItem>
         );
@@ -721,6 +780,16 @@ export function DynamicMenubar() {
           </MenubarContent>
         </MenubarMenu>
       ))}
+
+      {formId && (
+        <DeleteFormDialog
+          formId={formId}
+          formName={formName}
+          open={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+          onSuccess={() => navigate('/dashboard')}
+        />
+      )}
     </Menubar>
   );
 }
@@ -903,7 +972,11 @@ export function Workspaces({
   return (
     <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border bg-background px-3 py-[5.5px]">
       <div className="flex items-center gap-1">
-        <DynamicMenubar />
+        <DynamicMenubar
+          handleSave={handleSave}
+          saving={saving}
+          formId={formId}
+        />
       </div>
 
       <div className="flex items-center gap-1">

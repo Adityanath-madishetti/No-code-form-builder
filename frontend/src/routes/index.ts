@@ -1,7 +1,5 @@
-import { publicRoutes } from "./publicRoutes";
-import { protectedRoutes } from "./protectedRoutes";
+// frontend/src/routes/index.ts
+import { publicRoutes } from './publicRoutes';
+import { protectedRoutes } from './protectedRoutes';
 
-export const appRoutes = [
-  ...publicRoutes,
-  protectedRoutes,
-];
+export const appRoutes = [...publicRoutes, protectedRoutes];

@@ -15,7 +15,6 @@ import {
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 
 export const DONT_ASK_DELETE_FORM_KEY = 'dontAskAgainDeleteForm';
 
@@ -99,7 +98,7 @@ export function DeleteFormDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col space-y-4 py-4">
+        <div className="flex flex-col space-y-4 py-2">
           <div className="space-y-2">
             <Label>
               Please type{' '}
@@ -115,8 +114,8 @@ export function DeleteFormDialog({
               disabled={isDeleting}
             />
           </div>
-          
-          <div className="flex items-center space-x-2 pt-2">
+
+          {/* <div className="flex items-center space-x-2 pt-2">
             <Checkbox 
               id="dont-ask-delete-form" 
               checked={dontAskAgain} 
@@ -129,7 +128,7 @@ export function DeleteFormDialog({
             >
               Don't ask again
             </label>
-          </div>
+          </div> */}
         </div>
 
         <DialogFooter className="gap-2 sm:gap-2">

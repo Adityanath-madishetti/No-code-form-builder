@@ -74,8 +74,9 @@ export default function UserSettingsPage() {
   }, []);
 
   const isDarkMode =
-    theme === 'dark' ||
-    (theme === 'system' && document.documentElement.classList.contains('dark'));
+    theme === 'light' ||
+    (theme === 'system' &&
+      document.documentElement.classList.contains('light'));
 
   return (
     <div className="min-h-screen bg-neutral-100 dark:bg-neutral-900">

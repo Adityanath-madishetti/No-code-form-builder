@@ -82,7 +82,7 @@ export function FormCanvas({ currentPageIndex }: FormCanvasProps) {
             </div>
           ) : (
             <>
-              <PageHeader pageId={pageId} pageNumber={currentPageIndex + 1} />
+              <PageHeader pageId={pageId} />
 
               {!hasComponents ? (
                 <EmptyPageDrop pageId={pageId} />
@@ -148,14 +148,7 @@ function FormHeader() {
   );
 }
 
-function PageHeader({
-  pageId,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  pageNumber,
-}: {
-  pageId: string;
-  pageNumber: number;
-}) {
+function PageHeader({ pageId }: { pageId: string }) {
   const page = useFormStore((s) => s.pages[pageId]);
   const setActivePage = useFormStore((s) => s.setActivePage);
   const setActiveComponent = useFormStore((s) => s.setActiveComponent);
@@ -184,12 +177,6 @@ function PageHeader({
           )}
         </Card>
       )}
-      {/* <input
-        value={page?.title ?? ''}
-        onChange={(e) => updatePageTitle(pageId, e.target.value)}
-        placeholder={`Page ${pageNumber}`}
-        className="w-full bg-transparent text-xl font-semibold tracking-tight text-foreground outline-none placeholder:text-muted-foreground/20"
-      /> */}
     </div>
   );
 }

@@ -96,7 +96,7 @@ export default function Dashboard() {
             >
               <div className="mb-4 pl-3">
                 {/* Updated to Solid Pills styling */}
-                <TabsList className="bg-background gap-1">
+                <TabsList className="gap-1 bg-background">
                   {dashboardTabs.map((tab) => (
                     <TabsTrigger
                       key={tab.value}
