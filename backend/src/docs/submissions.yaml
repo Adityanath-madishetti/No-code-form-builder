@@ -1,0 +1,75 @@
+paths:
+  /api/forms/{formId}/submissions:
+    post:
+      summary: Submit a response to a form
+      tags: [Submissions]
+      parameters:
+        - in: path
+          name: formId
+          required: true
+          schema:
+            type: string
+      responses:
+        201:
+          description: Created
+
+    get:
+      summary: List all submissions for a form (Owner/Reviewer only)
+      tags: [Submissions]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: formId
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+
+  /api/forms/{formId}/submissions/export:
+    get:
+      summary: Export submissions as CSV
+      tags: [Submissions]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: formId
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            text/csv:
+              schema:
+                type: string
+
+  /api/forms/{formId}/submissions/mine:
+    get:
+      summary: List my submissions for a specific form
+      tags: [Submissions]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: formId
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+
+  /api/submissions/mine:
+    get:
+      summary: Get all submissions made by the current user across all forms
+      tags: [Submissions]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK

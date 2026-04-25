@@ -1,0 +1,52 @@
+paths:
+  /api/forms/{formId}/versions:
+    get:
+      summary: List all versions of a form
+      tags: [Form Versions]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: formId
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+
+    post:
+      summary: Create a new version of a form
+      tags: [Form Versions]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: formId
+          required: true
+          schema:
+            type: string
+      responses:
+        201:
+          description: Created
+
+  /api/forms/{formId}/versions/{version}/restore:
+    post:
+      summary: Restore an older version of a form
+      tags: [Form Versions]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: formId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: version
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK

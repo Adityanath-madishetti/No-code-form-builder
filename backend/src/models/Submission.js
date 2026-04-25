@@ -1,3 +1,5 @@
+// backend/src/models/Submission.js
+
 import mongoose from "mongoose";
 
 const { Schema } = mongoose;
@@ -83,6 +85,7 @@ const SubmissionSchema = new Schema(
 
         pages: [SubmissionPageSchema],
 
+/*
         // ── Workflow State ──
         currentState: {
             type: String,
@@ -99,6 +102,7 @@ const SubmissionSchema = new Schema(
                 note: String,
             },
         ],
+*/
     },
     { timestamps: true }
 );

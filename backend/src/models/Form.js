@@ -1,3 +1,5 @@
+// backend/src/models/Form.js
+
 import mongoose from "mongoose";
 
 const { Schema } = mongoose;
@@ -97,10 +99,12 @@ const FormSchema = new Schema(
             index: true,
         },
 
+/*
         workflow: {
             type: WorkflowSchema,
             default: null,
         },
+*/
     },
     { timestamps: true }
 );

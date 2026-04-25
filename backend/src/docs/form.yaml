@@ -1,0 +1,175 @@
+components:
+  schemas:
+    Form:
+      type: object
+      properties:
+        formId:
+          type: string
+        title:
+          type: string
+        currentVersion:
+          type: number
+        isActive:
+          type: boolean
+        createdBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateFormRequest:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+
+paths:
+  /api/forms:
+    post:
+      summary: Create a new form
+      tags: [Forms]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFormRequest'
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  form:
+                    $ref: '#/components/schemas/Form'
+                  formVersion:
+                    type: object
+
+    get:
+      summary: List all forms created by the user
+      tags: [Forms]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  forms:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Form'
+
+  /api/forms/shared:
+    get:
+      summary: List forms shared with the user
+      tags: [Forms]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+
+  /api/forms/{formId}:
+    get:
+      summary: Get form by ID
+      tags: [Forms]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: formId
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  form:
+                    $ref: '#/components/schemas/Form'
+        404:
+          description: Not Found
+
+    patch:
+      summary: Update form metadata
+      tags: [Forms]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: formId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFormRequest'
+      responses:
+        200:
+          description: OK
+
+    delete:
+      summary: Delete a form
+      tags: [Forms]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: formId
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+
+  /api/forms/{formId}/publish:
+    post:
+      summary: Publish the latest version of a form
+      tags: [Forms]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: formId
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+
+  /api/forms/{formId}/public:
+    get:
+      summary: Get published form schema (Public access)
+      tags: [Forms]
+      parameters:
+        - in: path
+          name: formId
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK

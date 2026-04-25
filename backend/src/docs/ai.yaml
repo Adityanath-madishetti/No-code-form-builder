@@ -1,0 +1,37 @@
+paths:
+  /api/ai/generate-form:
+    post:
+      summary: Generate a form draft using AI
+      tags: [AI]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - prompt
+              properties:
+                prompt:
+                  type: string
+                  description: Natural language description of the form to generate.
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  formName:
+                    type: string
+                  operations:
+                    type: array
+                    items:
+                      type: object
+        400:
+          description: Bad Request
+        401:
+          description: Unauthorized

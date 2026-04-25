@@ -1,0 +1,45 @@
+components:
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - idToken
+      properties:
+        idToken:
+          type: string
+          description: Firebase Auth ID Token
+
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          type: object
+          properties:
+            uid:
+              type: string
+            email:
+              type: string
+            displayName:
+              type: string
+
+paths:
+  /api/auth/login:
+    post:
+      summary: Login or Register a user
+      tags: [Auth]
+      description: Verifies the Firebase ID token and creates a user if they don't exist.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        401:
+          description: Unauthorized

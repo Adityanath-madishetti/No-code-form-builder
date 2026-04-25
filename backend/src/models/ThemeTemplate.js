@@ -1,3 +1,5 @@
+// backend/src/models/ThemeTemplate.js
+
 import mongoose from "mongoose";
 
 const { Schema } = mongoose;

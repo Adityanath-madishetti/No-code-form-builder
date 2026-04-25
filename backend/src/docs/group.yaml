@@ -1,0 +1,50 @@
+paths:
+  /api/groups:
+    post:
+      summary: Create a new component group
+      tags: [Groups]
+      security:
+        - bearerAuth: []
+      responses:
+        201:
+          description: Created
+
+    get:
+      summary: List all component groups
+      tags: [Groups]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+
+  /api/groups/{groupId}:
+    patch:
+      summary: Update a component group
+      tags: [Groups]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: groupId
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+
+    delete:
+      summary: Delete a component group
+      tags: [Groups]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: groupId
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK

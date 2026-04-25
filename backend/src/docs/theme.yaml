@@ -1,0 +1,50 @@
+paths:
+  /api/themes:
+    get:
+      summary: List all theme templates
+      tags: [Themes]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+
+    post:
+      summary: Create a new theme template
+      tags: [Themes]
+      security:
+        - bearerAuth: []
+      responses:
+        201:
+          description: Created
+
+  /api/themes/{themeId}:
+    patch:
+      summary: Update a theme template
+      tags: [Themes]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: themeId
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+
+    delete:
+      summary: Delete a theme template
+      tags: [Themes]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: themeId
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK

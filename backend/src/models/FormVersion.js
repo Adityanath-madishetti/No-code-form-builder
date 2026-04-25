@@ -1,3 +1,5 @@
+// backend/src/models/FormVersion.js
+
 import mongoose from "mongoose";
 
 const { Schema } = mongoose;
@@ -6,7 +8,7 @@ const IdentitySchema = new Schema(
   {
     uid: {
       type: String,
-      required: true,
+      required: false,
       trim: true,
     },
     email: {
@@ -583,9 +585,11 @@ const FormVersionSchema = new Schema(
       componentShuffleStacks: [ComponentShuffleStackSchema],
     },
 
+/*
     workflow: {
       type: WorkflowSchema,
     },
+*/
 
     access: {
       type: AccessSchema,

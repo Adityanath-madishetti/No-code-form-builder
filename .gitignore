@@ -2,6 +2,8 @@
 node_modules/
 planning/
 serviceAccountKey.json
+dist/
+logs/
 
 run.sh
 test-host/
