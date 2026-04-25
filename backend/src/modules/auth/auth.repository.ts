@@ -1,4 +1,4 @@
-import User, { IUser } from '@/models/User.js';
+import User, { IUser } from '@/database/models/User.js';
 
 export const upsertUserByEmail = async (
   email: string,

@@ -1,6 +1,6 @@
 // backend/src/modules/workflow/workflow.engine.ts
 
-import { evaluateCondition } from '@/shared/utils/conditionEvaluator.js';
+import { evaluateCondition } from '@/utils/conditionEvaluator.js';
 import { IWorkflow, ITransition, IHistoryEntry } from './workflow.types.js';
 
 /**

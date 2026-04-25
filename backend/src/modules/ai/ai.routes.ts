@@ -1,7 +1,7 @@
 // backend/src/modules/ai/ai.routes.ts
 
 import { Router } from 'express';
-import { verifyToken } from '@/shared/middleware/auth.middleware.js';
+import { verifyToken } from '@/middlewares/auth.middleware.js';
 import * as controller from './ai.controller.js';
 
 const router = Router();

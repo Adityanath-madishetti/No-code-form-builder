@@ -1,10 +1,10 @@
 // backend/src/modules/workflow/workflow.service.ts
 
-import Form from '@/models/Form.js';
-import FormVersion from '@/models/FormVersion.js';
-import Submission from '@/models/Submission.js';
-import { ApiError } from '@/shared/middleware/error.middleware.js';
-import { canEditForm } from '../forms/form.utils.js';
+import Form from '@/database/models/Form.js';
+import FormVersion from '@/database/models/FormVersion.js';
+import Submission from '@/database/models/Submission.js';
+import { ApiError } from '@/middlewares/error.middleware.js';
+import { canEditForm } from '../form/form.utils.js';
 import * as engine from './workflow.engine.js';
 import { IWorkflow, ITransitionResult, IAvailableTransitions } from './workflow.types.js';
 

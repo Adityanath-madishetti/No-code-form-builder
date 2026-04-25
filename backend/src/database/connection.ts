@@ -1,6 +1,6 @@
 // backend/src/database/connection.ts
 import mongoose from 'mongoose';
-import logger from '../shared/utils/logger.js';
+import { logger } from '@/shared/logger/index.js';
 
 mongoose.set('strictQuery', true);
 

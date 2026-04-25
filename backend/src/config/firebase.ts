@@ -2,7 +2,7 @@
 
 import admin from 'firebase-admin';
 import { readFileSync, existsSync } from 'fs';
-import logger from '../shared/utils/logger.js';
+import { logger } from '@/shared/logger/index.js';
 
 /**
  * Initialize Firebase Admin SDK.

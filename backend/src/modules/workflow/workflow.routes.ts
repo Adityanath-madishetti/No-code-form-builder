@@ -1,9 +1,9 @@
 // backend/src/modules/workflow/workflow.routes.ts
 
 import { Router } from 'express';
-import { verifyToken } from '@/shared/middleware/auth.middleware.js';
+import { verifyToken } from '@/middlewares/auth.middleware.js';
 import * as controller from './workflow.controller.js';
-import { validateRequest } from '@/shared/middleware/validate.middleware.js';
+import { validateRequest } from '@/middlewares/validate.middleware.js';
 import { workflowConfigSchema, transitionSubmissionSchema } from './workflow.schema.js';
 
 const router = Router({ mergeParams: true });
