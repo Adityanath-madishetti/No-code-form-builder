@@ -1,0 +1,122 @@
+<!-- microfrontend/SubmissionViewModule/usage-agnostic.html -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Framework Agnostic Submission View</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 20px;
+      }
+      iframe {
+        width: 100%;
+        border: 1px solid #ddd;
+        min-height: 500px;
+        transition: height 0.2s;
+      }
+      .controls {
+        margin-bottom: 20px;
+        padding: 15px;
+        background: #f9f9f9;
+        border-radius: 8px;
+      }
+      code {
+        background: #eee;
+        padding: 2px 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Framework Agnostic Submission View</h1>
+    <p>
+      This example demonstrates how to embed the view in an
+      <code>iframe</code> and communicate via <code>postMessage</code>.
+    </p>
+
+    <div class="controls">
+      <button onclick="sendInit()">Send MF_INIT (Initial Data)</button>
+      <button onclick="sendUpdate()">Send MF_UPDATE (New Data)</button>
+    </div>
+
+    <iframe
+      id="submission-view-iframe"
+      src="http://localhost:5173/microfrontend/submission-view?hostOrigin=http://localhost:3000"
+    ></iframe>
+
+    <script>
+      const iframe = document.getElementById("submission-view-iframe");
+      const HOST_SOURCE = "host-app";
+      const MF_VERSION = "1.0";
+
+      const sampleSchema = {
+        form: { title: "Agnostic Test Form" },
+        version: {
+          meta: { description: "Testing iframe communication" },
+          theme: { color: "blue", mode: "light" },
+          pages: [
+            {
+              pageNo: 1,
+              components: [
+                {
+                  componentId: "test-field",
+                  componentType: "single-line-input",
+                  props: { questionText: "Test Field" },
+                },
+              ],
+            },
+          ],
+        },
+      };
+
+      window.addEventListener("message", (event) => {
+        const data = event.data;
+        if (!data || data.source !== "submission-view-mf") return;
+
+        console.log("MF Message:", data.type, data.payload);
+
+        if (data.type === "FRAME_RESIZE") {
+          iframe.style.height = data.payload.height + "px";
+        }
+
+        if (data.type === "MF_READY") {
+          console.log("MF Ready. You can now send MF_INIT.");
+        }
+      });
+
+      function sendInit() {
+        iframe.contentWindow.postMessage(
+          {
+            source: HOST_SOURCE,
+            type: "MF_INIT",
+            version: MF_VERSION,
+            payload: {
+              formSchema: sampleSchema,
+              responseData: { "test-field": "Hello from Iframe Host" },
+            },
+          },
+          "*",
+        );
+      }
+
+      function sendUpdate() {
+        iframe.contentWindow.postMessage(
+          {
+            source: HOST_SOURCE,
+            type: "MF_UPDATE",
+            version: MF_VERSION,
+            payload: {
+              formSchema: sampleSchema,
+              responseData: {
+                "test-field":
+                  "Updated content at " +
+                  new RegExp().constructor().toLocaleTimeString(),
+              },
+            },
+          },
+          "*",
+        );
+      }
+    </script>
+  </body>
+</html>
