@@ -226,7 +226,7 @@ export function GroupCatalogPanel() {
         </div>
       </div>
 
-      <div className="flex-1 space-y-6 overflow-y-auto pr-2">
+      <div className="flex-1 space-y-6 overflow-y-auto">
         {groups.length === 0 ? (
           <div className="mt-8 flex flex-col items-center justify-center space-y-2 rounded-lg border border-dashed border-border bg-muted/30 p-6 text-center">
             <Layers className="h-6 w-6 text-muted-foreground/60" />

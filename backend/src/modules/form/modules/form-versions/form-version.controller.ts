@@ -36,6 +36,7 @@ export const getVersion = async (req: Request, res: Response, next: NextFunction
     }
     if (!req.user) throw new ApiError(401, 'Unauthorized');
     const versionNum = parseInt(version, 10);
+    if (isNaN(versionNum)) throw new ApiError(400, 'Version must be a number');
     const result = await service.getVersionService(formId, versionNum, req.user);
     res.status(200).json({ version: result });
   } catch (err) {
@@ -89,6 +90,7 @@ export const updateVersionSettings = async (req: Request, res: Response, next: N
       throw new ApiError(400, 'Invalid parameters');
     }
     const versionNum = parseInt(version, 10);
+    if (isNaN(versionNum)) throw new ApiError(400, 'Version must be a number');
     const result = await service.updateVersionSettingsService(
       formId,
       versionNum,
@@ -108,6 +110,7 @@ export const updateVersionAccess = async (req: Request, res: Response, next: Nex
       throw new ApiError(400, 'Invalid parameters');
     }
     const versionNum = parseInt(version, 10);
+    if (isNaN(versionNum)) throw new ApiError(400, 'Version must be a number');
     const result = await service.updateVersionAccessService(formId, versionNum, req.body, req.user);
     res.status(200).json({ version: result });
   } catch (err) {

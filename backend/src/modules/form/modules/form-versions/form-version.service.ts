@@ -2,7 +2,7 @@
 import * as repo from './form-version.repository.js';
 import Form from '@/database/models/Form.js';
 import { ApiError } from '@/middlewares/error.middleware.js';
-import { canEditForm, normalizeVersionForResponse } from '../../form.utils.js';
+import { canEditForm, canReviewSubmissions, normalizeSettings, normalizeVersionForResponse } from '../../form.utils.js';
 import { resolveAccessIdentities } from '../../form.service.js';
 import { VersionResponse } from './form-version.types.js';
 
@@ -16,11 +16,27 @@ const assertCanEdit = async (formId: string, user: any) => {
   return { form, latestVersion };
 };
 
+/**
+ * Broader read guard: owner + editor + reviewer.
+ * Used on endpoints that only read version data (list versions, fetch a specific
+ * version) so that reviewers can display the schema when reviewing submissions.
+ */
+const assertCanRead = async (formId: string, user: any) => {
+  if (!user) throw new ApiError(401, 'Unauthorized');
+  const form = await Form.findOne({ formId, isDeleted: false });
+  const latestVersion = await repo.findLatestVersion(formId);
+
+  if (!form || !latestVersion) throw new ApiError(404, 'Form or Version not found');
+  if (!canReviewSubmissions(form, latestVersion, user)) throw new ApiError(403, 'Access denied');
+
+  return { form, latestVersion };
+};
+
 export const getLatestVersionService = async (
   formId: string,
   user: any,
 ): Promise<VersionResponse> => {
-  const { latestVersion } = await assertCanEdit(formId, user);
+  const { latestVersion } = await assertCanRead(formId, user);
   return normalizeVersionForResponse(latestVersion) as unknown as VersionResponse;
 };
 
@@ -65,10 +81,7 @@ export const updateVersionService = async (
 };
 
 export const listVersionsService = async (formId: string, user: any) => {
-  // Logic from your assertCanEdit check
-  const form = await Form.findOne({ formId, isDeleted: false });
-  if (!form) throw new ApiError(404, 'Form not found');
-
+  await assertCanRead(formId, user);
   return repo.listAllVersions(formId);
 };
 
@@ -77,6 +90,7 @@ export const getVersionService = async (
   versionNum: number,
   user: any,
 ): Promise<VersionResponse> => {
+  await assertCanRead(formId, user);
   const versionDoc = await repo.findVersionByNum(formId, versionNum);
   if (!versionDoc) throw new ApiError(404, 'Version not found');
 
@@ -89,8 +103,10 @@ export const updateVersionSettingsService = async (
   payload: any,
   user: any,
 ) => {
-  const settings = payload.settings ?? payload;
-  // This uses the shared applyVersionUpdates logic or a direct repo call:
+  // Bug fix #1 & #3: assert edit access before writing, and normalize settings
+  // so invalid enum values are coerced rather than crashing the DB validator.
+  await assertCanEdit(formId, user);
+  const settings = normalizeSettings(payload.settings ?? payload);
   const versionDoc = await repo.updateVersionDoc(formId, versionNum, { settings });
   if (!versionDoc) throw new ApiError(404, 'Version not found');
   return normalizeVersionForResponse(versionDoc) as unknown as VersionResponse;
@@ -102,6 +118,8 @@ export const updateVersionAccessService = async (
   payload: any,
   user: any,
 ) => {
+  // Bug fix #2: assert edit access before allowing visibility/access changes.
+  await assertCanEdit(formId, user);
   const access = await resolveAccessIdentities(payload.access ?? payload);
   const versionDoc = await repo.updateVersionDoc(formId, versionNum, { access });
   if (!versionDoc) throw new ApiError(404, 'Version not found');

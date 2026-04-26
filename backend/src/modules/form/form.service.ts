@@ -175,7 +175,9 @@ export const updateFormService = async (formId: string, body: IFormUpdate, user:
     throw new ApiError(403, 'Access denied');
   }
 
-  return repo.updateFormDoc(formId, body);
+  // Strip isActive — it must only be changed through the publish/unpublish flow.
+  const { isActive: _ignored, ...safeUpdates } = body as any;
+  return repo.updateFormDoc(formId, safeUpdates);
 };
 
 export const deleteFormService = async (formId: string, uid: string) => {

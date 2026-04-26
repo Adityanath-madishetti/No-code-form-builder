@@ -22,6 +22,7 @@ import {
   type VersionSettings,
 } from '@/form/renderer/viewRenderer/runtimeForm.types';
 import { api } from '@/lib/api';
+import { ApiError } from '@/lib/api';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { AlertCircle, Pencil } from 'lucide-react';
@@ -353,6 +354,7 @@ export function TrueForm({
 export function FormRunner() {
   const { formId } = useParams<{ formId: string }>();
   const [globalFormError, setGlobalFormError] = useState('');
+  const [requiresAuth, setRequiresAuth] = useState(false);
   const [globalFormLoading, setGlobalFormLoading] = useState(true);
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -378,6 +380,7 @@ export function FormRunner() {
     const loadData = async () => {
       setGlobalFormLoading(true);
       setGlobalFormError('');
+      setRequiresAuth(false);
 
       try {
         const res = await api.get<PublicFormData>(
@@ -418,8 +421,14 @@ export function FormRunner() {
           }
         }
       } catch (err) {
-        if (isMounted)
+        if (!isMounted) return;
+        // Detect HTTP 401 by status code — avoids fragile string matching.
+        if (err instanceof ApiError && err.status === 401) {
+          setRequiresAuth(true);
+          setGlobalFormError(''); // clear generic error so only the login UI shows
+        } else {
           setGlobalFormError((err as Error).message || 'Form not found');
+        }
       } finally {
         if (isMounted) setGlobalFormLoading(false);
       }
@@ -430,6 +439,7 @@ export function FormRunner() {
     return () => {
       isMounted = false;
     };
+    // Re-run when auth state changes so that after login the form loads automatically.
   }, [formId, initRuntimeForm, user, user?.email]);
 
   const formData = useRuntimeFormStore((state) => state.formData);
@@ -815,6 +825,23 @@ export function FormRunner() {
   }
 
   // TODO: add auth requirement part
+  if (requiresAuth) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-4 text-center">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+          <LogIn className="h-6 w-6 text-primary" />
+        </div>
+        <div className="flex flex-col gap-1">
+          <p className="text-base font-semibold text-foreground">Sign In Required</p>
+          <p className="max-w-sm text-sm text-muted-foreground">
+            The creator of this form requires you to sign in before continuing.
+          </p>
+        </div>
+        <LoginDialog />
+      </div>
+    );
+  }
+
   if (globalFormError || !formData) {
     const requiresLogin = /authentication required/i.test(globalFormError);
 

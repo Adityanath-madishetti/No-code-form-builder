@@ -5,6 +5,16 @@ function getToken(): string | null {
   return localStorage.getItem("auth_token");
 }
 
+// Extended error type so callers can check the HTTP status directly.
+export class ApiError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+    this.name = "ApiError";
+  }
+}
+
 async function request<T = unknown>(
   path: string,
   options: RequestInit = {}
@@ -26,9 +36,13 @@ async function request<T = unknown>(
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(
-      (body as { error?: string }).error || `Request failed: ${res.status}`
-    );
+    // Backend error middleware sends { message }, not { error }.
+    // Fall back gracefully in case either key is absent.
+    const message =
+      (body as { message?: string; error?: string }).message ||
+      (body as { error?: string }).error ||
+      `Request failed: ${res.status}`;
+    throw new ApiError(message, res.status);
   }
 
   return res.json() as Promise<T>;

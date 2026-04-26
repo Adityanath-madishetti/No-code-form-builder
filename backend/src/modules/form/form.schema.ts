@@ -12,6 +12,6 @@ export const createFormSchema = z.object({
 export const updateFormSchema = z.object({
   body: z.object({
     title: z.string().min(1).optional(),
-    isActive: z.boolean().optional(),
+    // isActive is intentionally excluded: use the publish/unpublish endpoints.
   }),
 });
