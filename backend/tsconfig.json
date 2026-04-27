@@ -10,13 +10,13 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "allowJs": true,
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     },
     "typeRoots": [
       "./node_modules/@types",
-      "./src/types"
+      "./src/types",
+      "./src/shared/types"
     ],
   },
   "include": [

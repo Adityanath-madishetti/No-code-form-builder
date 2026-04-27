@@ -61,7 +61,7 @@ import { Label } from '@/components/ui/label';
 
 import { executeAIActionStream } from '@/form/ai/actionStream';
 
-import { Sparkles, X } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { generateAiFormDraft } from '@/lib/formApi';
 import { api } from '@/lib/api';
 import type { FormHeader } from '@/pages/Dashboard/dashboard.types';
@@ -639,13 +639,13 @@ export function DynamicMenubar({
           text: 'Open Form...',
           shortcut: '⌘O',
         },
-        // {
-        //   type: 'item',
-        //   text: 'Save',
-        //   shortcut: '⌘S',
-        //   disabled: saving,
-        //   onClick: () => handleSave(),
-        // },
+        {
+          type: 'item',
+          text: 'Save',
+          shortcut: '⌘S',
+          disabled: saving,
+          onClick: () => handleSave(),
+        },
         {
           type: 'item',
           text: 'Duplicate Form',
@@ -692,17 +692,17 @@ export function DynamicMenubar({
         },
       ],
     },
-    // {
-    //   trigger: 'Edit',
-    //   content: [
-    //     { type: 'item', text: 'Undo', shortcut: '⌘Z', onClick: () => undo() },
-    //     { type: 'item', text: 'Redo', shortcut: '⇧⌘Z', onClick: () => redo() },
-    //     { type: 'separator' },
-    //     { type: 'item', text: 'Cut', shortcut: '⌘X' },
-    //     { type: 'item', text: 'Copy', shortcut: '⌘C' },
-    //     { type: 'item', text: 'Paste', shortcut: '⌘V' },
-    //   ],
-    // },
+    {
+      trigger: 'Edit',
+      content: [
+        { type: 'item', text: 'Undo', shortcut: '⌘Z', onClick: () => undo() },
+        { type: 'item', text: 'Redo', shortcut: '⇧⌘Z', onClick: () => redo() },
+        { type: 'separator' },
+        { type: 'item', text: 'Cut', shortcut: '⌘X' },
+        { type: 'item', text: 'Copy', shortcut: '⌘C' },
+        { type: 'item', text: 'Paste', shortcut: '⌘V' },
+      ],
+    },
     {
       trigger: 'Help',
       content: [
@@ -980,7 +980,7 @@ export function Workspaces({
       </div>
 
       <div className="flex items-center gap-1">
-        {/* <ThemeToggleButton
+        <ThemeToggleButton
           isDark={editorTheme === 'dark'}
           onToggle={() => {
             const isDark = document.documentElement.classList.contains('dark');
@@ -994,7 +994,7 @@ export function Workspaces({
               document.documentElement.classList.remove('dark');
             }
           }}
-        /> */}
+        />
         <AIGenerateButton />
 
         <SaveButton handleSave={handleSave} saving={saving} />
