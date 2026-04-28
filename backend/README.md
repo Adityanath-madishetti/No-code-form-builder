@@ -10,6 +10,31 @@ cp .env.example .env
 npm run dev
 ```
 
+## Docker (Recommended Local Setup)
+
+From repo root (`No-Code-Form-Builder-And-Workflow`):
+
+```bash
+docker compose up --build -d
+```
+
+This starts:
+1. Partner frontend on `http://localhost:5175`
+2. Partner backend on `http://localhost:5002`
+3. Dedicated MongoDB on `localhost:27018`
+
+Isolation from `ai-workflow-copilot`:
+1. Different Mongo container: `ncfb_mongo`
+2. Different DB: `nocode_form_builder`
+3. Different volume: `ncfb_mongo_data`
+4. Different host ports (`27018`, `5002`, `5175`)
+
+Seed demo user/form in Docker:
+
+```bash
+docker compose exec backend npm run seed:demo
+```
+
 ### Environment Variables
 
 | Variable | Description | Example |
@@ -53,6 +78,14 @@ src/
 |--------|----------|------|-------------|
 | `POST` | `/api/auth/login` | — | Login/register with email, returns JWT |
 
+### Partner Fluxoris Bridge
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/api/partner/fluxoris/events` | — | Receive Fluxoris status webhooks and store in MongoDB |
+| `GET` | `/api/partner/fluxoris/events` | ✅ | List stored Fluxoris status events |
+| `POST` | `/api/partner/fluxoris/exchange-token` | ✅ | Exchange current partner user identity for Fluxoris token |
+
 ### Forms
 
 | Method | Endpoint | Auth | Description |
@@ -90,3 +123,4 @@ src/
 |---------|-------------|
 | `npm run dev` | Start with nodemon (auto-reload) |
 | `npm start` | Start in production mode |
+| `npm run seed:demo` | Create demo user/form and publish one starter form |

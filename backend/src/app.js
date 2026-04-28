@@ -8,6 +8,7 @@ import formRoutes from "./routes/formRoutes.js";
 import aiRoutes from "./routes/aiRoutes.js";
 import groupRoutes from "./routes/groupRoutes.js";
 import themeRoutes from "./routes/themeTemplateRoutes.js";
+import partnerFluxorisRoutes from "./routes/partnerFluxorisRoutes.js";
 import { getMySubmissions } from "./controllers/submissionController.js";
 import { verifyToken } from "./middleware/auth.js";
 import { errorHandler } from "./middleware/errorHandler.js";
@@ -45,6 +46,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/forms", formRoutes);
 app.use("/api/groups", groupRoutes);
 app.use("/api/themes", themeRoutes);
+app.use("/api/partner/fluxoris", partnerFluxorisRoutes);
 // Note: formVersionRoutes and submissionRoutes are nested under formRoutes
 //       at /api/forms/:formId/versions and /api/forms/:formId/submissions
 

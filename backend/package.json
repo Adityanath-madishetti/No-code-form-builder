@@ -5,7 +5,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node src/server.js",
-    "dev": "nodemon --watch src --watch .env --ext js,json,env src/server.js"
+    "dev": "nodemon --watch src --watch .env --ext js,json,env src/server.js",
+    "seed:demo": "node scripts/seedDemoData.js"
   },
   "type": "module",
   "keywords": [],

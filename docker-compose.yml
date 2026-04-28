@@ -1,0 +1,58 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: ncfb_mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ncfb_admin
+      MONGO_INITDB_ROOT_PASSWORD: ncfb_password
+      MONGO_INITDB_DATABASE: nocode_form_builder
+    ports:
+      - "27018:27017"
+    volumes:
+      - ncfb_mongo_data:/data/db
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval 'db.adminCommand({ ping: 1 }).ok' | grep 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ncfb_backend
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      PORT: 5000
+      JWT_SECRET: ncfb-local-dev-secret
+      MONGO_URI: mongodb://ncfb_admin:ncfb_password@mongo:27017/nocode_form_builder?authSource=admin
+      FLUXORIS_API_BASE_URL: http://host.docker.internal:8000/api
+      FLUXORIS_CLIENT_ID: nocode_form_builder_dev
+      FLUXORIS_AUDIENCE: fluxoris-partner-exchange
+      FLUXORIS_SHARED_SECRET: d2d5459849035a233bfbf11019b7f702e4f1bb06b67b7cc15f69128ffb76b881
+    ports:
+      - "5002:5000"
+    command: npm run dev
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ncfb_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      VITE_API_URL: http://localhost:5002
+      VITE_FLUXORIS_REMOTE_URL: http://localhost:5173/assets/remoteEntry.js
+      VITE_FLUXORIS_API_BASE_URL: http://localhost:8000/api
+    ports:
+      - "5175:5173"
+    command: npm run dev -- --host 0.0.0.0 --port 5173
+
+volumes:
+  ncfb_mongo_data:

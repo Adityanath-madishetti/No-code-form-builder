@@ -7,7 +7,17 @@ import {
 } from "../utils/schemaPromptBuilder.js";
 import { getRegisteredComponentTypes } from "../registry/components.js";
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const GROQ_API_KEY = (process.env.GROQ_API_KEY || "").trim();
+const groq = GROQ_API_KEY ? new Groq({ apiKey: GROQ_API_KEY }) : null;
+
+function assertGroqConfigured() {
+  if (groq) return;
+  const error = new Error(
+    "AI generation is disabled because GROQ_API_KEY is not configured."
+  );
+  error.statusCode = 503;
+  throw error;
+}
 
 // ─── Model identifiers ───────────────────────────────────────────────────────
 const ROUTER_MODEL = "llama-3.1-8b-instant"; // Pass 1 — fast & cheap
@@ -65,6 +75,8 @@ const RouterOutputSchema = z.object({
  * @returns {Promise<{ componentTypes: string[], requiresLogic: boolean }>}
  */
 async function runRouterPass(userPrompt) {
+  assertGroqConfigured();
+
   const registeredTypes = getRegisteredComponentTypes();
   const catalogue = generateRouterCatalogue();
 
@@ -175,6 +187,8 @@ Respond with ONLY this JSON (no markdown, no explanation):
  * @returns {Promise<import('../utils/aiForm.schema.js').ActionStream>}
  */
 async function runBuilderPass(userPrompt, componentTypes, maxRetries = 2) {
+  assertGroqConfigured();
+
   const systemInstruction = generateBuilderPrompt(componentTypes);
 
   const messages = [

@@ -1,5 +1,22 @@
 // src/lib/api.ts
-export const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5001";
+const RAW_API_BASE =
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_API_BASE_URL ||
+  "http://localhost:5000";
+
+function normalizeApiBase(value: string): string {
+  const trimmed = value.trim().replace(/\/+$/, "");
+  return trimmed.endsWith("/api") ? trimmed.slice(0, -4) : trimmed;
+}
+
+function normalizeApiPath(path: string): string {
+  const withLeadingSlash = path.startsWith("/") ? path : `/${path}`;
+  return withLeadingSlash.startsWith("/api/")
+    ? withLeadingSlash
+    : `/api${withLeadingSlash}`;
+}
+
+export const API_BASE = normalizeApiBase(RAW_API_BASE);
 
 function getToken(): string | null {
   return localStorage.getItem("auth_token");
@@ -19,7 +36,7 @@ async function request<T = unknown>(
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await fetch(`${API_BASE}${normalizeApiPath(path)}`, {
     ...options,
     headers,
   });

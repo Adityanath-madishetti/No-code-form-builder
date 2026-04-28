@@ -14,6 +14,7 @@
   "dependencies": {
     "@dnd-kit/helpers": "^0.3.2",
     "@dnd-kit/react": "^0.3.2",
+    "@fluxoris/partner-mfe": "file:./vendor/fluxoris-partner-mfe-0.1.4.tgz",
     "@fontsource-variable/geist": "^5.2.8",
     "@heroui/react": "^3.0.1",
     "@hookform/resolvers": "^5.2.2",

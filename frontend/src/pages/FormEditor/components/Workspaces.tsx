@@ -328,6 +328,34 @@ interface PublishButtonProps {
   saving: boolean;
 }
 
+interface FluxorisButtonProps {
+  formId?: string;
+}
+
+function FluxorisButton({ formId }: FluxorisButtonProps) {
+  const target = `/integrations/fluxoris-mfe-dry-run?formId=${encodeURIComponent(
+    formId || ''
+  )}`;
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <a
+          href={target}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex h-7 w-7 items-center justify-center rounded-sm border border-blue-600/60 bg-blue-600 text-white shadow-sm transition-colors hover:bg-blue-700"
+        >
+          <ExternalLink className="h-3 w-3" />
+        </a>
+      </TooltipTrigger>
+      <TooltipContent>
+        <p>Connect to Fluxoris</p>
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
 export function PublishButton({
   formId,
   handleSave,
@@ -543,15 +571,26 @@ export function PublishButton({
             </div>
           </div>
           <DialogFooter className="flex justify-end pt-4">
-            <a
-              href={shareLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
-            >
-              Open Form
-              <ExternalLink className="h-4 w-4" />
-            </a>
+            <div className="flex w-full items-center justify-between gap-2">
+              <a
+                href={`${window.location.origin}/integrations/fluxoris-mfe-dry-run?formId=${encodeURIComponent(formId || '')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
+              >
+                Connect to Fluxoris
+                <ExternalLink className="h-4 w-4" />
+              </a>
+              <a
+                href={shareLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
+              >
+                Open Form
+                <ExternalLink className="h-4 w-4" />
+              </a>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -999,6 +1038,7 @@ export function Workspaces({
 
         <SaveButton handleSave={handleSave} saving={saving} />
         <PreviewButton formId={formId} />
+        <FluxorisButton formId={formId} />
         <PublishButton
           formId={formId}
           handleSave={handleSave}
