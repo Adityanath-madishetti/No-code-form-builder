@@ -8,6 +8,7 @@ import { aiRoutes } from '@/modules/ai/index.js';
 import { groupRoutes } from '@/modules/group/index.js';
 import { themeRoutes } from '@/modules/theme/index.js';
 import { formTemplateRoutes } from '@/modules/form-template/index.js';
+import { fluxorisRoutes } from '@/modules/fluxoris/index.js';
 import { submissionController } from '@/modules/form/modules/submissions/index.js';
 import { verifyToken } from '@/middlewares/auth.middleware.js';
 
@@ -20,6 +21,7 @@ router.use('/groups', groupRoutes);
 router.use('/themes', themeRoutes);
 router.use('/form-templates', formTemplateRoutes);
 router.use('/ai', aiRoutes);
+router.use('/partner/fluxoris', fluxorisRoutes);
 
 router.get('/submissions/mine', verifyToken, submissionController.getMySubmissions);
 

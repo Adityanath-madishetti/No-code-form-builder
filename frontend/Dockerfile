@@ -4,6 +4,7 @@ FROM node:22 AS base
 WORKDIR /app
 
 COPY package*.json ./
+COPY fluxoris-partner-mfe-0.1.4.tgz ./
 RUN npm ci
 
 

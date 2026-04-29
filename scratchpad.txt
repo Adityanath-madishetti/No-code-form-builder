@@ -1,6 +1,13 @@
 rm -rf node_modules package-lock.json
 docker run --rm -v $(pwd):/app -w /app node:22 /bin/sh -c "npm install -g npm@10.9.4 && npm install"
 
+docker run --rm \
+  -u $(id -u):$(id -g) \
+  -v $(pwd):/app \
+  -w /app \
+  node:22 \
+  sh -c "npm install -g npm@10.9.4 && npm install"
+
 
 
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build

@@ -7,6 +7,9 @@ import { RouteErrorFallback } from '@/components/ErrorFallback';
 import { settingsRoutes } from './settingsRoutes';
 import { formRoutes } from './formRoutes';
 
+import FluxorisMfeDryRunPage from '../pages/FluxorisMfeDryRunPage';
+import FluxorisRunDetailsPage from '../pages/FluxorisRunDetailsPage';
+
 export const protectedRoutes = {
   element: <ProtectedLayout />,
   errorElement: <RouteErrorFallback />,
@@ -18,6 +21,14 @@ export const protectedRoutes = {
     {
       path: 'keyboard-shortcuts',
       element: <KeyboardShortcutsPage />,
+    },
+    {
+      path: 'integrations/fluxoris-mfe-dry-run',
+      element: <FluxorisMfeDryRunPage />,
+    },
+    {
+      path: 'integrations/fluxoris-run-details',
+      element: <FluxorisRunDetailsPage />,
     },
     ...settingsRoutes,
     ...formRoutes,
