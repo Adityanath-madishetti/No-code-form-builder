@@ -23,10 +23,6 @@ export type SubmissionViewModuleProps = {
   responseData?: SubmissionViewResponseData;
 };
 
-/**
- * Robust Microfrontend Entry Point for Submission View.
- * Wraps the viewer in an ErrorBoundary and provides a clean interface for consumers.
- */
 export default function SubmissionViewModule({
   formSchema,
   responseData,

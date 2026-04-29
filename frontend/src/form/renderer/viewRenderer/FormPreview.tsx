@@ -434,7 +434,7 @@ export default function FormPreview() {
   return (
     <>
       <FormThemeProvider globalTheme={globalTheme}>
-        <div className="mx-auto mt-15 mb-15 max-w-3xl min-w-3xl">
+        <div className="mx-auto my-8 max-w-3xl px-4 md:my-16 md:px-8">
           <div className="mb-4 flex items-center justify-center gap-2 rounded-md bg-blue-50 py-2 text-sm font-medium text-blue-700">
             <Eye className="h-4 w-4" />
             Preview Mode
@@ -448,7 +448,7 @@ export default function FormPreview() {
               {/* Header Section */}
               <Card>
                 <CardHeader>
-                  <div className="w-full bg-transparent text-5xl font-bold tracking-tight text-foreground outline-none">
+                  <div className="w-full bg-transparent text-3xl font-bold tracking-tight text-foreground outline-none md:text-5xl">
                     <h1>{formData.form.title}</h1>
                   </div>
                 </CardHeader>
@@ -470,7 +470,7 @@ export default function FormPreview() {
               {(currentPage?.title || currentPage?.description) && (
                 <Card>
                   <CardHeader>
-                    <div className="text-4xl font-semibold tracking-tight">
+                    <div className="text-2xl font-semibold tracking-tight md:text-4xl">
                       {currentPage?.title}
                     </div>
                   </CardHeader>
@@ -527,18 +527,17 @@ export default function FormPreview() {
                 )}
               </div>
 
-              {/* Footer Navigation */}
-              <div className="mt-8 flex items-center justify-between border-t pt-6">
-                <div className="flex items-center gap-2">
+              <div className="mt-8 flex flex-row items-center justify-between gap-2 border-t pt-6 sm:gap-4">
+                <div className="flex flex-row items-center gap-2">
                   <Button
                     key="btn-back"
                     type="button"
                     variant="outline"
                     onClick={handleBack}
                     disabled={!hasPrevious}
-                    className="bg-secondary text-primary"
+                    className="w-auto bg-secondary text-primary"
                   >
-                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    <ArrowLeft className="mr-1 h-4 w-4 sm:mr-2" />
                     Back
                   </Button>
                 </div>
@@ -549,19 +548,20 @@ export default function FormPreview() {
                     type="button"
                     variant="outline"
                     onClick={handleNext}
-                    className="bg-secondary text-primary"
+                    className="w-auto bg-secondary text-primary"
                   >
                     Next
-                    <ArrowRight className="ml-2 h-4 w-4" />
+                    <ArrowRight className="ml-1 h-4 w-4 sm:ml-2" />
                   </Button>
                 ) : (
                   <Button
                     key="btn-submit"
                     type="submit"
                     variant="outline"
-                    className="bg-success text-black"
+                    className="w-auto bg-success text-black"
                   >
-                    Submit (Preview)
+                    <span className="hidden sm:inline">Submit (Preview)</span>
+                    <span className="sm:hidden">Submit</span>
                   </Button>
                 )}
               </div>

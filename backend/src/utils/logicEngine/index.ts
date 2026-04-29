@@ -181,9 +181,18 @@ function collectRequiredViolations(
   values: Record<string, any>,
   visibility: Record<string, boolean>,
   enabled: Record<string, boolean>,
+  submittedPages: SubmissionPage[] = [],
 ) {
+  const submittedPageNos = new Set((submittedPages || []).map((p) => p.pageNo));
   const violations = [];
+
   for (const page of version?.pages || []) {
+    // If the payload contains pages, we assume any missing page was skipped via navigation logic
+    // and therefore should not trigger 'required' violations.
+    if (submittedPages.length > 0 && !submittedPageNos.has(page.pageNo)) {
+      continue;
+    }
+
     for (const component of page?.components || []) {
       if (!component?.componentId) continue;
       if (component.componentType === 'heading') continue;
@@ -361,7 +370,7 @@ export function evaluateFormLogicRuntime({
   }
 
   // 4) Required-field checks after visibility/enablement resolution
-  violations.push(...collectRequiredViolations(version, values, visibility, enabled));
+  violations.push(...collectRequiredViolations(version, values, visibility, enabled, pages));
 
   // 5) Strip hidden/disabled values
   for (const id of componentIds) {
