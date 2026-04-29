@@ -6,15 +6,16 @@ import EmbedForm from '@/components/EmbedForm';
 import EmbedSubmissionView from '@/components/EmbedSubmissionView';
 import EmbedSubmissionViewHardcodedTest from '@/components/EmbedSubmissionViewHardcodedTest';
 import { RouteErrorFallback } from '@/components/ErrorFallback';
+import LandingPage from '@/pages/LandingPage/LandingPage';
 
 export const publicRoutes = [
   {
     errorElement: <RouteErrorFallback />,
     children: [
-      // {
-      //   path: '/',
-      //   element: <HomePage />,
-      // },
+      {
+        path: '/',
+        element: <LandingPage />,
+      },
       {
         path: '/login',
         element: <Login />,

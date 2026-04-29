@@ -39,6 +39,7 @@ type ParsedFormSchema = PublicFormData | undefined;
 type EmbedSubmissionViewProps = {
   formSchema?: FormSchemaLike;
   responseData?: SubmissionLike;
+  skipInit?: boolean;
 };
 
 type HostToMfMessage = {
@@ -128,6 +129,7 @@ function parseResponseData(input: SubmissionLike): {
 export default function EmbedSubmissionView({
   formSchema,
   responseData,
+  skipInit = false,
 }: EmbedSubmissionViewProps) {
   const [searchParams] = useSearchParams();
   const targetOriginRef = useRef<string>('*');
@@ -293,7 +295,7 @@ export default function EmbedSubmissionView({
   }, [messageResponseData, responseData, searchParams]);
 
   useEffect(() => {
-    if (!parsedSchema) {
+    if (skipInit || !parsedSchema) {
       return;
     }
     try {

@@ -10,6 +10,7 @@ import {
   ExternalLink,
   AlertCircle,
   AlertTriangle,
+  Home,
 } from 'lucide-react';
 import { useFormStore } from '@/form/store/form.store';
 
@@ -574,7 +575,7 @@ interface MenuItem {
 }
 
 interface MenuSection {
-  trigger: string;
+  trigger: React.ReactNode;
   content: MenuItem[];
 }
 
@@ -588,8 +589,6 @@ export function DynamicMenubar({
   formId?: string;
 }) {
   const navigate = useNavigate();
-  const undo = useFormStore((s) => s.undo);
-  const redo = useFormStore((s) => s.redo);
   const form = useFormStore((s) => s.form);
   const formName = form?.name || 'Untitled Form';
 
@@ -614,6 +613,19 @@ export function DynamicMenubar({
   };
 
   const formBuilderMenuConfig: MenuSection[] = [
+    {
+      trigger: <Home className="h-4 w-4" />,
+      content: [
+        {
+          type: 'item',
+          text: 'Dashboard',
+          inset: true,
+          onClick: () => {
+            navigate('/dashboard');
+          },
+        },
+      ],
+    },
     {
       trigger: 'Form',
       content: [
@@ -691,17 +703,17 @@ export function DynamicMenubar({
         },
       ],
     },
-    {
-      trigger: 'Edit',
-      content: [
-        { type: 'item', text: 'Undo', shortcut: '⌘Z', onClick: () => undo() },
-        { type: 'item', text: 'Redo', shortcut: '⇧⌘Z', onClick: () => redo() },
-        { type: 'separator' },
-        { type: 'item', text: 'Cut', shortcut: '⌘X' },
-        { type: 'item', text: 'Copy', shortcut: '⌘C' },
-        { type: 'item', text: 'Paste', shortcut: '⌘V' },
-      ],
-    },
+    // {
+    //   trigger: 'Edit',
+    //   content: [
+    //     { type: 'item', text: 'Undo', shortcut: '⌘Z', onClick: () => undo() },
+    //     { type: 'item', text: 'Redo', shortcut: '⇧⌘Z', onClick: () => redo() },
+    //     { type: 'separator' },
+    //     { type: 'item', text: 'Cut', shortcut: '⌘X' },
+    //     { type: 'item', text: 'Copy', shortcut: '⌘C' },
+    //     { type: 'item', text: 'Paste', shortcut: '⌘V' },
+    //   ],
+    // },
     {
       trigger: 'Help',
       content: [
@@ -764,8 +776,8 @@ export function DynamicMenubar({
 
   return (
     <Menubar className="w-72 border-none">
-      {formBuilderMenuConfig.map((menu) => (
-        <MenubarMenu key={menu.trigger}>
+      {formBuilderMenuConfig.map((menu, index) => (
+        <MenubarMenu key={index}>
           <MenubarTrigger>{menu.trigger}</MenubarTrigger>
           <MenubarContent className="shadow-none">
             {/* Wrap in RadioGroup if it contains radio items */}
