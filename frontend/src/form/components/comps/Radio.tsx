@@ -106,7 +106,7 @@ export function RadioComponentRenderer({
             render={({ field }) => (
               <RadioGroup
                 onValueChange={field.onChange}
-                defaultValue={field.value}
+                value={field.value}
                 className={layoutClasses}
               >
                 {shuffledOptions.map((option) => (
@@ -145,7 +145,7 @@ export function RadioComponentRenderer({
           {props.questionText}
         </Label>
         <RadioGroup
-          // defaultValue={props.defaultValue}
+          value={props.defaultValue}
           className={layoutClasses}
           disabled
         >
