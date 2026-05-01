@@ -28,7 +28,7 @@ async function request<T = unknown>(
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
   }
-
+  console.log(import.meta.env.VITE_API_URL);
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
     headers,

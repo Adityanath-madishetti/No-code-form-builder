@@ -192,7 +192,7 @@ export function TrueForm({
       <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6">
         <Card>
           <CardHeader>
-            <div className="w-full bg-transparent text-5xl font-bold tracking-tight text-foreground outline-none">
+            <div className="w-full bg-transparent text-3xl md:text-5xl font-bold tracking-tight text-foreground outline-none">
               <h1>{formData.form.title}</h1>
             </div>
           </CardHeader>
@@ -213,7 +213,7 @@ export function TrueForm({
         {(currentPage?.title || currentPage?.description) && (
           <Card>
             <CardHeader>
-              <div className="text-4xl font-semibold tracking-tight">
+              <div className="text-2xl md:text-4xl font-semibold tracking-tight">
                 {currentPage?.title}
               </div>
             </CardHeader>
@@ -268,18 +268,19 @@ export function TrueForm({
             })
           )}
         </div>
-        <div className="mt-8 flex items-center justify-between border-t pt-6">
-          <div className="flex items-center gap-2">
+        <div className="mt-8 flex flex-row items-center justify-between gap-2 border-t pt-6 sm:gap-4">
+          <div className="flex flex-row items-center gap-2">
             <Button
               key="btn-back"
               type="button"
               variant="outline"
               onClick={handleBack}
               disabled={!hasPrevious || submitting}
-              className="bg-secondary text-primary"
+              className="w-auto bg-secondary text-primary"
             >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
+              <ArrowLeft className="mr-1 h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Back</span>
+              <span className="sm:hidden">Back</span>
             </Button>
 
             {/* --- UI: Cancel Editing Button --- */}
@@ -289,9 +290,10 @@ export function TrueForm({
                 type="button"
                 variant="outline"
                 onClick={handleBackToList}
-                className="bg-secondary text-primary"
+                className="w-auto bg-secondary text-primary"
               >
-                Switch to Submissions
+                <span className="hidden sm:inline">Switch to Submissions</span>
+                <span className="sm:hidden">Cancel</span>
               </Button>
             )}
           </div>
@@ -305,10 +307,11 @@ export function TrueForm({
               disabled={
                 submitting || (submitDisabledByPolicy && !editingSubmissionId)
               }
-              className="bg-secondary text-primary"
+              className="w-auto bg-secondary text-primary"
             >
-              Next
-              <ArrowRight className="ml-2 h-4 w-4" />
+              <span className="hidden sm:inline">Next</span>
+              <span className="sm:hidden">Next</span>
+              <ArrowRight className="ml-1 h-4 w-4 sm:ml-2" />
             </Button>
           ) : (
             <Button
@@ -318,22 +321,25 @@ export function TrueForm({
               disabled={
                 submitting || (submitDisabledByPolicy && !editingSubmissionId)
               }
-              className="bg-success text-black hover:bg-success disabled:opacity-50"
+              className="w-auto bg-success text-black hover:bg-success disabled:opacity-50"
             >
               {submitting ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Submitting...
+                  <Loader2 className="mr-1 h-4 w-4 animate-spin sm:mr-2" />
+                  <span className="hidden sm:inline">Submitting...</span>
+                  <span className="sm:hidden">Wait...</span>
                 </>
               ) : editingSubmissionId ? (
                 <>
-                  Update Submission
-                  <Pencil className="ml-2 h-4 w-4" />
+                  <span className="hidden sm:inline">Update Submission</span>
+                  <span className="sm:hidden">Update</span>
+                  <Pencil className="ml-1 h-4 w-4 sm:ml-2" />
                 </>
               ) : (
                 <>
-                  Submit
-                  <Send className="ml-2 h-4 w-4" />
+                  <span className="hidden sm:inline">Submit</span>
+                  <span className="sm:hidden">Submit</span>
+                  <Send className="ml-1 h-4 w-4 sm:ml-2" />
                 </>
               )}
             </Button>
@@ -865,7 +871,7 @@ export function FormRunner() {
 
   if (isLockedOut) {
     return (
-      <div className="mx-auto mt-15 mb-15 max-w-3xl">
+      <div className="mx-auto my-8 md:my-16 max-w-3xl px-4 md:px-8">
         <Card className="border-amber-200 bg-amber-50">
           <CardContent className="flex flex-col items-center justify-center p-12 text-center">
             <AlertCircle className="mb-4 h-10 w-10 text-amber-500" />
@@ -887,7 +893,7 @@ export function FormRunner() {
       {showHistoryList ? (
         <>
           <FormThemeProvider globalTheme={globalTheme}>
-            <div className="mx-auto mb-15 max-w-3xl pt-15">
+            <div className="mx-auto mb-8 md:mb-16 max-w-3xl pt-8 md:pt-16 px-4 md:px-8">
               <Card className="mb-8">
                 <CardHeader className="flex flex-row items-center justify-between pb-3">
                   <h2 className="text-lg font-semibold">Your Submissions</h2>
@@ -954,7 +960,7 @@ export function FormRunner() {
           )} */}
 
           <FormThemeProvider globalTheme={globalTheme}>
-            <div className="px-auto max-w-3xl pt-15 pb-15">
+            <div className="mx-auto max-w-3xl py-8 md:py-16 px-4 md:px-8">
               <TrueForm
                 methods={methods}
                 formData={formData}

@@ -14,8 +14,18 @@ import {
 } from 'lucide-react';
 import { useFormStore } from '@/form/store/form.store';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
   Dialog,
   DialogContent,
@@ -66,6 +76,8 @@ import { generateAiFormDraft } from '@/lib/formApi';
 import { api } from '@/lib/api';
 import type { FormHeader } from '@/pages/Dashboard/dashboard.types';
 import { DeleteFormDialog } from '@/components/DeleteFormDialog';
+import { WorkspaceTemplateDialog } from './WorkspaceTemplateDialog';
+import { OpenFormDialog } from './OpenFormDialog';
 
 interface RulesWarningDialogProps {
   open: boolean;
@@ -279,7 +291,7 @@ export function SaveButton({ handleSave, saving }: SaveButtonProps) {
           </button>
         </TooltipTrigger>
         <TooltipContent>
-          <p>Save form</p>
+          <p>Save form (⌘S)</p>
         </TooltipContent>
       </Tooltip>
 
@@ -316,7 +328,35 @@ export function PreviewButton({ formId }: PreviewButtonProps) {
         </button>
       </TooltipTrigger>
       <TooltipContent>
-        <p>Preview form</p>
+        <p>Preview form (Opens in new tab)</p>
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
+interface FluxorisButtonProps {
+  formId?: string;
+}
+
+function FluxorisButton({ formId }: FluxorisButtonProps) {
+  const target = `/integrations/fluxoris-mfe-dry-run?formId=${encodeURIComponent(
+    formId || ''
+  )}`;
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <a
+          href={target}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex h-7 w-7 items-center justify-center rounded-sm border border-blue-600/60 bg-blue-600 text-white shadow-sm transition-colors hover:bg-blue-700"
+        >
+          <ExternalLink className="h-3 w-3" />
+        </a>
+      </TooltipTrigger>
+      <TooltipContent>
+        <p>Connect to Fluxoris</p>
       </TooltipContent>
     </Tooltip>
   );
@@ -492,6 +532,7 @@ export function PublishButton({
                   id="link"
                   defaultValue={shareLink}
                   readOnly
+                  onClick={(e) => e.currentTarget.select()}
                   className="h-9 flex-1 bg-muted/50 text-sm text-muted-foreground"
                 />
                 <Button
@@ -543,7 +584,7 @@ export function PublishButton({
             </div>
           </div>
           <DialogFooter className="flex justify-end pt-4">
-            <a
+            {/* <a
               href={shareLink}
               target="_blank"
               rel="noopener noreferrer"
@@ -551,7 +592,28 @@ export function PublishButton({
             >
               Open Form
               <ExternalLink className="h-4 w-4" />
-            </a>
+            </a> */}
+
+            <div className="flex w-full items-center justify-between gap-2">
+              <a
+                href={`${window.location.origin}/integrations/fluxoris-mfe-dry-run?formId=${encodeURIComponent(formId || '')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
+              >
+                Connect to Fluxoris
+                <ExternalLink className="h-4 w-4" />
+              </a>
+              <a
+                href={shareLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
+              >
+                Open Form
+                <ExternalLink className="h-4 w-4" />
+              </a>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -590,9 +652,40 @@ export function DynamicMenubar({
 }) {
   const navigate = useNavigate();
   const form = useFormStore((s) => s.form);
+  const undo = useFormStore((s) => s.undo);
+  const redo = useFormStore((s) => s.redo);
   const formName = form?.name || 'Untitled Form';
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isNewFormDialogOpen, setIsNewFormDialogOpen] = useState(false);
+  const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
+  const [isOpenFormDialogOpen, setIsOpenFormDialogOpen] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          redo();
+        } else {
+          undo();
+        }
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault();
+        handleSave();
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'o') {
+        e.preventDefault();
+        setIsOpenFormDialogOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [undo, redo, handleSave]);
 
   const handleOpenDeleteDialog = () => {
     setIsDeleteDialogOpen(true);
@@ -632,23 +725,23 @@ export function DynamicMenubar({
         {
           type: 'item',
           text: 'New Blank Form',
-          shortcut: '⌘N',
+          // shortcut: '⌘N',
           onClick: () => {
-            if (confirm('Create a new form? Unsaved changes will be lost.')) {
-              handleCreate();
-            }
+            setIsNewFormDialogOpen(true);
           },
         },
         {
           type: 'item',
           text: 'New from Template...',
           inset: true,
+          onClick: () => setIsTemplateDialogOpen(true),
         },
         { type: 'separator' },
         {
           type: 'item',
           text: 'Open Form...',
           shortcut: '⌘O',
+          onClick: () => setIsOpenFormDialogOpen(true),
         },
         {
           type: 'item',
@@ -660,7 +753,10 @@ export function DynamicMenubar({
         {
           type: 'item',
           text: 'Duplicate Form',
-          shortcut: '⌘D',
+          // shortcut: '⌘D',
+          onClick: () => {
+            alert('Duplicate Form not implemented yet');
+          },
         },
         { type: 'separator' },
         {
@@ -683,17 +779,17 @@ export function DynamicMenubar({
         //     { type: 'item', text: 'Publish as Template', disabled: true },
         //   ],
         // },
-        { type: 'separator' },
+        // { type: 'separator' },
         // {
         //   type: 'item',
         //   text: 'Form Settings',
         //   shortcut: '⌘,',
         // },
-        {
-          type: 'item',
-          text: 'Print Preview',
-          shortcut: '⌘P',
-        },
+        // {
+        //   type: 'item',
+        //   text: 'Print Preview',
+        //   shortcut: '⌘P',
+        // },
         { type: 'separator' },
         {
           type: 'item',
@@ -703,17 +799,13 @@ export function DynamicMenubar({
         },
       ],
     },
-    // {
-    //   trigger: 'Edit',
-    //   content: [
-    //     { type: 'item', text: 'Undo', shortcut: '⌘Z', onClick: () => undo() },
-    //     { type: 'item', text: 'Redo', shortcut: '⇧⌘Z', onClick: () => redo() },
-    //     { type: 'separator' },
-    //     { type: 'item', text: 'Cut', shortcut: '⌘X' },
-    //     { type: 'item', text: 'Copy', shortcut: '⌘C' },
-    //     { type: 'item', text: 'Paste', shortcut: '⌘V' },
-    //   ],
-    // },
+    {
+      trigger: 'Edit',
+      content: [
+        { type: 'item', text: 'Undo', shortcut: '⌘Z', onClick: () => undo() },
+        { type: 'item', text: 'Redo', shortcut: '⇧⌘Z', onClick: () => redo() },
+      ],
+    },
     {
       trigger: 'Help',
       content: [
@@ -801,6 +893,42 @@ export function DynamicMenubar({
           onSuccess={() => navigate('/dashboard')}
         />
       )}
+
+      <AlertDialog
+        open={isNewFormDialogOpen}
+        onOpenChange={setIsNewFormDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Create a new form?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Any unsaved changes to the current form will be lost. Do you want
+              to proceed?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={creating}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleCreate();
+              }}
+              disabled={creating}
+            >
+              {creating ? 'Creating...' : 'Create New Form'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <WorkspaceTemplateDialog
+        open={isTemplateDialogOpen}
+        onOpenChange={setIsTemplateDialogOpen}
+      />
+      <OpenFormDialog
+        open={isOpenFormDialogOpen}
+        onOpenChange={setIsOpenFormDialogOpen}
+      />
     </Menubar>
   );
 }
@@ -923,14 +1051,31 @@ export function AIGenerateButton() {
             </p>
           </div>
 
-          <Textarea
-            placeholder="Describe your form (e.g., A two-page job application asking for name, email, and Github URL...)"
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            className="min-h-[400px] resize-none focus-visible:ring-primary/50"
-            autoFocus
-            disabled={isGenerating}
-          />
+          <div className="relative">
+            <Textarea
+              placeholder="Describe your form (e.g., A two-page job application asking for name, email, and Github URL...)"
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              onKeyDown={(e) => {
+                if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                  e.preventDefault();
+                  handleGenerate();
+                }
+              }}
+              className="min-h-[400px] resize-none pb-8 focus-visible:ring-primary/50"
+              autoFocus
+              disabled={isGenerating}
+            />
+            <div className="absolute right-2 bottom-2 flex items-center">
+              <p className="rounded bg-background/80 px-1 text-[10px] text-muted-foreground">
+                Press{' '}
+                <kbd className="pointer-events-none inline-flex h-4 items-center gap-1 rounded border bg-muted px-1 font-mono text-[9px] font-medium text-muted-foreground opacity-100 select-none">
+                  ⌘+Enter
+                </kbd>{' '}
+                to generate
+              </p>
+            </div>
+          </div>
 
           {error && (
             <p className="text-xs font-medium text-destructive">{error}</p>
@@ -1010,6 +1155,7 @@ export function Workspaces({
 
         <SaveButton handleSave={handleSave} saving={saving} />
         <PreviewButton formId={formId} />
+        <FluxorisButton formId={formId} />
         <PublishButton
           formId={formId}
           handleSave={handleSave}

@@ -36,6 +36,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Skeleton } from '@/components/ui/skeleton';
 
 // Icons
 import { Plus, Loader2, MoreHorizontal, Search, X } from 'lucide-react';
@@ -51,6 +52,8 @@ export default function TemplatesSection() {
   );
   const [templates, setTemplates] = useState<FormTemplateData[]>([]);
   const [allTemplatesOpen, setAllTemplatesOpen] = useState(false);
+  const [loadingTemplates, setLoadingTemplates] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
 
   const handleCreate = async () => {
     if (creatingBlank || creatingTemplateId) return;
@@ -60,11 +63,12 @@ export default function TemplatesSection() {
         title: 'Untitled Form',
       });
       navigate(`/form-builder/${res.form.formId}`);
-    } catch {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to create a blank form');
+    } finally {
       setCreatingBlank(false);
-      return;
     }
-    setCreatingBlank(false);
   };
 
   const handleCreateFromTemplate = async (templateId: string) => {
@@ -74,18 +78,32 @@ export default function TemplatesSection() {
       const { formId } = await createFormFromTemplate(templateId);
       navigate(`/form-builder/${formId}`);
       return formId;
-    } catch {
-      toast.error('Failed to open template');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to open template');
       return null;
     } finally {
       setCreatingTemplateId(null);
     }
   };
 
-  useEffect(() => {
+  const loadTemplates = () => {
+    setLoadingTemplates(true);
+    setFetchError(false);
     fetchFormTemplates()
       .then((rows) => setTemplates(rows))
-      .catch(() => setTemplates([]));
+      .catch((err) => {
+        console.error('Error fetching templates:', err);
+        toast.error('Failed to load templates');
+        setFetchError(true);
+        setTemplates([]);
+      })
+      .finally(() => setLoadingTemplates(false));
+  };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadTemplates();
   }, []);
 
   const quickTemplates = templates.slice(0, 1);
@@ -148,53 +166,76 @@ export default function TemplatesSection() {
         </Card>
 
         {/* Quick templates (first one) */}
-        {quickTemplates.map((template) => {
-          const isCreatingThis = creatingTemplateId === template.templateId;
-          return (
-            <Card
-              key={template.templateId}
-              className="group relative flex flex-col overflow-hidden transition-all hover:border-primary/50"
-              role="button"
-              tabIndex={0}
-              onClick={() => handleCreateFromTemplate(template.templateId)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  void handleCreateFromTemplate(template.templateId);
-                }
-              }}
-            >
-              <CardHeader className="px-4">
-                <div>
-                  <CardTitle className="text-base font-semibold">
-                    {template.name}
-                  </CardTitle>
-                  <CardDescription className="mt-0 text-xs">
-                    {template.description || 'Saved template'}
-                  </CardDescription>
-                </div>
-              </CardHeader>
-              <CardContent className="flex-1 px-4 text-xs text-muted-foreground">
-                <div className="rounded-md bg-muted/30 italic">
-                  {template.snapshot?.pages?.length || 0} page template ready to
-                  use.
-                </div>
-              </CardContent>
-              <CardFooter className="border-t bg-muted/20 p-3">
-                <div className="flex w-full items-center justify-between text-xs font-medium text-muted-foreground transition-colors">
-                  <span>
-                    {isCreatingThis ? 'Opening template...' : 'Use Template'}
-                  </span>
-                  {isCreatingThis ? (
-                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                  ) : (
-                    <Plus className="h-4 w-4 cursor-pointer hover:text-foreground" />
-                  )}
-                </div>
-              </CardFooter>
-            </Card>
-          );
-        })}
+        {loadingTemplates ? (
+          <Card className="flex flex-col overflow-hidden">
+            <CardHeader className="px-4">
+              <Skeleton className="mb-1 h-5 w-3/4" />
+              <Skeleton className="h-3 w-1/2" />
+            </CardHeader>
+            <CardContent className="flex-1 px-4">
+              <Skeleton className="h-10 w-full" />
+            </CardContent>
+            <CardFooter className="flex justify-between border-t bg-muted/20 p-3">
+              <Skeleton className="h-4 w-1/3" />
+              <Skeleton className="h-4 w-4" />
+            </CardFooter>
+          </Card>
+        ) : fetchError ? (
+          <Card className="flex h-full flex-col items-center justify-center border-dashed p-4 text-center text-muted-foreground">
+            <span className="text-sm">Could not load templates.</span>
+            <Button variant="link" size="sm" onClick={loadTemplates}>
+              Retry
+            </Button>
+          </Card>
+        ) : (
+          quickTemplates.map((template) => {
+            const isCreatingThis = creatingTemplateId === template.templateId;
+            return (
+              <Card
+                key={template.templateId}
+                className="group relative flex flex-col overflow-hidden transition-all hover:border-primary/50"
+                role="button"
+                tabIndex={0}
+                onClick={() => handleCreateFromTemplate(template.templateId)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    void handleCreateFromTemplate(template.templateId);
+                  }
+                }}
+              >
+                <CardHeader className="px-4">
+                  <div>
+                    <CardTitle className="text-base font-semibold">
+                      {template.name}
+                    </CardTitle>
+                    <CardDescription className="mt-0 text-xs">
+                      {template.description || 'Saved template'}
+                    </CardDescription>
+                  </div>
+                </CardHeader>
+                <CardContent className="flex-1 px-4 text-xs text-muted-foreground">
+                  <div className="rounded-md bg-muted/30 italic">
+                    {template.snapshot?.pages?.length || 0} page template ready
+                    to use.
+                  </div>
+                </CardContent>
+                <CardFooter className="border-t bg-muted/20 p-3">
+                  <div className="flex w-full items-center justify-between text-xs font-medium text-muted-foreground transition-colors">
+                    <span>
+                      {isCreatingThis ? 'Opening template...' : 'Use Template'}
+                    </span>
+                    {isCreatingThis ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                    ) : (
+                      <Plus className="h-4 w-4 cursor-pointer hover:text-foreground" />
+                    )}
+                  </div>
+                </CardFooter>
+              </Card>
+            );
+          })
+        )}
 
         {/* More Templates card */}
         <Card
@@ -233,6 +274,8 @@ export default function TemplatesSection() {
         open={allTemplatesOpen}
         onOpenChange={setAllTemplatesOpen}
         templates={templates}
+        loading={loadingTemplates}
+        error={fetchError}
         creatingTemplateId={creatingTemplateId}
         onUse={async (templateId) => {
           const formId = await handleCreateFromTemplate(templateId);
@@ -261,18 +304,22 @@ const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: 'name-desc', label: 'Name Z–A' },
 ];
 
-interface AllTemplatesDialogProps {
+export interface AllTemplatesDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   templates: FormTemplateData[];
+  loading?: boolean;
+  error?: boolean;
   creatingTemplateId: string | null;
   onUse: (templateId: string) => void;
 }
 
-function AllTemplatesDialog({
+export function AllTemplatesDialog({
   open,
   onOpenChange,
   templates,
+  loading,
+  error,
   creatingTemplateId,
   onUse,
 }: AllTemplatesDialogProps) {
@@ -408,7 +455,27 @@ function AllTemplatesDialog({
         {/* ── Template list ── */}
         <ScrollArea className="min-h-0 flex-1">
           <div className="grid grid-cols-1 gap-3 px-6 py-4 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.length === 0 ? (
+            {loading ? (
+              Array.from({ length: 6 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="flex h-[120px] flex-col justify-between rounded-md border p-4"
+                >
+                  <div>
+                    <Skeleton className="mb-2 h-4 w-3/4" />
+                    <Skeleton className="h-3 w-full" />
+                  </div>
+                  <div className="flex items-end justify-between">
+                    <Skeleton className="h-3 w-1/3" />
+                    <Skeleton className="h-4 w-4" />
+                  </div>
+                </div>
+              ))
+            ) : error ? (
+              <div className="col-span-full rounded-md border border-dashed py-10 text-center text-sm text-destructive">
+                Failed to load templates. Please try again later.
+              </div>
+            ) : filtered.length === 0 ? (
               <div className="col-span-full rounded-md border border-dashed py-10 text-center text-sm text-muted-foreground">
                 {search
                   ? `No templates found for "${search}"`

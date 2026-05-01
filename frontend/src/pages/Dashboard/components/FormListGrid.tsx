@@ -1,3 +1,4 @@
+import { useState, useEffect, useRef } from 'react';
 import { FileText, Inbox, ExternalLink, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -30,9 +31,9 @@ export interface FormItemData {
   // Handlers
   onClickTitle: () => void;
   onClickEdit?: () => void; // Usually same as Edit Form/Title
-  onClickInbox: () => void;
-  onClickPreview: () => void;
-  onClickRename: () => void;
+  onClickInbox?: () => void;
+  onClickPreview?: () => void;
+  onClickRename?: () => void;
   onClickDelete?: () => void;
 }
 
@@ -53,6 +54,40 @@ export function FormListGrid({
   emptyDescription,
   listBadgeHeader,
 }: FormListGridProps) {
+  const [visibleCount, setVisibleCount] = useState(12);
+  const observerTarget = useRef<HTMLDivElement>(null);
+
+  // useEffect(() => {
+  //   setVisibleCount(12);
+  // }, [items]);
+  const [prevItems, setPrevItems] = useState(items);
+  if (items !== prevItems) {
+    setPrevItems(items);
+    setVisibleCount(12);
+  }
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleCount((prev) => Math.min(prev + 12, items.length));
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const currentTarget = observerTarget.current;
+    if (currentTarget) {
+      observer.observe(currentTarget);
+    }
+
+    return () => {
+      if (currentTarget) observer.unobserve(currentTarget);
+    };
+  }, [items]);
+
+  const visibleItems = items.slice(0, visibleCount);
+
   if (items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/25 bg-background/50 py-24 text-center">
@@ -65,187 +100,210 @@ export function FormListGrid({
 
   if (layout === 'grid') {
     return (
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {items.map((item) => (
-          <Card
-            key={item.id}
-            className="group flex flex-col transition-colors hover:border-primary/50"
-          >
-            <CardHeader className="px-4">
-              <div className="flex w-full min-w-0 items-start justify-between gap-4">
-                <div className="min-w-0 flex-1">
-                  <CardTitle
-                    className="truncate text-base font-semibold hover:cursor-pointer"
-                    onClick={item.onClickTitle}
-                  >
-                    {item.title}
-                  </CardTitle>
-                  <CardDescription className="mt-1.5 truncate text-xs">
-                    {item.creatorLabel}
-                  </CardDescription>
+      <>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {visibleItems.map((item) => (
+            <Card
+              key={item.id}
+              className="group flex flex-col transition-colors hover:border-primary/50"
+            >
+              <CardHeader className="px-4">
+                <div className="flex w-full min-w-0 items-start justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <CardTitle
+                      className="truncate text-base font-semibold hover:cursor-pointer"
+                      onClick={item.onClickTitle}
+                    >
+                      {item.title}
+                    </CardTitle>
+                    <CardDescription className="mt-1.5 truncate text-xs">
+                      {item.creatorLabel}
+                    </CardDescription>
+                  </div>
+                  {item.badgeNode}
                 </div>
-                {item.badgeNode}
-              </div>
-            </CardHeader>
-            <CardContent className="mt-auto px-4 pt-0 text-xs text-muted-foreground">
-              Edited {item.updatedAtString}
-              {item.submissionCount !== undefined && (
-                <p className="mt-1">
-                  {item.submissionCount} submission
-                  {item.submissionCount === 1 ? '' : 's'}
-                </p>
+              </CardHeader>
+              <CardContent className="mt-auto px-4 pt-0 text-xs text-muted-foreground">
+                Edited {item.updatedAtString}
+                {item.submissionCount !== undefined && (
+                  <p className="mt-1">
+                    {item.submissionCount} submission
+                    {item.submissionCount === 1 ? '' : 's'}
+                  </p>
+                )}
+              </CardContent>
+              {(item.onClickInbox ||
+                item.onClickPreview ||
+                item.onClickRename ||
+                item.onClickDelete) && (
+                <CardFooter className="flex justify-end gap-1 border-t bg-muted/20 p-1">
+                  <div className="flex items-center justify-end gap-1">
+                    {item.onClickInbox && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                            onClick={item.onClickInbox}
+                          >
+                            <Inbox className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>View Submissions</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+
+                    {item.onClickPreview && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                            onClick={item.onClickPreview}
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Preview Form</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+
+                    {item.canEdit && item.onClickRename && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                            onClick={item.onClickRename}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Rename Form</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+
+                    {item.canDelete && item.onClickDelete && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                            onClick={item.onClickDelete}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Delete Form</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                  </div>
+                </CardFooter>
               )}
-            </CardContent>
-            <CardFooter className="flex justify-end gap-1 border-t bg-muted/20 p-1">
-              <div className="flex items-center justify-end gap-1">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                      onClick={item.onClickInbox}
-                    >
-                      <Inbox className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>View Submissions</p>
-                  </TooltipContent>
-                </Tooltip>
-
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                      onClick={item.onClickPreview}
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Preview Form</p>
-                  </TooltipContent>
-                </Tooltip>
-
-                {item.canEdit && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                        onClick={item.onClickRename}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Rename Form</p>
-                    </TooltipContent>
-                  </Tooltip>
-                )}
-
-                {item.canDelete && item.onClickDelete && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                        onClick={item.onClickDelete}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Delete Form</p>
-                    </TooltipContent>
-                  </Tooltip>
-                )}
-              </div>
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
+            </Card>
+          ))}
+        </div>
+        {visibleCount < items.length && (
+          <div ref={observerTarget} className="mt-4 h-4 w-full" />
+        )}
+      </>
     );
   }
 
   // list view
   return (
-    <Card className="overflow-hidden p-0">
-      <div
-        className={`grid ${LIST_COLUMNS_GRID} border-b bg-muted/50 px-4 py-3 text-xs font-medium tracking-wider text-muted-foreground uppercase`}
-      >
-        <span>Form Name</span>
-        <span>Creator</span>
-        <span>Last Edited</span>
-        <span>{listBadgeHeader}</span>
-        <span className="text-right">Actions</span>
-      </div>
-      <div className="divide-y">
-        {items.map((item) => (
-          <div
-            key={item.id}
-            className={`grid ${LIST_COLUMNS_GRID} items-center gap-4 px-4 py-2 transition-colors hover:bg-muted/30`}
-          >
-            <button
-              onClick={item.onClickTitle}
-              className="truncate text-left text-sm font-medium hover:underline focus:outline-none"
+    <>
+      <Card className="gap-0 overflow-hidden p-0">
+        <div
+          className={`grid ${LIST_COLUMNS_GRID} border-b bg-muted/50 px-4 py-3 text-xs font-medium tracking-wider text-muted-foreground uppercase`}
+        >
+          <span>Form Name</span>
+          <span>Creator</span>
+          <span>Last Edited</span>
+          <span>{listBadgeHeader}</span>
+          <span className="text-right">Actions</span>
+        </div>
+        <div className="divide-y">
+          {visibleItems.map((item) => (
+            <div
+              key={item.id}
+              className={`grid ${LIST_COLUMNS_GRID} items-center gap-4 px-4 py-2 transition-colors hover:bg-muted/30`}
             >
-              {item.title}
-            </button>
-            <span className="truncate text-sm text-muted-foreground">
-              {item.creatorLabel}
-            </span>
-            <span className="text-sm text-muted-foreground">
-              {item.updatedAtString}
-            </span>
-            <div>{item.badgeNode}</div>
+              <button
+                onClick={item.onClickTitle}
+                className="truncate text-left text-sm font-medium hover:underline focus:outline-none"
+              >
+                {item.title}
+              </button>
+              <span className="truncate text-sm text-muted-foreground">
+                {item.creatorLabel}
+              </span>
+              <span className="text-sm text-muted-foreground">
+                {item.updatedAtString}
+              </span>
+              <div>{item.badgeNode}</div>
 
-            <div className="flex items-center justify-end gap-1">
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                onClick={item.onClickInbox}
-              >
-                <Inbox className="h-4 w-4" />
-              </Button>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                onClick={item.onClickPreview}
-              >
-                <ExternalLink className="h-4 w-4" />
-              </Button>
-              {item.canEdit && (
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                  onClick={item.onClickRename}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-              )}
-              {item.canDelete && item.onClickDelete && (
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                  onClick={item.onClickDelete}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              )}
+              <div className="flex items-center justify-end gap-1">
+                {item.onClickInbox && (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    onClick={item.onClickInbox}
+                  >
+                    <Inbox className="h-4 w-4" />
+                  </Button>
+                )}
+                {item.onClickPreview && (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    onClick={item.onClickPreview}
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </Button>
+                )}
+                {item.canEdit && item.onClickRename && (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    onClick={item.onClickRename}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                )}
+                {item.canDelete && item.onClickDelete && (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                    onClick={item.onClickDelete}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
-    </Card>
+          ))}
+        </div>
+      </Card>
+      {visibleCount < items.length && (
+        <div ref={observerTarget} className="mt-4 h-4 w-full" />
+      )}
+    </>
   );
 }

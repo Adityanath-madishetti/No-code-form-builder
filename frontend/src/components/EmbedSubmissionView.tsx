@@ -312,7 +312,7 @@ export default function EmbedSubmissionView({
         },
       });
     }
-  }, [initRuntimeForm, parsedSchema, postToHost]);
+  }, [initRuntimeForm, parsedSchema, postToHost, skipInit]);
 
   useEffect(() => {
     methods.reset(parsedResponseData.flatValues);

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
-import { Loader2 } from 'lucide-react';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
 
 import DashboardHeader from './components/DashboardHeader';
 import TemplatesSection from './components/TemplatesSection';
@@ -110,8 +110,31 @@ export default function Dashboard() {
               </div>
 
               {loading ? (
-                <div className="flex justify-center py-20">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <div className="mt-4 pl-3">
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="flex h-[130px] flex-col rounded-xl border bg-card p-4 shadow-sm"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="w-full">
+                            <Skeleton className="mb-2 h-5 w-3/4" />
+                            <Skeleton className="h-3 w-1/2" />
+                          </div>
+                          <Skeleton className="h-5 w-16 rounded-full" />
+                        </div>
+                        <div className="mt-auto flex items-end justify-between">
+                          <Skeleton className="h-3 w-1/3" />
+                          <div className="flex gap-1">
+                            <Skeleton className="h-8 w-8 rounded-md" />
+                            <Skeleton className="h-8 w-8 rounded-md" />
+                            <Skeleton className="h-8 w-8 rounded-md" />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ) : (
                 <div className="pl-3">

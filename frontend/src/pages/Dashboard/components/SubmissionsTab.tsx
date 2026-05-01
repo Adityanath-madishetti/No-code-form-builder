@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Search, Inbox } from 'lucide-react';
 
 // shadcn components
@@ -69,6 +69,9 @@ export default function SubmissionsTab({
     'all' | 'last7' | 'last30' | 'older'
   >('all');
 
+  const [visibleCount, setVisibleCount] = useState(12);
+  const observerTarget = useRef<HTMLDivElement>(null);
+
   const submissionStatuses = Array.from(
     new Set(submissions.map((s) => s.status))
   ).sort();
@@ -85,6 +88,47 @@ export default function SubmissionsTab({
 
     return matchesSearch && matchesStatus && matchesDate;
   });
+
+  // useEffect(() => {
+  //   setVisibleCount(12);
+  // }, [submissions, query, statusFilter, dateFilter]);
+  const [prevCriteria, setPrevCriteria] = useState({
+    query,
+    statusFilter,
+    dateFilter,
+    submissions,
+  });
+  if (
+    query !== prevCriteria.query ||
+    statusFilter !== prevCriteria.statusFilter ||
+    dateFilter !== prevCriteria.dateFilter ||
+    submissions !== prevCriteria.submissions
+  ) {
+    setPrevCriteria({ query, statusFilter, dateFilter, submissions });
+    setVisibleCount(12);
+  }
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleCount((prev) => Math.min(prev + 12, filtered.length));
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const currentTarget = observerTarget.current;
+    if (currentTarget) {
+      observer.observe(currentTarget);
+    }
+
+    return () => {
+      if (currentTarget) observer.unobserve(currentTarget);
+    };
+  }, [filtered]);
+
+  const visibleFiltered = filtered.slice(0, visibleCount);
 
   return (
     <div className="space-y-6">
@@ -154,46 +198,51 @@ export default function SubmissionsTab({
           </p>
         </div>
       ) : (
-        <Card className="overflow-hidden">
-          <div
-            className={`grid ${LIST_COLUMNS} border-b bg-muted/50 px-4 py-3 text-xs font-medium tracking-wider text-muted-foreground uppercase`}
-          >
-            <span>Form Name</span>
-            <span>Submitted</span>
-            <span>Status</span>
-          </div>
-          <div className="divide-y">
-            {filtered.map((sub) => {
-              const badgeProps = getStatusBadge(sub.status);
-              const isSelected = selectedId === sub.submissionId;
+        <>
+          <Card className="gap-0 overflow-hidden p-0">
+            <div
+              className={`grid ${LIST_COLUMNS} border-b bg-muted/50 px-4 py-3 text-xs font-medium tracking-wider text-muted-foreground uppercase`}
+            >
+              <span>Form Name</span>
+              <span>Submitted</span>
+              <span>Status</span>
+            </div>
+            <div className="divide-y">
+              {visibleFiltered.map((sub) => {
+                const badgeProps = getStatusBadge(sub.status);
+                const isSelected = selectedId === sub.submissionId;
 
-              return (
-                <div
-                  key={sub.submissionId}
-                  onClick={() => onSelect(sub.submissionId)}
-                  className={`grid ${LIST_COLUMNS} cursor-pointer items-center gap-4 px-4 py-3 transition-colors hover:bg-muted/30 ${
-                    isSelected ? 'bg-muted/30 dark:bg-muted/20' : ''
-                  }`}
-                >
-                  <span className="truncate text-sm font-medium">
-                    {sub.formTitle}
-                  </span>
-                  <span className="text-sm text-muted-foreground">
-                    {formatDate(sub.submittedAt)}
-                  </span>
-                  <div>
-                    <Badge
-                      variant={badgeProps.variant}
-                      className={`pointer-events-none capitalize ${badgeProps.className}`}
-                    >
-                      {sub.status.replace('_', ' ')}
-                    </Badge>
+                return (
+                  <div
+                    key={sub.submissionId}
+                    onClick={() => onSelect(sub.submissionId)}
+                    className={`grid ${LIST_COLUMNS} cursor-pointer items-center gap-4 px-4 py-3 transition-colors hover:bg-muted/30 ${
+                      isSelected ? 'bg-muted/30 dark:bg-muted/20' : ''
+                    }`}
+                  >
+                    <span className="truncate text-sm font-medium">
+                      {sub.formTitle}
+                    </span>
+                    <span className="text-sm text-muted-foreground">
+                      {formatDate(sub.submittedAt)}
+                    </span>
+                    <div>
+                      <Badge
+                        variant={badgeProps.variant}
+                        className={`pointer-events-none capitalize ${badgeProps.className}`}
+                      >
+                        {sub.status.replace('_', ' ')}
+                      </Badge>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        </Card>
+                );
+              })}
+            </div>
+          </Card>
+          {visibleCount < filtered.length && (
+            <div ref={observerTarget} className="mt-4 h-4 w-full" />
+          )}
+        </>
       )}
     </div>
   );

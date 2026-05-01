@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { format } from 'date-fns';
 import { type DateRange } from 'react-day-picker';
 import { API_BASE, api } from '@/lib/api';
@@ -21,6 +21,8 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import FormSummary from './FormSummary';
 import {
   Select,
   SelectContent,
@@ -30,7 +32,6 @@ import {
 } from '@/components/ui/select';
 import {
   Loader2,
-  ArrowLeft,
   Inbox,
   RefreshCw,
   Download,
@@ -118,7 +119,6 @@ function mapErrorMessage(errorMessage: string): string {
 
 export default function FormReview() {
   const { formId } = useParams<{ formId: string }>();
-  const navigate = useNavigate();
 
   // Backend Data States
   const [formTitle, setFormTitle] = useState('');
@@ -193,7 +193,10 @@ export default function FormReview() {
   }, [loadSubmissions]);
 
   useEffect(() => {
-    if (!formId || !selectedSubmission?.version) {
+    const versionToLoad =
+      selectedSubmission?.version || submissions[0]?.version;
+
+    if (!formId || !versionToLoad) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setReviewFormSchema(null);
       return;
@@ -204,7 +207,7 @@ export default function FormReview() {
 
     api
       .get<{ version: VersionData }>(
-        `/api/forms/${formId}/versions/${selectedSubmission.version}`
+        `/api/forms/${formId}/versions/${versionToLoad}`
       )
       .then((res) => {
         const versionData = res.version;
@@ -231,7 +234,7 @@ export default function FormReview() {
           )
         );
       });
-  }, [formId, selectedSubmission?.version]);
+  }, [formId, selectedSubmission?.version, submissions]);
 
   useEffect(() => {
     document.title = formTitle
@@ -245,19 +248,25 @@ export default function FormReview() {
       // 1. Search filter
       const matchesSearch =
         !searchQuery ||
-        sub.submissionId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        String(sub.submissionId || '')
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase()) ||
         (sub.email &&
-          sub.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          String(sub.email)
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase())) ||
         (sub.submittedBy &&
-          sub.submittedBy.toLowerCase().includes(searchQuery.toLowerCase()));
+          String(sub.submittedBy)
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase()));
 
       // 2. Status filter
       const matchesStatus =
-        statusFilter === 'all' || sub.status === statusFilter;
+        statusFilter === 'all' || String(sub.status || '') === statusFilter;
 
       // 3. Date Range filter
       let matchesDate = true;
-      if (dateRange?.from) {
+      if (dateRange?.from && sub.createdAt) {
         const subDate = new Date(sub.createdAt);
         const fromDate = new Date(dateRange.from);
         fromDate.setHours(0, 0, 0, 0); // Start of day
@@ -355,8 +364,8 @@ export default function FormReview() {
 
   // Dynamically extract unique statuses from submissions for the filter dropdown
   const uniqueStatuses = useMemo(() => {
-    const statuses = new Set(submissions.map((s) => s.status));
-    return Array.from(statuses);
+    const statuses = new Set(submissions.map((s) => String(s.status || '')));
+    return Array.from(statuses).filter(Boolean);
   }, [submissions]);
 
   return (
@@ -368,10 +377,6 @@ export default function FormReview() {
             {formTitle || 'Shared form'}
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => navigate('/')}>
-          <ArrowLeft className="mr-1.5 h-4 w-4" />
-          Back to Dashboard
-        </Button>
       </header>
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-8">
@@ -418,7 +423,9 @@ export default function FormReview() {
               placeholder="Search by ID, email, or user..."
               className="pl-8"
               value={searchQuery}
-              onChange={(e) => {handleSearchChange(e.target.value)}}
+              onChange={(e) => {
+                handleSearchChange(e.target.value);
+              }}
               disabled={loading}
             />
           </div>
@@ -480,185 +487,223 @@ export default function FormReview() {
           </Popover>
         </div>
 
-        {/* SUBMISSIONS TABLE */}
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          </div>
-        ) : error ? (
-          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
-            {error}
-          </div>
-        ) : filteredSubmissions.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border py-16 text-center">
-            <Inbox className="mb-3 h-8 w-8 text-muted-foreground/40" />
-            <p className="text-sm text-muted-foreground">
-              {submissions.length > 0
-                ? 'No submissions match your filters.'
-                : 'No submissions yet.'}
-            </p>
-            {submissions.length > 0 && (
-              <Button
-                variant="link"
-                onClick={() => {
-                  setSearchQuery('');
-                  setStatusFilter('all');
-                  setDateRange(undefined);
-                }}
-              >
-                Clear Filters
-              </Button>
-            )}
-          </div>
-        ) : (
-          <div className="overflow-hidden rounded-lg border border-border bg-background">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-border bg-muted/30">
-                <tr>
-                  <th className="px-4 py-2.5 font-medium text-muted-foreground">
-                    Submission ID
-                  </th>
-                  <th className="px-4 py-2.5 font-medium text-muted-foreground">
-                    Submitted
-                  </th>
-                  <th className="px-4 py-2.5 font-medium text-muted-foreground">
-                    Status
-                  </th>
-                  <th className="px-4 py-2.5 text-center font-medium text-muted-foreground">
-                    Version
-                  </th>
-                  <th className="px-4 py-2.5 font-medium text-muted-foreground">
-                    Email / UID
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedSubmissions.map((submission) => (
-                  <tr
-                    key={submission.submissionId}
-                    className={`cursor-pointer border-b border-border last:border-0 hover:bg-muted/20 ${
-                      selectedSubmissionId === submission.submissionId
-                        ? 'bg-muted/30'
-                        : ''
-                    }`}
-                    onClick={() =>
-                      openSubmissionDetail(submission.submissionId)
-                    }
-                  >
-                    <td className="px-4 py-3 font-mono text-xs">
-                      {submission.submissionId}
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {formatDate(submission.createdAt)}
-                    </td>
-                    <td className="px-4 py-3 capitalize">
-                      {submission.status.replace('_', ' ')}
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <span className="inline-flex items-center rounded-md bg-neutral-100 px-2 py-1 text-xs font-medium text-neutral-600 ring-1 ring-neutral-500/10 ring-inset dark:bg-neutral-800 dark:text-neutral-400">
-                        v{submission.version}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {submission.email ||
-                        submission.submittedBy ||
-                        'Anonymous'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <Tabs defaultValue="responses" className="w-full">
+          <TabsList className="mb-6 grid w-full grid-cols-2">
+            <TabsTrigger value="responses">Responses</TabsTrigger>
+            <TabsTrigger value="summary">Summary</TabsTrigger>
+          </TabsList>
 
-        {/* PAGINATION CONTROLS */}
-        {!loading && !error && filteredSubmissions.length > 0 && (
-          <div className="mt-4 flex items-center justify-end gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setLocalPage((p) => Math.max(1, p - 1))}
-              disabled={!canGoPrev}
-            >
-              Previous
-            </Button>
-            <span className="text-xs text-muted-foreground">
-              Page {localPage} / {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setLocalPage((p) => Math.min(totalPages, p + 1))}
-              disabled={!canGoNext}
-            >
-              Next
-            </Button>
-          </div>
-        )}
-
-        {/* DETAIL VIEW */}
-        {(selectedSubmission || detailLoading || detailError) && (
-          <section className="mt-8 rounded-lg border border-border bg-background p-5">
-            <h2 className="text-base font-semibold">Submission Details</h2>
-
-            {detailLoading ? (
-              <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Loading submission...
+          <TabsContent value="responses" className="mt-0 space-y-6">
+            {/* SUBMISSIONS TABLE */}
+            {loading ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
-            ) : detailError ? (
-              <p className="mt-4 text-sm text-destructive">{detailError}</p>
-            ) : selectedSubmission ? (
-              <div className="mt-4 space-y-5">
-                <div className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
-                  <p>
-                    <span className="font-medium text-foreground">
-                      Submission ID:
-                    </span>{' '}
-                    <span className="font-mono text-xs">
-                      {selectedSubmission.submissionId}
-                    </span>
-                  </p>
-                  <p>
-                    <span className="font-medium text-foreground">
-                      Submitted:
-                    </span>{' '}
-                    {formatDate(selectedSubmission.createdAt)}
-                  </p>
-                  <p>
-                    <span className="font-medium text-foreground">Status:</span>{' '}
-                    {selectedSubmission.status.replace('_', ' ')}
-                  </p>
-                  <p>
-                    <span className="font-medium text-foreground">
-                      Identity:
-                    </span>{' '}
-                    {selectedSubmission.email ||
-                      selectedSubmission.submittedBy ||
-                      'Anonymous'}
-                  </p>
-                </div>
-                {reviewFormSchemaError ? (
-                  <p className="text-sm text-destructive">
-                    {reviewFormSchemaError}
-                  </p>
-                ) : reviewFormSchema ? (
-                  <div className="overflow-hidden rounded-md border border-border">
-                    <EmbedSubmissionView
-                      formSchema={reviewFormSchema}
-                      responseData={selectedSubmission.pages}
-                    />
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Loading form schema...
-                  </div>
+            ) : error ? (
+              <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+                {error}
+              </div>
+            ) : filteredSubmissions.length === 0 ? (
+              <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border py-16 text-center">
+                <Inbox className="mb-3 h-8 w-8 text-muted-foreground/40" />
+                <p className="text-sm text-muted-foreground">
+                  {submissions.length > 0
+                    ? 'No submissions match your filters.'
+                    : 'No submissions yet.'}
+                </p>
+                {submissions.length > 0 && (
+                  <Button
+                    variant="link"
+                    onClick={() => {
+                      setSearchQuery('');
+                      setStatusFilter('all');
+                      setDateRange(undefined);
+                    }}
+                  >
+                    Clear Filters
+                  </Button>
                 )}
               </div>
-            ) : null}
-          </section>
-        )}
+            ) : (
+              <div className="overflow-hidden rounded-lg border border-border bg-background">
+                <table className="w-full text-left text-sm">
+                  <thead className="border-b border-border bg-muted/30">
+                    <tr>
+                      <th className="px-4 py-2.5 font-medium text-muted-foreground">
+                        Submission ID
+                      </th>
+                      <th className="px-4 py-2.5 font-medium text-muted-foreground">
+                        Submitted
+                      </th>
+                      <th className="px-4 py-2.5 font-medium text-muted-foreground">
+                        Status
+                      </th>
+                      <th className="px-4 py-2.5 text-center font-medium text-muted-foreground">
+                        Version
+                      </th>
+                      <th className="px-4 py-2.5 font-medium text-muted-foreground">
+                        Email / UID
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedSubmissions.map((submission) => (
+                      <tr
+                        key={submission.submissionId}
+                        className={`cursor-pointer border-b border-border last:border-0 hover:bg-muted/20 ${
+                          selectedSubmissionId === submission.submissionId
+                            ? 'bg-muted/30'
+                            : ''
+                        }`}
+                        onClick={() =>
+                          openSubmissionDetail(submission.submissionId)
+                        }
+                      >
+                        <td className="px-4 py-3 font-mono text-xs">
+                          {submission.submissionId}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {formatDate(submission.createdAt)}
+                        </td>
+                        <td className="px-4 py-3 capitalize">
+                          {String(submission.status || '').replace('_', ' ')}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <span className="inline-flex items-center rounded-md bg-neutral-100 px-2 py-1 text-xs font-medium text-neutral-600 ring-1 ring-neutral-500/10 ring-inset dark:bg-neutral-800 dark:text-neutral-400">
+                            v{submission.version}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {submission.email ||
+                            submission.submittedBy ||
+                            'Anonymous'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* PAGINATION CONTROLS */}
+            {!loading && !error && filteredSubmissions.length > 0 && (
+              <div className="mt-4 flex items-center justify-end gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setLocalPage((p) => Math.max(1, p - 1))}
+                  disabled={!canGoPrev}
+                >
+                  Previous
+                </Button>
+                <span className="text-xs text-muted-foreground">
+                  Page {localPage} / {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setLocalPage((p) => Math.min(totalPages, p + 1))
+                  }
+                  disabled={!canGoNext}
+                >
+                  Next
+                </Button>
+              </div>
+            )}
+
+            {/* DETAIL VIEW */}
+            {(selectedSubmission || detailLoading || detailError) && (
+              <section className="mt-8 rounded-lg border border-border bg-background p-5">
+                <h2 className="text-base font-semibold">Submission Details</h2>
+
+                {detailLoading ? (
+                  <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading submission...
+                  </div>
+                ) : detailError ? (
+                  <p className="mt-4 text-sm text-destructive">{detailError}</p>
+                ) : selectedSubmission ? (
+                  <div className="mt-4 space-y-5">
+                    <div className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
+                      <p>
+                        <span className="font-medium text-foreground">
+                          Submission ID:
+                        </span>{' '}
+                        <span className="font-mono text-xs">
+                          {selectedSubmission.submissionId}
+                        </span>
+                      </p>
+                      <p>
+                        <span className="font-medium text-foreground">
+                          Submitted:
+                        </span>{' '}
+                        {formatDate(selectedSubmission.createdAt)}
+                      </p>
+                      <p>
+                        <span className="font-medium text-foreground">
+                          Status:
+                        </span>{' '}
+                        {selectedSubmission.status.replace('_', ' ')}
+                      </p>
+                      <p>
+                        <span className="font-medium text-foreground">
+                          Identity:
+                        </span>{' '}
+                        {selectedSubmission.email ||
+                          selectedSubmission.submittedBy ||
+                          'Anonymous'}
+                      </p>
+                    </div>
+                    {reviewFormSchemaError ? (
+                      <p className="text-sm text-destructive">
+                        {reviewFormSchemaError}
+                      </p>
+                    ) : reviewFormSchema ? (
+                      <div className="overflow-hidden rounded-md border border-border">
+                        <EmbedSubmissionView
+                          formSchema={reviewFormSchema}
+                          responseData={selectedSubmission.pages}
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Loading form schema...
+                      </div>
+                    )}
+                  </div>
+                ) : null}
+              </section>
+            )}
+          </TabsContent>
+
+          <TabsContent value="summary" className="mt-0">
+            {reviewFormSchema ? (
+              <FormSummary
+                formSchema={reviewFormSchema}
+                submissions={filteredSubmissions}
+              />
+            ) : loading || detailLoading ? (
+              <div className="flex h-32 items-center justify-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Loading form schema...
+              </div>
+            ) : reviewFormSchemaError ? (
+              <div className="flex h-32 items-center justify-center rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+                {reviewFormSchemaError}
+              </div>
+            ) : (
+              <div className="flex h-32 flex-col items-center justify-center rounded-lg border-2 border-dashed border-border py-8 text-center">
+                <p className="text-sm text-muted-foreground">
+                  Select a submission first to load the schema, or wait for
+                  automatic schema resolution.
+                </p>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );

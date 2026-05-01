@@ -5,6 +5,10 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import federation from '@originjs/vite-plugin-federation';
 
+const fluxorisRemoteUrl =
+  process.env.VITE_FLUXORIS_REMOTE_URL ||
+  'http://localhost:5174/assets/remoteEntry.js';
+
 export default defineConfig({
   plugins: [
     react(),
@@ -15,7 +19,28 @@ export default defineConfig({
       exposes: {
         './SubmissionView': './src/microfrontend/SubmissionViewModule.tsx',
       },
-      shared: ['react', 'react-dom'],
+      // shared: ['react', 'react-dom'],
+      remotes: {
+        fluxorisPartnerMfe: fluxorisRemoteUrl,
+      },
+      shared: {
+        react: {
+          singleton: true,
+          requiredVersion: false,
+        },
+        'react-dom': {
+          singleton: true,
+          requiredVersion: false,
+        },
+        'react/jsx-runtime': {
+          singleton: true,
+          requiredVersion: false,
+        },
+        'react/jsx-dev-runtime': {
+          singleton: true,
+          requiredVersion: false,
+        },
+      },
     }),
   ],
   server: {
