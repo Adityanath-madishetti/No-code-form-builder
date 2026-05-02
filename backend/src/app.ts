@@ -6,7 +6,7 @@ import swaggerUi from 'swagger-ui-express';
 
 import { logger } from '@/shared/logger/index.js';
 import { swaggerSpec } from '@/config/swagger.js';
-import { errorHandler } from '@/middlewares/error.middleware.js';
+import { errorHandler, ApiError } from '@/middlewares/error.middleware.js';
 import apiRoutes from '@/routes/index.js';
 
 const app: Application = express();
@@ -33,9 +33,7 @@ app.use('/api', apiRoutes);
 
 // 404 Handler
 app.use((req: Request, res: Response, next: NextFunction) => {
-  const error = new Error(`Not Found - ${req.originalUrl}`);
-  res.status(404);
-  next(error);
+  next(new ApiError(404, `Not Found - ${req.originalUrl}`));
 });
 
 app.use(errorHandler);

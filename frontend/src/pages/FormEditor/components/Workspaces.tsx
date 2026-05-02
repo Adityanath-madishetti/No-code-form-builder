@@ -1111,16 +1111,16 @@ export function AIGenerateButton() {
 }
 
 interface WorkspacesProps {
-  editorTheme: 'dark' | 'light' | 'system' | string;
-  setEditorTheme: (theme: 'dark' | 'light' | 'system') => void;
+  // editorTheme: 'dark' | 'light' | 'system' | string;
+  // setEditorTheme: (theme: 'dark' | 'light' | 'system') => void;
   saving: boolean;
   handleSave: () => Promise<boolean>;
   formId?: string;
 }
 
 export function Workspaces({
-  editorTheme,
-  setEditorTheme,
+  // editorTheme,
+  // setEditorTheme,
   saving,
   handleSave,
   formId,
@@ -1136,7 +1136,7 @@ export function Workspaces({
       </div>
 
       <div className="flex items-center gap-1">
-        <ThemeToggleButton
+        {/* <ThemeToggleButton
           isDark={editorTheme === 'dark'}
           onToggle={() => {
             const isDark = document.documentElement.classList.contains('dark');
@@ -1150,7 +1150,7 @@ export function Workspaces({
               document.documentElement.classList.remove('dark');
             }
           }}
-        />
+        /> */}
         <AIGenerateButton />
 
         <SaveButton handleSave={handleSave} saving={saving} />

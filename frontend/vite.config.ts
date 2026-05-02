@@ -46,6 +46,10 @@ export default defineConfig({
   server: {
     port: 5173,
     cors: true,
+    // allowedHosts: [
+    //   'lip-backstage-legal.ngrok-free.dev'
+    // ]
+    allowedHosts: true,
   },
   preview: {
     port: 5173,
