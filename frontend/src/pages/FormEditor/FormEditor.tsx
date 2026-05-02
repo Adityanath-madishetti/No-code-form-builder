@@ -19,7 +19,6 @@ import { type SidebarPanelId } from './components/EditorSidebar';
 import { FormCanvas } from './components/FormCanvas';
 import { DebugPanel } from './components/DebugPanel';
 import { RightFloatingPanel } from './components/RightFloatingPanel';
-import { useTheme } from '@/components/theme-provider';
 import { useLogicStore } from '@/form/logic/logic.store';
 import { Bug, PanelRightClose, ArrowLeft } from 'lucide-react';
 import { Workspaces } from './components/Workspaces';
@@ -64,7 +63,7 @@ export default function FormEditor() {
     'canvas' | 'logic' | 'workflow' | 'formProperties' | 'theming'
   >('canvas');
 
-  const { theme: editorTheme, setTheme: setEditorTheme } = useTheme();
+  // const { theme: editorTheme, setTheme: setEditorTheme } = useTheme();
 
   const [debugWidth, setDebugWidth] = useState(400);
   const [publishing] = useState(false);
@@ -142,8 +141,8 @@ export default function FormEditor() {
         <div className="relative flex h-full flex-1 overflow-hidden">
           <div className="relative flex h-full min-w-[400px] flex-1 flex-col overflow-hidden bg-neutral-100 dark:bg-neutral-900">
             <Workspaces
-              editorTheme={editorTheme}
-              setEditorTheme={setEditorTheme}
+              // editorTheme={editorTheme}
+              // setEditorTheme={setEditorTheme}
               saving={saving}
               handleSave={handleSave}
               formId={formId}

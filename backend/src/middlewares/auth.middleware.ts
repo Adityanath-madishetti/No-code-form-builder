@@ -18,6 +18,7 @@ const getJwtSecret = (): string => {
  */
 export const verifyToken = (req: Request, _res: Response, next: NextFunction): void => {
   const authHeader = req.headers.authorization;
+  logger.info(`verifyToken hit: ${req.method} ${req.originalUrl}`);
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return next(new ApiError(401, 'No token provided'));

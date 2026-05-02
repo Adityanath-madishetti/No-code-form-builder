@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import fluxorisService from './fluxoris.service.js';
 import { FluxorisEventPayload } from './fluxoris.types.js';
+import { logger } from '@/shared/logger/index.js';
 
 export const receiveFluxorisEvent = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -37,6 +38,7 @@ export const listFluxorisEvents = async (req: Request, res: Response, next: Next
 
 export const exchangeFluxorisToken = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    logger.info(`Received exchange-token request for user: ${req.user?.uid}`);
     if (!req.user) {
       return res.status(401).json({ error: 'Unauthorized: No user found in request.' });
     }

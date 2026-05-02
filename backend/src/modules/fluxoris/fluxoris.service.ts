@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import User from '@/database/models/User.js';
 import FluxorisEvent from './fluxoris.schema.js';
+import { logger } from '@/shared/logger/index.js';
 import {
   FluxorisConfig,
   FluxorisEventPayload,
@@ -58,6 +59,7 @@ class FluxorisService {
 
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
+      logger.error(`Upstream error from Fluxoris: ${response.status}`, { data });
       const error: any = new Error(data?.detail || data?.error || 'Fluxoris exchange failed.');
       error.status = response.status;
       error.upstream = data;
