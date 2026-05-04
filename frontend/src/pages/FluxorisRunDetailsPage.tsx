@@ -1,6 +1,14 @@
 import { useEffect, useState, type ComponentType } from 'react';
 import '@fluxoris/partner-mfe/style.css';
 
+// shadcn/ui imports
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle, Info, Loader2 } from 'lucide-react';
+
 const FLUXORIS_PARTNER_TOKEN_KEY = 'fluxoris_partner_token';
 
 type PartnerRunDetailsComponent = ComponentType<{
@@ -28,10 +36,12 @@ export default function FluxorisRunDetailsPage() {
     import.meta.env.VITE_API_URL ||
     import.meta.env.VITE_API_BASE_URL ||
     'http://localhost:5001';
+
   const [fluxorisApiBase, setFluxorisApiBase] = useState(
     import.meta.env.VITE_FLUXORIS_API_BASE_URL ||
       `${partnerApiBase.replace(/\/+$/, '')}/api/partner/fluxoris/proxy`
   );
+
   const [formId, setFormId] = useState('');
   const [workflowId, setWorkflowId] = useState('');
   const [runs, setRuns] = useState<FluxorisRun[]>([]);
@@ -141,101 +151,150 @@ export default function FluxorisRunDetailsPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-4 p-6">
+    <div className="mx-auto w-full max-w-6xl space-y-6 p-6">
       <div>
-        <h1 className="text-2xl font-semibold">Fluxoris Run Details</h1>
-        <p className="text-sm text-muted-foreground">
+        <h1 className="text-3xl font-bold tracking-tight">
+          Fluxoris Run Details
+        </h1>
+        <p className="mt-1 text-muted-foreground">
           Enter Form ID to auto-resolve workflow and list latest runs.
         </p>
       </div>
 
-      <div className="rounded-md border p-4">
-        <label className="mb-2 block text-sm font-medium">
-          Fluxoris API Base URL
-        </label>
-        <input
-          className="mb-3 w-full rounded border px-3 py-2 text-sm"
-          value={fluxorisApiBase}
-          onChange={(event) => setFluxorisApiBase(event.target.value)}
-        />
-        <label className="mb-2 block text-sm font-medium">Form ID</label>
-        <input
-          className="mb-3 w-full rounded border px-3 py-2 text-sm"
-          value={formId}
-          onChange={(event) => setFormId(event.target.value)}
-          placeholder="partner-form-id"
-        />
-        <button
-          type="button"
-          className="rounded border px-3 py-1 text-xs"
-          onClick={resolveWorkflowAndRuns}
-          disabled={refreshing}
-        >
-          {refreshing ? 'Loading...' : 'Load Runs'}
-        </button>
-        {workflowId && (
-          <p className="mt-2 text-sm">
-            Resolved Workflow ID: <code>{workflowId}</code>
-          </p>
-        )}
-        {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="rounded-md border p-4">
-          <h2 className="mb-3 text-base font-semibold">Runs (Latest First)</h2>
-          {runs.length === 0 && (
-            <p className="text-sm text-muted-foreground">No runs found.</p>
-          )}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl">Configuration</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <div className="space-y-2">
-            {runs.map((run) => {
-              const selected = run._id === selectedRunId;
-              return (
-                <button
-                  key={run._id}
-                  type="button"
-                  onClick={() => setSelectedRunId(run._id)}
-                  className={`w-full rounded border p-2 text-left text-xs ${
-                    selected ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
-                  }`}
-                >
-                  <div>
-                    <strong>{run._id}</strong>
-                  </div>
-                  <div>Status: {run.status || '-'}</div>
-                  <div>
-                    Started:{' '}
-                    {run.started_at
-                      ? new Date(run.started_at).toLocaleString()
-                      : '-'}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="rounded-md border p-4 lg:col-span-2">
-          {loadError && (
-            <div className="rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-700">
-              Could not load run details module: {loadError}
-            </div>
-          )}
-
-          {!loadError && !ModuleComp && (
-            <div className="rounded-md border p-3 text-sm">
-              Loading run details module...
-            </div>
-          )}
-
-          {ModuleComp && selectedRunId && (
-            <ModuleComp
-              runId={selectedRunId}
-              workflowId={workflowId || undefined}
-              autoRefreshMs={0}
+            <Label htmlFor="api-base">Fluxoris API Base URL</Label>
+            <Input
+              id="api-base"
+              value={fluxorisApiBase}
+              onChange={(event) => setFluxorisApiBase(event.target.value)}
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="form-id">Form ID</Label>
+            <Input
+              id="form-id"
+              value={formId}
+              onChange={(event) => setFormId(event.target.value)}
+              placeholder="partner-form-id"
+            />
+          </div>
+
+          <div className="pt-2">
+            <Button onClick={resolveWorkflowAndRuns} disabled={refreshing}>
+              {refreshing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {refreshing ? 'Loading Runs...' : 'Load Runs'}
+            </Button>
+          </div>
+
+          {workflowId && (
+            <Alert className="mt-4 border-primary/20 bg-primary/5">
+              <Info className="h-4 w-4 text-primary" />
+              <AlertTitle>Resolved</AlertTitle>
+              <AlertDescription className="font-mono text-xs">
+                Workflow ID: {workflowId}
+              </AlertDescription>
+            </Alert>
           )}
-        </div>
+
+          {error && (
+            <Alert variant="destructive" className="mt-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Left Column: Runs List */}
+        <Card className="flex flex-col">
+          <CardHeader>
+            <CardTitle className="text-lg">Runs (Latest First)</CardTitle>
+          </CardHeader>
+          <CardContent className="flex-1 overflow-y-auto">
+            {runs.length === 0 && (
+              <p className="text-sm text-muted-foreground">No runs found.</p>
+            )}
+            <div className="space-y-3">
+              {runs.map((run) => {
+                const selected = run._id === selectedRunId;
+                return (
+                  <button
+                    key={run._id}
+                    type="button"
+                    onClick={() => setSelectedRunId(run._id)}
+                    className={`w-full rounded-md border p-3 text-left text-sm transition-colors ${
+                      selected
+                        ? 'border-primary bg-primary/5 shadow-sm'
+                        : 'border-border hover:bg-muted/50'
+                    }`}
+                  >
+                    <div className="mb-1 font-medium text-foreground">
+                      {run._id}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Status:{' '}
+                      <span className="font-medium text-foreground">
+                        {run.status || '-'}
+                      </span>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Started:{' '}
+                      {run.started_at
+                        ? new Date(run.started_at).toLocaleString()
+                        : '-'}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Right Column: Module Viewer */}
+        <Card className="lg:col-span-2">
+          <CardContent className="p-6">
+            {loadError && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Module Load Error</AlertTitle>
+                <AlertDescription>
+                  Could not load run details module: {loadError}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {!loadError && !ModuleComp && (
+              <Alert>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <AlertTitle>Loading</AlertTitle>
+                <AlertDescription>
+                  Loading run details module...
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {ModuleComp && selectedRunId ? (
+              <div className="rounded-md border bg-background p-4">
+                <ModuleComp
+                  runId={selectedRunId}
+                  workflowId={workflowId || undefined}
+                  autoRefreshMs={0}
+                />
+              </div>
+            ) : ModuleComp && !selectedRunId ? (
+              <div className="flex h-40 items-center justify-center rounded-md border border-dashed text-sm text-muted-foreground">
+                Select a run from the list to view details
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

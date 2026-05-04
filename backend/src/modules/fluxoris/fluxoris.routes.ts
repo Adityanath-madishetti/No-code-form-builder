@@ -12,6 +12,6 @@ const router = Router();
 router.post('/events', receiveFluxorisEvent);
 router.get('/events', verifyToken, listFluxorisEvents);
 router.post('/exchange-token', verifyToken, exchangeFluxorisToken);
-router.all('/proxy/{*path}', proxyFluxorisRequest);
+router.all('/proxy/:path*', proxyFluxorisRequest);
 
 export default router;

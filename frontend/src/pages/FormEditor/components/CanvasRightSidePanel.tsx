@@ -1,7 +1,15 @@
 'use client';
 
 import * as React from 'react';
-import { Settings, Form, Component, Palette, Zap, Layers } from 'lucide-react';
+import {
+  Settings,
+  Form,
+  Component,
+  Palette,
+  Zap,
+  Layers,
+  LayoutTemplate,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Resizable } from 're-resizable';
 import {
@@ -147,7 +155,7 @@ const TABS_DATA: TabItem[] = [
   {
     id: 'templatesCatalog',
     title: 'Templates Catalog',
-    icon: Layers,
+    icon: LayoutTemplate,
     content: <TemplateCatalogPanel />,
   },
   {
