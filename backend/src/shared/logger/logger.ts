@@ -40,7 +40,11 @@ const baseFormat = winston.format.combine(
 const devFormat = winston.format.combine(
   baseFormat,
   winston.format.colorize({ all: true }),
-  winston.format.printf((info) => `${info.timestamp} [${info.level}]: ${info.message}`),
+  winston.format.printf((info) => {
+    const { timestamp, level, message, ...meta } = info;
+    const metaStr = Object.keys(meta).length ? `\n${JSON.stringify(meta, null, 2)}` : '';
+    return `${timestamp} [${level}]: ${message}${metaStr}`;
+  }),
 );
 
 // Format for production (structured JSON)

@@ -246,6 +246,7 @@ export default function FluxorisMfeDryRunPage() {
   const [remoteApiError, setRemoteApiError] = useState('');
   const [schemaLoadError, setSchemaLoadError] = useState('');
   const [fieldMap, setFieldMap] = useState<Record<string, string>>({});
+  const [isConfigured, setIsConfigured] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -333,6 +334,7 @@ export default function FluxorisMfeDryRunPage() {
       baseUrl: fluxorisApiBase,
       getToken: () => fluxorisToken || null,
     });
+    setIsConfigured(true);
   }, [remote, fluxorisApiBase, fluxorisToken]);
 
   const parsedSchema = useMemo(() => {
@@ -547,7 +549,7 @@ export default function FluxorisMfeDryRunPage() {
               />
             </div>
 
-            {TemplateBuilderFlow && parsedSchema.value && fluxorisToken ? (
+            {TemplateBuilderFlow && parsedSchema.value && fluxorisToken && isConfigured ? (
               // eslint-disable-next-line react-hooks/static-components
               <TemplateBuilderFlow
                 formId={formId}
