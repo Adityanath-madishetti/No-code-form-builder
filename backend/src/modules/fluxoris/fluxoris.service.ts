@@ -21,7 +21,10 @@ class FluxorisService {
     };
   }
 
-  public async exchangeToken(uid: string, emailFromToken: string): Promise<FluxorisExchangeResponse> {
+  public async exchangeToken(
+    uid: string,
+    emailFromToken: string,
+  ): Promise<FluxorisExchangeResponse> {
     const config = this.getConfig();
     if (!config.sharedSecret) {
       throw new Error('FLUXORIS_SHARED_SECRET is not configured.');
@@ -85,7 +88,10 @@ class FluxorisService {
     });
   }
 
-  public async listEvents(filters: { runId?: string; formId?: string; eventType?: string }, limit = 50) {
+  public async listEvents(
+    filters: { runId?: string; formId?: string; eventType?: string },
+    limit = 50,
+  ) {
     const query: any = {};
     if (filters.runId) query.runId = filters.runId;
     if (filters.formId) query.formId = filters.formId;
@@ -97,12 +103,7 @@ class FluxorisService {
       .lean();
   }
 
-  public async proxyRequest(
-    method: string,
-    path: string,
-    headers: Record<string, any>,
-    body: any,
-  ) {
+  public async proxyRequest(method: string, path: string, headers: Record<string, any>, body: any) {
     const config = this.getConfig();
     const url = `${config.baseUrl}${path}`;
 

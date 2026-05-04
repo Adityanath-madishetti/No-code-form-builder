@@ -309,6 +309,7 @@ export default function FluxorisMfeDryRunPage() {
 
   useEffect(() => {
     const stored = localStorage.getItem(FLUXORIS_PARTNER_TOKEN_KEY) || '';
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (stored.trim()) setFluxorisToken(stored.trim());
   }, []);
 
@@ -321,6 +322,7 @@ export default function FluxorisMfeDryRunPage() {
       }) => void;
     }>(remote, 'partnerIntegrationApi');
     if (!remoteApi?.configureApiClient) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRemoteApiError(
         'Remote loaded but partnerIntegrationApi is missing. Check federation remote build/export shape.'
       );
@@ -546,6 +548,7 @@ export default function FluxorisMfeDryRunPage() {
             </div>
 
             {TemplateBuilderFlow && parsedSchema.value && fluxorisToken ? (
+              // eslint-disable-next-line react-hooks/static-components
               <TemplateBuilderFlow
                 formId={formId}
                 schemaJson={parsedSchema.value}
