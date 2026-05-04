@@ -3,6 +3,15 @@ import { api } from '@/lib/api';
 import { Link, useSearchParams } from 'react-router-dom';
 import '@fluxoris/partner-mfe/style.css';
 
+// shadcn/ui imports
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle, Info } from 'lucide-react';
+
 type RemoteModule = typeof import('fluxorisPartnerMfe/PartnerIntegration');
 type PackageModule = typeof import('@fluxoris/partner-mfe');
 type IntegrationModule = RemoteModule | PackageModule;
@@ -209,19 +218,27 @@ export default function FluxorisMfeDryRunPage() {
   const [loadError, setLoadError] = useState('');
   const [formId, setFormId] = useState(searchParams.get('formId') || '');
   const [schemaText, setSchemaText] = useState(DEFAULT_SCHEMA);
+
   const partnerApiBase =
     import.meta.env.VITE_API_URL ||
     import.meta.env.VITE_API_BASE_URL ||
     'http://localhost:5001';
+
   const [statusWebhookUrl, setStatusWebhookUrl] = useState(
     `${partnerApiBase.replace(/\/+$/, '')}/api/partner/fluxoris/events`
   );
-  const [fluxorisApiBase, setFluxorisApiBase] = useState(
-    import.meta.env.VITE_FLUXORIS_API_BASE_URL || 'http://localhost:8000/api'
-  );
+  const [fluxorisApiBase, setFluxorisApiBase] = useState(() => {
+    const envVal = import.meta.env.VITE_FLUXORIS_API_BASE_URL as
+      | string
+      | undefined;
+    if (!envVal) return `${window.location.origin}/api/partner/fluxoris/proxy`;
+    if (envVal.startsWith('/')) return `${window.location.origin}${envVal}`;
+    return envVal;
+  });
   const [fluxorisAppBase, setFluxorisAppBase] = useState(
     import.meta.env.VITE_FLUXORIS_APP_BASE_URL || 'http://localhost:5173'
   );
+
   const [fluxorisToken, setFluxorisToken] = useState('');
   const [connectedMessage, setConnectedMessage] = useState('');
   const [exchangeLoading, setExchangeLoading] = useState(false);
@@ -229,6 +246,7 @@ export default function FluxorisMfeDryRunPage() {
   const [remoteApiError, setRemoteApiError] = useState('');
   const [schemaLoadError, setSchemaLoadError] = useState('');
   const [fieldMap, setFieldMap] = useState<Record<string, string>>({});
+  const [isConfigured, setIsConfigured] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -316,6 +334,7 @@ export default function FluxorisMfeDryRunPage() {
       baseUrl: fluxorisApiBase,
       getToken: () => fluxorisToken || null,
     });
+    setIsConfigured(true);
   }, [remote, fluxorisApiBase, fluxorisToken]);
 
   const parsedSchema = useMemo(() => {
@@ -365,131 +384,172 @@ export default function FluxorisMfeDryRunPage() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-4 p-6">
+    <div className="mx-auto w-full max-w-4xl space-y-6 p-6">
       <div>
-        <h1 className="text-2xl font-semibold">Fluxoris MFE Dry Run</h1>
-        <p className="text-sm text-muted-foreground">
+        <h1 className="text-3xl font-bold tracking-tight">
+          Fluxoris MFE Dry Run
+        </h1>
+        <p className="mt-1 text-muted-foreground">
           Host app consuming integration module.
         </p>
-        <p className="mt-1 text-sm">
+        <p className="mt-2 text-sm">
           Need run audit view?{' '}
-          <Link className="underline" to="/integrations/fluxoris-run-details">
+          <Link
+            className="font-medium text-primary underline underline-offset-4"
+            to="/integrations/fluxoris-run-details"
+          >
             Open Fluxoris Run Details page
           </Link>
         </p>
       </div>
 
-      <div className="rounded-md border p-4">
-        <h2 className="mb-3 text-base font-semibold">Fluxoris API Config</h2>
-        <label className="mb-2 block text-sm font-medium">
-          Fluxoris API Base URL
-        </label>
-        <input
-          className="mb-3 w-full rounded border px-3 py-2 text-sm"
-          value={fluxorisApiBase}
-          onChange={(event) => setFluxorisApiBase(event.target.value)}
-        />
-        <label className="mb-2 block text-sm font-medium">
-          Fluxoris App Base URL
-        </label>
-        <input
-          className="mb-3 w-full rounded border px-3 py-2 text-sm"
-          value={fluxorisAppBase}
-          onChange={(event) => setFluxorisAppBase(event.target.value)}
-          placeholder="http://localhost:5173"
-        />
-        <label className="mb-2 block text-sm font-medium">
-          Fluxoris Bearer Token (optional override)
-        </label>
-        <button
-          type="button"
-          className="mb-2 rounded border px-3 py-1 text-xs"
-          disabled={exchangeLoading}
-          onClick={handleExchangeToken}
-        >
-          {exchangeLoading ? 'Exchanging...' : 'Get Token From Partner Backend'}
-        </button>
-        <textarea
-          className="w-full rounded border px-3 py-2 font-mono text-xs"
-          rows={3}
-          placeholder="Paste Fluxoris JWT here for dry-run auth"
-          value={fluxorisToken}
-          onChange={(event) => setFluxorisToken(event.target.value.trim())}
-        />
-        {exchangeError && (
-          <p className="mt-2 text-sm text-red-600">{exchangeError}</p>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl">Fluxoris API Config</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="api-base">Fluxoris API Base URL</Label>
+            <Input
+              id="api-base"
+              value={fluxorisApiBase}
+              onChange={(event) => setFluxorisApiBase(event.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="app-base">Fluxoris App Base URL</Label>
+            <Input
+              id="app-base"
+              value={fluxorisAppBase}
+              onChange={(event) => setFluxorisAppBase(event.target.value)}
+              placeholder="http://localhost:5173"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Fluxoris Bearer Token (optional override)</Label>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                disabled={exchangeLoading}
+                onClick={handleExchangeToken}
+              >
+                {exchangeLoading
+                  ? 'Exchanging...'
+                  : 'Get Token From Partner Backend'}
+              </Button>
+            </div>
+            <Textarea
+              className="font-mono text-xs"
+              rows={3}
+              placeholder="Paste Fluxoris JWT here for dry-run auth"
+              value={fluxorisToken}
+              onChange={(event) => setFluxorisToken(event.target.value.trim())}
+            />
+            {exchangeError && (
+              <p className="text-sm font-medium text-destructive">
+                {exchangeError}
+              </p>
+            )}
+            <div className="pt-2">
+              <Button
+                type="button"
+                disabled={!fluxorisToken.trim()}
+                onClick={handleOpenFluxorisWithToken}
+              >
+                Open Fluxoris App With This Token
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl">Form ID</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Input
+            placeholder="partner-form-123"
+            value={formId}
+            onChange={(event) => setFormId(event.target.value)}
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl">Schema JSON</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {schemaLoadError && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Auto-load Failed</AlertTitle>
+              <AlertDescription>
+                Could not auto-load form schema: {schemaLoadError}
+              </AlertDescription>
+            </Alert>
+          )}
+          <Textarea
+            className="h-44 font-mono text-xs"
+            value={schemaText}
+            onChange={(event) => setSchemaText(event.target.value)}
+          />
+          {parsedSchema.error && (
+            <p className="text-sm font-medium text-destructive">
+              Invalid schema JSON: {parsedSchema.error}
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* MFE Loading and Error States */}
+      <div className="space-y-4">
+        {loadError && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Module Load Error</AlertTitle>
+            <AlertDescription>
+              Could not load MFE integration module: {loadError}
+            </AlertDescription>
+          </Alert>
         )}
-        <button
-          type="button"
-          className="mt-2 rounded border px-3 py-1 text-xs"
-          disabled={!fluxorisToken.trim()}
-          onClick={handleOpenFluxorisWithToken}
-        >
-          Open Fluxoris App With This Token
-        </button>
-      </div>
-
-      <div className="rounded-md border p-4">
-        <label className="mb-2 block text-sm font-medium">Form ID</label>
-        <input
-          className="w-full rounded border px-3 py-2 text-sm"
-          placeholder="partner-form-123"
-          value={formId}
-          onChange={(event) => setFormId(event.target.value)}
-        />
-      </div>
-
-      <div className="rounded-md border p-4">
-        <label className="mb-2 block text-sm font-medium">Schema JSON</label>
-        {schemaLoadError && (
-          <p className="mb-2 text-sm text-amber-700">
-            Could not auto-load form schema: {schemaLoadError}
-          </p>
+        {remoteApiError && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>API Config Error</AlertTitle>
+            <AlertDescription>{remoteApiError}</AlertDescription>
+          </Alert>
         )}
-        <textarea
-          className="h-44 w-full rounded border px-3 py-2 font-mono text-xs"
-          value={schemaText}
-          onChange={(event) => setSchemaText(event.target.value)}
-        />
-        {parsedSchema.error && (
-          <p className="mt-2 text-sm text-red-600">
-            Invalid schema JSON: {parsedSchema.error}
-          </p>
+        {!loadError && !remote && (
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertTitle>Loading</AlertTitle>
+            <AlertDescription>Loading remote MFE...</AlertDescription>
+          </Alert>
         )}
       </div>
-
-      {loadError && (
-        <div className="rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-700">
-          Could not load MFE integration module: {loadError}
-        </div>
-      )}
-      {remoteApiError && (
-        <div className="rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-700">
-          {remoteApiError}
-        </div>
-      )}
-
-      {!loadError && !remote && (
-        <div className="rounded-md border p-3 text-sm">
-          Loading remote MFE...
-        </div>
-      )}
 
       {remote && (
-        <>
-          <div className="rounded-md border p-4">
-            <h2 className="mb-3 text-base font-semibold">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl">
               Template + Builder + Connect
-            </h2>
-            <label className="mb-2 block text-sm font-medium">
-              Partner Status Webhook URL
-            </label>
-            <input
-              className="mb-3 w-full rounded border px-3 py-2 text-sm"
-              value={statusWebhookUrl}
-              onChange={(event) => setStatusWebhookUrl(event.target.value)}
-            />
-            {TemplateBuilderFlow && parsedSchema.value && fluxorisToken && (
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="webhook-url">Partner Status Webhook URL</Label>
+              <Input
+                id="webhook-url"
+                value={statusWebhookUrl}
+                onChange={(event) => setStatusWebhookUrl(event.target.value)}
+              />
+            </div>
+
+            {TemplateBuilderFlow && parsedSchema.value && fluxorisToken && isConfigured ? (
               // eslint-disable-next-line react-hooks/static-components
               <TemplateBuilderFlow
                 formId={formId}
@@ -502,18 +562,26 @@ export default function FluxorisMfeDryRunPage() {
                   );
                 }}
               />
-            )}
-            {!fluxorisToken && (
-              <p className="text-sm text-amber-700">
-                Get a Fluxoris token first to load template and node catalog
-                data.
-              </p>
-            )}
+            ) : !fluxorisToken ? (
+              <Alert className="border-amber-200 bg-amber-50 text-amber-800">
+                <AlertCircle className="h-4 w-4 text-amber-800" />
+                <AlertTitle>Token Required</AlertTitle>
+                <AlertDescription>
+                  Get a Fluxoris token first to load template and node catalog
+                  data.
+                </AlertDescription>
+              </Alert>
+            ) : null}
+
             {connectedMessage && (
-              <p className="mt-2 text-sm text-green-700">{connectedMessage}</p>
+              <Alert className="border-green-200 bg-green-50 text-green-800">
+                <Info className="h-4 w-4 text-green-800" />
+                <AlertTitle>Success</AlertTitle>
+                <AlertDescription>{connectedMessage}</AlertDescription>
+              </Alert>
             )}
-          </div>
-        </>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

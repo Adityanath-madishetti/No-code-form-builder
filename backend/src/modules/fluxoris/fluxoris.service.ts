@@ -21,7 +21,10 @@ class FluxorisService {
     };
   }
 
-  public async exchangeToken(uid: string, emailFromToken: string): Promise<FluxorisExchangeResponse> {
+  public async exchangeToken(
+    uid: string,
+    emailFromToken: string,
+  ): Promise<FluxorisExchangeResponse> {
     const config = this.getConfig();
     if (!config.sharedSecret) {
       throw new Error('FLUXORIS_SHARED_SECRET is not configured.');
@@ -85,7 +88,10 @@ class FluxorisService {
     });
   }
 
-  public async listEvents(filters: { runId?: string; formId?: string; eventType?: string }, limit = 50) {
+  public async listEvents(
+    filters: { runId?: string; formId?: string; eventType?: string },
+    limit = 50,
+  ) {
     const query: any = {};
     if (filters.runId) query.runId = filters.runId;
     if (filters.formId) query.formId = filters.formId;
@@ -95,6 +101,75 @@ class FluxorisService {
       .sort({ createdAt: -1 })
       .limit(Math.min(limit, 200))
       .lean();
+  }
+
+  public async proxyRequest(method: string, path: string, headers: Record<string, any>, body: any) {
+    const config = this.getConfig();
+    const url = `${config.baseUrl}${path}`;
+
+    // Forward only necessary headers
+    const allowedHeaders = ['authorization', 'accept', 'user-agent'];
+    const safeHeaders: Record<string, string> = {};
+
+    for (const [key, value] of Object.entries(headers)) {
+      const lowerKey = key.toLowerCase();
+      // Forward allowlisted headers or anything starting with x- (but not x-fluxoris-)
+      if (
+        allowedHeaders.includes(lowerKey) ||
+        (lowerKey.startsWith('x-') && !lowerKey.startsWith('x-fluxoris-'))
+      ) {
+        safeHeaders[lowerKey] = String(value);
+      }
+    }
+
+    // Force application/json and skip ngrok warning page
+    safeHeaders['content-type'] = 'application/json';
+    safeHeaders['ngrok-skip-browser-warning'] = 'true';
+
+    const isGetOrHead = ['GET', 'HEAD'].includes(method.toUpperCase());
+    let stringifiedBody: string | undefined;
+
+    if (!isGetOrHead && body) {
+      if (typeof body === 'string') {
+        stringifiedBody = body;
+      } else if (Buffer.isBuffer(body)) {
+        stringifiedBody = body.toString('utf-8');
+      } else {
+        stringifiedBody = JSON.stringify(body);
+      }
+    }
+
+    logger.info(`Proxy request: ${method} ${url}`, {
+      headers: safeHeaders,
+      bodyType: typeof body,
+      isBuffer: Buffer.isBuffer(body),
+      bodyPreview: stringifiedBody ? stringifiedBody.slice(0, 100) : null,
+    });
+
+    const response = await fetch(url, {
+      method,
+      headers: safeHeaders,
+      body: stringifiedBody,
+    });
+
+    const contentType = response.headers.get('content-type') || '';
+    let data: any;
+    if (contentType.includes('application/json')) {
+      data = await response.json().catch(() => ({}));
+    } else {
+      const text = await response.text().catch(() => '');
+      data = { _raw: text };
+    }
+
+    logger.info(`Proxy response: ${method} ${url}`, {
+      status: response.status,
+      headers: Object.fromEntries(response.headers.entries()),
+      data,
+    });
+    return {
+      status: response.status,
+      data,
+    };
   }
 }
 

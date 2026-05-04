@@ -4,6 +4,7 @@ import {
   exchangeFluxorisToken,
   listFluxorisEvents,
   receiveFluxorisEvent,
+  proxyFluxorisRequest,
 } from './fluxoris.controller.js';
 
 const router = Router();
@@ -11,5 +12,6 @@ const router = Router();
 router.post('/events', receiveFluxorisEvent);
 router.get('/events', verifyToken, listFluxorisEvents);
 router.post('/exchange-token', verifyToken, exchangeFluxorisToken);
+router.all(/^\/proxy\/(.*)/, proxyFluxorisRequest);
 
 export default router;
