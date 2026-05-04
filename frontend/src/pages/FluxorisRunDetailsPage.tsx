@@ -24,8 +24,13 @@ export default function FluxorisRunDetailsPage() {
     useState<PartnerRunDetailsComponent | null>(null);
   const [loadError, setLoadError] = useState('');
 
+  const partnerApiBase =
+    import.meta.env.VITE_API_URL ||
+    import.meta.env.VITE_API_BASE_URL ||
+    'http://localhost:5001';
   const [fluxorisApiBase, setFluxorisApiBase] = useState(
-    import.meta.env.VITE_FLUXORIS_API_BASE_URL || 'http://localhost:8000/api'
+    import.meta.env.VITE_FLUXORIS_API_BASE_URL ||
+      `${partnerApiBase.replace(/\/+$/, '')}/api/partner/fluxoris/proxy`
   );
   const [formId, setFormId] = useState('');
   const [workflowId, setWorkflowId] = useState('');

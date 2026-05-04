@@ -55,3 +55,18 @@ export const exchangeFluxorisToken = async (req: Request, res: Response, next: N
     next(error);
   }
 };
+
+export const proxyFluxorisRequest = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    // Express 5 {*path} wildcard — param is named 'path'
+    const wildcardPath = (req.params as Record<string, string>).path || (req.params as Record<string, string>)[0] || '';
+    const queryString = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+    const path = '/' + wildcardPath + queryString;
+
+    const { method, headers, body } = req;
+    const result = await fluxorisService.proxyRequest(method, path, headers as Record<string, any>, body);
+    res.status(result.status).json(result.data);
+  } catch (error) {
+    next(error);
+  }
+};

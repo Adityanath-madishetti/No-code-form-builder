@@ -96,6 +96,34 @@ class FluxorisService {
       .limit(Math.min(limit, 200))
       .lean();
   }
+
+  public async proxyRequest(
+    method: string,
+    path: string,
+    headers: Record<string, any>,
+    body: any,
+  ) {
+    const config = this.getConfig();
+    const url = `${config.baseUrl}${path}`;
+
+    // Filter out host and other sensitive/incompatible headers
+    const { host, connection, 'content-length': _, ...safeHeaders } = headers;
+
+    const response = await fetch(url, {
+      method,
+      headers: {
+        ...safeHeaders,
+        'Content-Type': 'application/json',
+      },
+      body: ['GET', 'HEAD'].includes(method.toUpperCase()) ? undefined : JSON.stringify(body),
+    });
+
+    const data = await response.json().catch(() => ({}));
+    return {
+      status: response.status,
+      data,
+    };
+  }
 }
 
 export default new FluxorisService();

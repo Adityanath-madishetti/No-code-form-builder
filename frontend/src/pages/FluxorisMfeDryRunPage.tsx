@@ -216,9 +216,13 @@ export default function FluxorisMfeDryRunPage() {
   const [statusWebhookUrl, setStatusWebhookUrl] = useState(
     `${partnerApiBase.replace(/\/+$/, '')}/api/partner/fluxoris/events`
   );
-  const [fluxorisApiBase, setFluxorisApiBase] = useState(
-    import.meta.env.VITE_FLUXORIS_API_BASE_URL || 'http://localhost:8000/api'
-  );
+  const [fluxorisApiBase, setFluxorisApiBase] = useState(() => {
+    const envVal = import.meta.env.VITE_FLUXORIS_API_BASE_URL as string | undefined;
+    if (!envVal) return `${window.location.origin}/api/partner/fluxoris/proxy`;
+    // If it's a relative path (starts with /), resolve against current origin
+    if (envVal.startsWith('/')) return `${window.location.origin}${envVal}`;
+    return envVal;
+  });
   const [fluxorisAppBase, setFluxorisAppBase] = useState(
     import.meta.env.VITE_FLUXORIS_APP_BASE_URL || 'http://localhost:5173'
   );

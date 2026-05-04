@@ -50,6 +50,12 @@ export default defineConfig({
     //   'lip-backstage-legal.ngrok-free.dev'
     // ]
     allowedHosts: true,
+    proxy: {
+      '/api': {
+        target: process.env.VITE_BACKEND_PROXY_TARGET || 'http://backend:5001',
+        changeOrigin: true,
+      },
+    },
   },
   preview: {
     port: 5173,
