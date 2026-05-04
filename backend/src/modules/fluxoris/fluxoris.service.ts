@@ -139,12 +139,12 @@ class FluxorisService {
       }
     }
 
-    logger.info(`Proxy request: ${method} ${url}`, {
-      headers: safeHeaders,
-      bodyType: typeof body,
-      isBuffer: Buffer.isBuffer(body),
-      bodyPreview: stringifiedBody ? stringifiedBody.slice(0, 100) : null,
-    });
+    // logger.info(`Proxy request: ${method} ${url}`, {
+    //   headers: safeHeaders,
+    //   bodyType: typeof body,
+    //   isBuffer: Buffer.isBuffer(body),
+    //   bodyPreview: stringifiedBody ? stringifiedBody.slice(0, 100) : null,
+    // });
 
     const response = await fetch(url, {
       method,
@@ -161,11 +161,11 @@ class FluxorisService {
       data = { _raw: text };
     }
 
-    logger.info(`Proxy response: ${method} ${url}`, {
-      status: response.status,
-      headers: Object.fromEntries(response.headers.entries()),
-      data,
-    });
+    // logger.info(`Proxy response: ${method} ${url}`, {
+    //   status: response.status,
+    //   headers: Object.fromEntries(response.headers.entries()),
+    //   data,
+    // });
     return {
       status: response.status,
       data,

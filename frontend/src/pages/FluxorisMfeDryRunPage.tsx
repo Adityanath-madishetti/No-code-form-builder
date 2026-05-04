@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '@/lib/api';
 import { Link, useSearchParams } from 'react-router-dom';
+import { getCookie, setCookie } from '@/lib/cookies';
 import '@fluxoris/partner-mfe/style.css';
 
 // shadcn/ui imports
@@ -220,9 +221,7 @@ export default function FluxorisMfeDryRunPage() {
   const [schemaText, setSchemaText] = useState(DEFAULT_SCHEMA);
 
   const partnerApiBase =
-    import.meta.env.VITE_API_URL ||
-    import.meta.env.VITE_API_BASE_URL ||
-    'http://localhost:5001';
+    import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '';
 
   const [statusWebhookUrl, setStatusWebhookUrl] = useState(
     `${partnerApiBase.replace(/\/+$/, '')}/api/partner/fluxoris/events`
@@ -309,7 +308,7 @@ export default function FluxorisMfeDryRunPage() {
   }, [formId]);
 
   useEffect(() => {
-    const stored = localStorage.getItem(FLUXORIS_PARTNER_TOKEN_KEY) || '';
+    const stored = getCookie(FLUXORIS_PARTNER_TOKEN_KEY) || '';
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (stored.trim()) setFluxorisToken(stored.trim());
   }, []);
@@ -365,7 +364,7 @@ export default function FluxorisMfeDryRunPage() {
         throw new Error('No token was returned from partner backend exchange.');
       }
       setFluxorisToken(token);
-      localStorage.setItem(FLUXORIS_PARTNER_TOKEN_KEY, token);
+      setCookie(FLUXORIS_PARTNER_TOKEN_KEY, token);
     } catch (error) {
       setExchangeError(
         error instanceof Error ? error.message : 'Token exchange failed.'
@@ -549,7 +548,10 @@ export default function FluxorisMfeDryRunPage() {
               />
             </div>
 
-            {TemplateBuilderFlow && parsedSchema.value && fluxorisToken && isConfigured ? (
+            {TemplateBuilderFlow &&
+            parsedSchema.value &&
+            fluxorisToken &&
+            isConfigured ? (
               // eslint-disable-next-line react-hooks/static-components
               <TemplateBuilderFlow
                 formId={formId}

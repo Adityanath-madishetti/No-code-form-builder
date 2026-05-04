@@ -1,8 +1,8 @@
 // src/lib/api.ts
-export const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5001";
+export const API_BASE = import.meta.env.VITE_API_URL || '';
 
 function getToken(): string | null {
-  return localStorage.getItem("auth_token");
+  return localStorage.getItem('auth_token');
 }
 
 // Extended error type so callers can check the HTTP status directly.
@@ -11,7 +11,7 @@ export class ApiError extends Error {
   constructor(message: string, status: number) {
     super(message);
     this.status = status;
-    this.name = "ApiError";
+    this.name = 'ApiError';
   }
 }
 
@@ -21,14 +21,15 @@ async function request<T = unknown>(
 ): Promise<T> {
   const token = getToken();
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': 'true',
     ...(options.headers as Record<string, string>),
   };
 
   if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
+    headers['Authorization'] = `Bearer ${token}`;
   }
-  console.log(import.meta.env.VITE_API_URL);
+  console.log('API Request Path:', `${API_BASE}${path}`);
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
     headers,
@@ -51,11 +52,10 @@ async function request<T = unknown>(
 export const api = {
   get: <T = unknown>(path: string) => request<T>(path),
   post: <T = unknown>(path: string, body?: unknown) =>
-    request<T>(path, { method: "POST", body: JSON.stringify(body) }),
+    request<T>(path, { method: 'POST', body: JSON.stringify(body) }),
   put: <T = unknown>(path: string, body?: unknown) =>
-    request<T>(path, { method: "PUT", body: JSON.stringify(body) }),
+    request<T>(path, { method: 'PUT', body: JSON.stringify(body) }),
   patch: <T = unknown>(path: string, body?: unknown) =>
-    request<T>(path, { method: "PATCH", body: JSON.stringify(body) }),
-  delete: <T = unknown>(path: string) =>
-    request<T>(path, { method: "DELETE" }),
+    request<T>(path, { method: 'PATCH', body: JSON.stringify(body) }),
+  delete: <T = unknown>(path: string) => request<T>(path, { method: 'DELETE' }),
 };
