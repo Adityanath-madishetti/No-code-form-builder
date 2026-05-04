@@ -1,4 +1,5 @@
 import { useEffect, useState, type ComponentType } from 'react';
+import { getCookie } from '@/lib/cookies';
 import '@fluxoris/partner-mfe/style.css';
 
 // shadcn/ui imports
@@ -35,7 +36,7 @@ export default function FluxorisRunDetailsPage() {
   const partnerApiBase =
     import.meta.env.VITE_API_URL ||
     import.meta.env.VITE_API_BASE_URL ||
-    'http://localhost:5001';
+    '';
 
   const [fluxorisApiBase, setFluxorisApiBase] = useState(
     import.meta.env.VITE_FLUXORIS_API_BASE_URL ||
@@ -50,7 +51,7 @@ export default function FluxorisRunDetailsPage() {
   const [error, setError] = useState('');
 
   const fluxorisToken = (
-    localStorage.getItem(FLUXORIS_PARTNER_TOKEN_KEY) || ''
+    getCookie(FLUXORIS_PARTNER_TOKEN_KEY) || ''
   ).trim();
 
   useEffect(() => {

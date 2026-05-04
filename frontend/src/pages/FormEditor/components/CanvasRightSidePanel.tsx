@@ -9,6 +9,7 @@ import {
   Zap,
   Layers,
   LayoutTemplate,
+  GitBranch,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Resizable } from 're-resizable';
@@ -27,6 +28,7 @@ import { TemplateCatalogPanel } from './TemplateCatalogPanel';
 
 import { ThemePanel } from './ThemePanel';
 import { LogicPanel } from './LogicPanel';
+import { FluxorisWorkflowPanel } from './FluxorisWorkflowPanel';
 
 // --- 1. Data Structure Interface ---
 export interface TabItem {
@@ -139,6 +141,12 @@ const TABS_DATA: TabItem[] = [
     title: 'Form Theme',
     icon: Palette,
     content: <ThemePanel />,
+  },
+  {
+    id: 'workflows',
+    title: 'Fluxoris Workflows',
+    icon: GitBranch,
+    content: <FluxorisWorkflowPanel />,
   },
   {
     id: 'componentsCatalog',
